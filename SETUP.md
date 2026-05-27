@@ -80,7 +80,7 @@ git push -u origin main
 | Name | Value |
 |------|-------|
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` (από Βήμα 3) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJ...` (από Βήμα 3) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `eyJ...` (από Βήμα 3, το anon/public key) |
 | `ANTHROPIC_API_KEY` | `sk-ant-...` (προαιρετικό, για AI εξαγωγή) |
 
 6. Κλικ **"Deploy"**

@@ -39,7 +39,7 @@ npm run dev
 | **Storage** | DE/GR depot, cost/day (auto-calculates days × rate), work items with date & technician |
 | **Sale** | Buyer, invoice no., price, VAT type |
 | **Export Transport** | CMR, carrier, delivery details + **🖨 Print CMR** |
-| **Documents** | Upload PDF/JPG/PNG, **AI extraction** fills vehicle card automatically |
+| **Documents** | Upload PDF/JPG/PNG via signed Supabase Storage URLs, **AI extraction** fills vehicle data automatically |
 | **Financials** | Full P&L: all costs vs. sale price, profit/loss, margin % |
 
 ### AI Document Extraction
@@ -57,8 +57,8 @@ Vehicles list → **📊 CSV** → exports current filtered list with all fields
 ### Vehicle Photos
 Info tab → click the photo zone → upload any image → appears in the vehicle header.
 
-### Works Offline / PWA
-All data in IndexedDB (browser storage). No server required after initial load. Add to home screen on mobile.
+### Cloud-Backed Data
+Vehicles use canonical UUIDs internally, human-friendly `VH-*` business references in the UI, and private Supabase Storage paths for document ingestion.
 
 ---
 
@@ -106,7 +106,7 @@ autofleet-nextjs/
 ├── lib/
 │   ├── types.ts                 ← All TypeScript interfaces
 │   ├── i18n.ts                  ← EL / EN / DE translations
-│   ├── db.ts                    ← IndexedDB via `idb`
+│   ├── supabase/                ← Supabase clients, DB mappers, activity log
 │   ├── defaults.ts              ← createVehicle() factory
 │   ├── financials.ts            ← computeFin() → P&L
 │   ├── pdf.ts                   ← generateVehiclePDF() via jsPDF
@@ -114,7 +114,7 @@ autofleet-nextjs/
 │   └── utils.ts                 ← fmtCur, fmtDate, catIcon, statusIcon, …
 │
 └── store/
-    └── useFleetStore.ts         ← Zustand store: all state + IndexedDB sync
+    └── useFleetStore.ts         ← Zustand store: all state + Supabase-backed sync
 ```
 
 ---
@@ -141,8 +141,18 @@ purchased → transit_in → at_depot → for_sale → sold → transit_out → 
 
 | Route | Method | Description |
 |---|---|---|
+| `/api/create-upload-url` | POST | Create a signed upload URL for a vehicle document using canonical `vehicle.id` UUID |
 | `/api/extract` | POST | AI document data extraction (server-side, key stays secret) |
 | `/api/cmr` | GET | Generate printable CMR waybill HTML |
+
+### Create upload URL body
+```json
+{
+  "vehicleId": "uuid",
+  "documentType": "invoice",
+  "mimeType": "application/pdf"
+}
+```
 
 ### Extract endpoint body
 ```json
@@ -172,7 +182,7 @@ ANTHROPIC_API_KEY=sk-ant-...   # Optional — can also be set in app Settings
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript 5 |
 | State | Zustand 4 |
-| Storage | IndexedDB via `idb` |
+| Storage | Supabase Postgres + private Supabase Storage |
 | PDF | jsPDF 2.5 |
 | Styling | Tailwind CSS + custom CSS variables |
 | AI | Anthropic Claude (`claude-sonnet-4-20250514`) |
@@ -184,5 +194,4 @@ ANTHROPIC_API_KEY=sk-ant-...   # Optional — can also be set in app Settings
 - **Export JSON** — full backup of all vehicle data (Settings page)
 - **Import JSON** — restore from backup  
 - **Export CSV** — Excel-compatible spreadsheet of all vehicles with all financial fields
-- Data is stored in browser IndexedDB — persists across sessions, no server needed
-
+- User-facing exports keep `businessId` (`VH-*`) while routing, APIs, storage, and logs use canonical UUIDs internally
