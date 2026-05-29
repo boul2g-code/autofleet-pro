@@ -3,7 +3,6 @@ import { deriveBusinessId } from '@/lib/utils'
 
 export interface VehicleRow {
   id: string
-  business_id?: string
   created_at: string
   updated_at: string
   user_id: string
@@ -13,11 +12,10 @@ export interface VehicleRow {
 }
 
 export function vehicleToRow(v: Vehicle): Omit<VehicleRow, 'user_id'> {
-  const { id, businessId, createdAt, updatedAt, status, category, ...rest } = v
+  const { createdAt, updatedAt, status, category, ...rest } = v
 
   return {
-    id,
-    business_id: businessId,
+    id: v.id,
     created_at: createdAt,
     updated_at: updatedAt,
     status,
@@ -30,18 +28,19 @@ export function rowToVehicle(row: VehicleRow): Vehicle {
   const data = { ...(row.data || {}) } as Record<string, unknown>
 
   if (Array.isArray(data.documents)) {
-    data.documents = data.documents.filter((doc): doc is Record<string, unknown> =>
-      typeof doc === 'object'
-      && doc !== null
-      && typeof doc.storagePath === 'string'
-      && doc.storagePath.length > 0,
+    data.documents = data.documents.filter(
+      (doc): doc is Record<string, unknown> =>
+        typeof doc === 'object' &&
+        doc !== null &&
+        typeof doc.storagePath === 'string' &&
+        doc.storagePath.length > 0,
     )
   }
 
   return {
     ...data,
     id: row.id,
-    businessId: row.business_id ?? deriveBusinessId(row.id),
+    businessId: deriveBusinessId(row.id),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     status: row.status as Vehicle['status'],
