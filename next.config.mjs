@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
-// v6.1 - fixed duplicate insert
+// v6.2 - fixed for Next.js 16
 const nextConfig = {
   reactStrictMode: false,
-  optimizeFonts: false,
   images: { unoptimized: true },
 }
 export default nextConfig
