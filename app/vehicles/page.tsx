@@ -3,7 +3,7 @@ import { useState, useMemo, useRef } from 'react'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import { calcFinancials, fmtCur } from '@/lib/financials'
-import type { VehicleStatus, Vehicle } from '@/lib/types'
+import type { VehicleStatus } from '@/lib/types'
 import AppShell from '@/components/AppShell'
 import InfoTab from '@/components/tabs/InfoTab'
 import PurchaseTab from '@/components/tabs/PurchaseTab'
@@ -13,6 +13,8 @@ import SaleTab from '@/components/tabs/SaleTab'
 import TransportOutTab from '@/components/tabs/TransportOutTab'
 import DocumentsTab from '@/components/tabs/DocumentsTab'
 import FinancialsTab from '@/components/tabs/FinancialsTab'
+import ListingsTab from '@/components/tabs/ListingsTab'
+import InspectionTab from '@/components/tabs/InspectionTab'
 
 const STATUS_FILTERS: (VehicleStatus | 'all')[] = [
   'all','purchased','transit_in','stored','for_sale','sold','transit_out','delivered'
@@ -27,6 +29,8 @@ const TABS = [
   { key: 'transportOut', label: 'tab.transportOut' },
   { key: 'documents', label: 'tab.documents' },
   { key: 'financials', label: 'tab.financials' },
+  { key: 'inspection', label: 'tab.inspection' },
+  { key: 'listings', label: 'tab.listings' },
 ]
 
 export default function VehiclesPage() {
@@ -47,7 +51,7 @@ export default function VehiclesPage() {
     return vehicles.filter(v => {
       if (statusFilter !== 'all' && v.status !== statusFilter) return false
       if (!q) return true
-      return [v.make, v.model, v.plate, v.vin, v.color, String(v.year || '')]
+      return [v.make, v.model, v.plate, v.vin, v.color, String(v.year || ''), v.purchase?.sellerName, v.sale?.buyerName]
         .some(f => (f || '').toLowerCase().includes(q))
     })
   }, [vehicles, search, statusFilter])
@@ -61,6 +65,7 @@ export default function VehiclesPage() {
       if (created) {
         setSelectedId(created.id)
         setActiveTab('info')
+        setConfirmDel(0)
       }
     } finally {
       setAdding(false)
@@ -72,29 +77,31 @@ export default function VehiclesPage() {
     if (!selectedId) return
     if (confirmDel === 0) { setConfirmDel(1); return }
     const veh = vehicles.find(x => x.id === selectedId)
-    const ok = window.confirm(`Delete ${veh?.make || ''} ${veh?.model || ''} ${veh?.plate || ''}? Cannot be undone.`)
+    const ok = window.confirm(`⚠️ Delete ${veh?.make || ''} ${veh?.model || ''} ${veh?.plate || ''}?\n\nThis cannot be undone.`)
     if (!ok) { setConfirmDel(0); return }
     await deleteVehicle(selectedId)
     setSelectedId(null)
     setConfirmDel(0)
   }
 
-  // VEHICLE DETAIL VIEW
+  // ── VEHICLE DETAIL VIEW ────────────────────────────────────
   if (selectedId) {
     return (
       <AppShell>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
           <button className="btn btn-ghost" onClick={() => { setSelectedId(null); setConfirmDel(0) }} style={{ padding: '6px 12px' }}>
             ← {t(lang, 'action.backToList')}
           </button>
           <div style={{ flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>
+            <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
               {v?.make || '— New Vehicle —'} {v?.model || ''} {v?.year ? `(${v.year})` : ''}
             </h1>
-            <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap', alignItems: 'center' }}>
               {v?.plate && <span style={{ color: 'var(--text2)', fontSize: 13 }}>📋 {v.plate}</span>}
-              {v?.vin && <span style={{ color: 'var(--text2)', fontSize: 13 }}>🔢 {v.vin}</span>}
+              {v?.vin && <span style={{ color: 'var(--text2)', fontSize: 12 }}>🔢 {v.vin}</span>}
               {v?.status && <span className={`badge status-${v.status}`}>{t(lang, `status.${v.status}`)}</span>}
+              {v?.mileage && <span style={{ color: 'var(--text2)', fontSize: 12 }}>📍 {v.mileage.toLocaleString()} km</span>}
             </div>
           </div>
           <button className="btn btn-danger" onClick={handleDelete} style={{ fontSize: 13 }}>
@@ -102,12 +109,13 @@ export default function VehiclesPage() {
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: 0, marginBottom: 16, overflowX: 'auto', borderBottom: '1px solid var(--border)' }}>
+        {/* Tabs */}
+        <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
           {TABS.map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               style={{
-                padding: '9px 14px', fontSize: 13, border: 'none', cursor: 'pointer',
-                background: 'transparent', whiteSpace: 'nowrap',
+                padding: '8px 13px', fontSize: 13, border: 'none', cursor: 'pointer',
+                background: 'transparent', whiteSpace: 'nowrap', flexShrink: 0,
                 color: activeTab === tab.key ? 'var(--primary)' : 'var(--text2)',
                 borderBottom: activeTab === tab.key ? '2px solid var(--primary)' : '2px solid transparent',
                 fontWeight: activeTab === tab.key ? 600 : 400,
@@ -126,12 +134,14 @@ export default function VehiclesPage() {
           {activeTab === 'transportOut' && <TransportOutTab id={selectedId} />}
           {activeTab === 'documents' && <DocumentsTab id={selectedId} />}
           {activeTab === 'financials' && <FinancialsTab id={selectedId} />}
+          {activeTab === 'inspection' && <InspectionTab id={selectedId} />}
+          {activeTab === 'listings' && <ListingsTab id={selectedId} />}
         </div>
       </AppShell>
     )
   }
 
-  // VEHICLE LIST VIEW
+  // ── VEHICLE LIST VIEW ──────────────────────────────────────
   return (
     <AppShell>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -146,7 +156,7 @@ export default function VehiclesPage() {
           placeholder={`🔍 ${t(lang, 'veh.search')}`}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ maxWidth: 280 }}
+          style={{ maxWidth: 300 }}
         />
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {STATUS_FILTERS.map(s => (
@@ -157,7 +167,7 @@ export default function VehiclesPage() {
                 background: statusFilter === s ? 'var(--primary)' : 'var(--surface2)',
                 color: 'var(--text)',
               }}>
-              {s === 'all' ? t(lang, 'veh.all') : t(lang, `status.${s}`)}
+              {s === 'all' ? `${t(lang, 'veh.all')} (${vehicles.length})` : `${t(lang, `status.${s}`)} (${vehicles.filter(v => v.status === s).length})`}
             </button>
           ))}
         </div>
@@ -168,9 +178,9 @@ export default function VehiclesPage() {
       ) : filtered.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text2)' }}>
           <div style={{ fontSize: 40 }}>🚗</div>
-          <p>{vehicles.length === 0 ? t(lang, 'dash.addFirst') : t(lang, 'veh.noResults')}</p>
+          <p style={{ marginTop: 8 }}>{vehicles.length === 0 ? t(lang, 'dash.addFirst') : t(lang, 'veh.noResults')}</p>
           {vehicles.length === 0 && (
-            <button className="btn btn-primary" onClick={handleAdd} disabled={adding} style={{ marginTop: 8 }}>
+            <button className="btn btn-primary" onClick={handleAdd} disabled={adding} style={{ marginTop: 12 }}>
               {adding ? '⏳' : `+ ${t(lang, 'veh.new')}`}
             </button>
           )}
@@ -181,7 +191,7 @@ export default function VehiclesPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
-                  {['Make / Model', 'Plate', 'Year', 'km', 'Status', 'Purchase', 'Profit'].map(h => (
+                  {['Make / Model', 'Plate', 'Year', 'km', 'Status', 'Purchase €', 'Profit €'].map(h => (
                     <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text2)', fontWeight: 500, fontSize: 12, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
@@ -192,10 +202,13 @@ export default function VehiclesPage() {
                   return (
                     <tr key={v.id}
                       onClick={() => { setSelectedId(v.id); setActiveTab('info'); setConfirmDel(0) }}
-                      style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+                      style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background 0.1s' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <td style={{ padding: '10px 12px', fontWeight: 500 }}>{v.make || '— New —'} {v.model || ''}</td>
+                      <td style={{ padding: '10px 12px', fontWeight: 500 }}>
+                        {v.photo && <img src={v.photo} alt="" style={{ width: 32, height: 24, objectFit: 'cover', borderRadius: 4, marginRight: 8, verticalAlign: 'middle' }} />}
+                        {v.make || '— New —'} {v.model || ''}
+                      </td>
                       <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.plate || '—'}</td>
                       <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.year || '—'}</td>
                       <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.mileage ? v.mileage.toLocaleString() : '—'}</td>
