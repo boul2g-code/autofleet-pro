@@ -1,201 +1,203 @@
 import type { Lang } from './types'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// AutoFleet Pro — Translations
-// Languages: EL · EN · DE · FR · IT · ES
-// Structure: I18N[lang][section][key]
-// ─────────────────────────────────────────────────────────────────────────────
+const T: Record<string, Record<Lang, string>> = {
+  // App
+  'app.name': { el:'AutoFleet Pro', en:'AutoFleet Pro', de:'AutoFleet Pro', fr:'AutoFleet Pro', it:'AutoFleet Pro', es:'AutoFleet Pro' },
+  'app.tagline': { el:'Διαχείριση Στόλου', en:'Fleet Management', de:'Flottenmanagement', fr:'Gestion de Flotte', it:'Gestione Flotta', es:'Gestión de Flota' },
 
-type Section = Record<string, string>
-type LangData = Record<string, Section>
+  // Nav
+  'nav.dashboard': { el:'Πίνακας', en:'Dashboard', de:'Übersicht', fr:'Tableau de bord', it:'Dashboard', es:'Panel' },
+  'nav.vehicles': { el:'Οχήματα', en:'Vehicles', de:'Fahrzeuge', fr:'Véhicules', it:'Veicoli', es:'Vehículos' },
+  'nav.manifest': { el:'Μανιφέστο', en:'Manifest', de:'Manifest', fr:'Manifeste', it:'Manifesto', es:'Manifiesto' },
+  'nav.analytics': { el:'Αναλυτικά', en:'Analytics', de:'Analytik', fr:'Analytique', it:'Analisi', es:'Análisis' },
+  'nav.import': { el:'Εισαγωγή', en:'Import', de:'Import', fr:'Importer', it:'Importa', es:'Importar' },
+  'nav.settings': { el:'Ρυθμίσεις', en:'Settings', de:'Einstellungen', fr:'Paramètres', it:'Impostazioni', es:'Configuración' },
+  'nav.logout': { el:'Αποσύνδεση', en:'Logout', de:'Abmelden', fr:'Déconnexion', it:'Esci', es:'Cerrar sesión' },
 
-export const I18N: Record<Lang, LangData> = {
+  // Dashboard
+  'dash.total': { el:'Σύνολο Οχημάτων', en:'Total Vehicles', de:'Fahrzeuge gesamt', fr:'Total Véhicules', it:'Totale Veicoli', es:'Total Vehículos' },
+  'dash.inStock': { el:'Σε Απόθεμα', en:'In Stock', de:'Auf Lager', fr:'En stock', it:'In magazzino', es:'En stock' },
+  'dash.sold': { el:'Πωλήθηκαν', en:'Sold', de:'Verkauft', fr:'Vendus', it:'Venduti', es:'Vendidos' },
+  'dash.revenue': { el:'Έσοδα', en:'Revenue', de:'Umsatz', fr:'Chiffre d\'affaires', it:'Ricavi', es:'Ingresos' },
+  'dash.profit': { el:'Κέρδος', en:'Profit', de:'Gewinn', fr:'Bénéfice', it:'Profitto', es:'Beneficio' },
+  'dash.recentVehicles': { el:'Πρόσφατα Οχήματα', en:'Recent Vehicles', de:'Neueste Fahrzeuge', fr:'Véhicules récents', it:'Veicoli recenti', es:'Vehículos recientes' },
+  'dash.noVehicles': { el:'Δεν υπάρχουν οχήματα', en:'No vehicles yet', de:'Keine Fahrzeuge', fr:'Aucun véhicule', it:'Nessun veicolo', es:'Sin vehículos' },
+  'dash.addFirst': { el:'Προσθέστε το πρώτο σας όχημα', en:'Add your first vehicle', de:'Fügen Sie Ihr erstes Fahrzeug hinzu', fr:'Ajoutez votre premier véhicule', it:'Aggiungi il tuo primo veicolo', es:'Añade tu primer vehículo' },
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ΕΛΛΗΝΙΚΑ ━━━
-el: {
-  app:      { name:'AutoFleet Pro', tagline:'Διαχείριση Στόλου Οχημάτων' },
-  nav:      { dashboard:'Πίνακας Ελέγχου', vehicles:'Οχήματα', newVehicle:'Νέο Όχημα', settings:'Ρυθμίσεις', main:'Κύριο Μενού', analytics:'Αναλυτικά', manifest:'Μανιφέστο' },
-  dashboard:{ title:'Πίνακας Ελέγχου', total:'Σύνολο Οχημάτων', inStock:'Σε Στόλο', sold:'Πωλημένα', inTransit:'Σε Μεταφορά', profit:'Συνολικό Κέρδος', recent:'Πρόσφατα Οχήματα', noRecent:'Δεν υπάρχουν οχήματα', statusOverview:'Κατάσταση Στόλου' },
-  vehicle:  { id:'Κωδικός', vin:'VIN', category:'Κατηγορία', make:'Μάρκα', model:'Μοντέλο', year:'Έτος', color:'Χρώμα', engine:'Κινητήρας (cc)', fuel:'Καύσιμο', gearbox:'Κιβώτιο', mileage:'Χιλιόμετρα', firstReg:'1η Ταξινόμηση', regCountry:'Χώρα', plate:'Πινακίδα', seats:'Θέσεις', payload:'Φορτίο (kg)', cocNum:'COC', condition:'Κατάσταση', status:'Κατάσταση', notes:'Σημειώσεις' },
-  tabs:     { info:'Στοιχεία', purchase:'Αγορά', importT:'Μεταφορά Αγοράς', storage:'Αποθήκη', sale:'Πώληση', exportT:'Μεταφορά Πώλησης', documents:'Έγγραφα', financials:'Οικονομικά', listings:'🌍 Αγγελίες', inspection:'🔍 Επιθεώρηση' },
-  purchase: { title:'Αγορά', date:'Ημ/νία', sellerName:'Πωλητής', sellerCountry:'Χώρα', sellerContact:'Επικοινωνία', priceNet:'Τιμή (καθαρή)', vatRate:'ΦΠΑ %', priceGross:'Τιμή (μικτή)', currency:'Νόμισμα', vatType:'Τύπος ΦΠΑ', invoiceNum:'Αρ. Τιμολογίου', extraCosts:'Πρόσθετα Κόστη', notes:'Σημειώσεις', addCost:'+ Προσθήκη', costDesc:'Περιγραφή', costAmt:'Ποσό' },
-  transport:{ title:'Μεταφορά', cmr:'Αρ. CMR', carrier:'Μεταφορέας', carrierContact:'Επικοινωνία', origin:'Τόπος Φόρτωσης', dest:'Τόπος Παράδοσης', depDate:'Ημ. Αναχώρησης', arrDate:'Ημ. Άφιξης', cost:'Κόστος', currency:'Νόμισμα', truckPlate:'Πινακίδα Φορτηγού', driver:'Οδηγός', notes:'Σημειώσεις' },
-  storage:  { title:'Αποθήκη', location:'Τοποθεσία', locDetails:'Λεπτομέρειες', entryDate:'Ημ. Εισόδου', exitDate:'Ημ. Εξόδου', cpd:'Κόστος/Ημέρα', currency:'Νόμισμα', days:'Ημέρες', totalSC:'Σύνολο', workTitle:'Εργασίες', addWork:'+ Εργασία', wDesc:'Περιγραφή', wCost:'Κόστος', wDate:'Ημ/νία', wBy:'Από', notes:'Σημειώσεις' },
-  sale:     { title:'Πώληση', date:'Ημ/νία', buyerName:'Αγοραστής', buyerCountry:'Χώρα', buyerContact:'Επικοινωνία', priceNet:'Τιμή (καθαρή)', vatRate:'ΦΠΑ %', priceGross:'Τιμή (μικτή)', currency:'Νόμισμα', vatType:'Τύπος ΦΠΑ', invoiceNum:'Αρ. Τιμολογίου', notes:'Σημειώσεις' },
-  documents:{ title:'Έγγραφα', upload:'Ανέβασμα', hint:'Σύρετε ή κλικ (PDF, JPG)', name:'Όνομα', type:'Τύπος', date:'Ημ/νία', aiExtract:'Εξαγωγή AI', aiLoading:'Επεξεργασία...', aiOk:'Εξήχθησαν δεδομένα!', aiErr:'Σφάλμα', noDoc:'Δεν υπάρχουν έγγραφα', del:'Διαγραφή', view:'Προβολή' },
-  financials:{ title:'Οικονομική Ανάλυση', purchaseP:'Τιμή Αγοράς', importC:'Κόστος Εισαγωγής', storageC:'Κόστος Αποθήκης', workC:'Εργασίες', exportC:'Κόστος Εξαγωγής', extraC:'Πρόσθετα', totalC:'ΣΥΝΟΛΟ ΚΟΣΤΟΥΣ', saleP:'Τιμή Πώλησης', profit:'ΚΕΡΔΟΣ / ΖΗΜΙΑ', margin:'Περιθώριο %', notSold:'Δεν πωλήθηκε' },
-  status:   { purchased:'Αγοράστηκε', transit_in:'Σε Εισαγωγή', at_depot:'Στην Έδρα', for_sale:'Προς Πώληση', sold:'Πωλήθηκε', transit_out:'Σε Εξαγωγή', delivered:'Παραδόθηκε' },
-  cat:      { car:'Επιβατικό', truck:'Φορτηγό', van:'Van', bus:'Λεωφορείο', moto:'Μοτοσικλέτα', construction:'Μηχανήματα Έργων' },
-  fuel:     { diesel:'Πετρέλαιο', petrol:'Βενζίνη', electric:'Ηλεκτρικό', hybrid:'Υβριδικό', lpg:'Υγραέριο' },
-  gear:     { manual:'Χειροκίνητο', automatic:'Αυτόματο' },
-  vat:      { standard:'Κανονικό ΦΠΑ', margin:'Καθεστώς Περιθωρίου', no_vat:'Χωρίς ΦΠΑ' },
-  cond:     { excellent:'Άριστη', good:'Καλή', fair:'Μέτρια', poor:'Κακή' },
-  docType:  { invoice:'Τιμολόγιο', registration:'Άδεια', coc:'COC', kteo:'ΚΤΕΟ', cmr:'CMR', insurance:'Ασφάλεια', other:'Άλλο' },
-  loc:      { de:'Γερμανία', gr:'Ελλάδα', other:'Άλλο' },
-  actions:  { save:'Αποθήκευση', cancel:'Ακύρωση', delete:'Διαγραφή', back:'Πίσω', pdf:'PDF', search:'Αναζήτηση', confirm:'Επιβεβαίωση', remove:'Αφαίρεση', all:'Όλα', add:'Προσθήκη' },
-  msg:      { saved:'Αποθηκεύτηκε ✓', deleted:'Διαγράφηκε ✓', confirmDel:'Διαγραφή αυτού του οχήματος;', noVeh:'Δεν υπάρχουν οχήματα.', search:'Αναζήτηση VIN, πινακίδα, μάρκα...', apiMissing:'Βάλτε API Key στις Ρυθμίσεις' },
-  settings: { title:'Ρυθμίσεις', company:'Εταιρεία', compName:'Επωνυμία', compDE:'Διεύθυνση Γερμανίας', compGR:'Διεύθυνση Ελλάδας', apiKey:'Anthropic API Key', apiHint:'Για AI εξαγωγή εγγράφων', lang:'Γλώσσα', currency:'Νόμισμα', data:'Δεδομένα', exportJson:'Εξαγωγή JSON', importJson:'Εισαγωγή JSON' },
-  report:   { title:'Αναφορά Οχήματος', genOn:'Δημιουργήθηκε', confid:'ΕΜΠΙΣΤΕΥΤΙΚΟ', vInfo:'ΣΤΟΙΧΕΙΑ ΟΧΗΜΑΤΟΣ', pInfo:'ΑΓΟΡΑ', itInfo:'ΜΕΤΑΦΟΡΑ ΑΓΟΡΑΣ', stInfo:'ΑΠΟΘΗΚΗ', sInfo:'ΠΩΛΗΣΗ', etInfo:'ΜΕΤΑΦΟΡΑ ΠΩΛΗΣΗΣ', fInfo:'ΟΙΚΟΝΟΜΙΚΑ' },
-  manifest: { title:'Μανιφέστο Στόλου', subtitle:'Κατάσταση Οχημάτων', printAll:'Εκτύπωση Όλων', printStatus:'Εκτύπωση', noVehicles:'Δεν υπάρχουν οχήματα σε αυτή την κατηγορία', generatedOn:'Δημιουργήθηκε', totalVehicles:'Σύνολο Οχημάτων', page:'Σελίδα' },
-},
+  // Vehicles
+  'veh.new': { el:'Νέο Όχημα', en:'New Vehicle', de:'Neues Fahrzeug', fr:'Nouveau véhicule', it:'Nuovo Veicolo', es:'Nuevo Vehículo' },
+  'veh.search': { el:'Αναζήτηση...', en:'Search...', de:'Suchen...', fr:'Rechercher...', it:'Cerca...', es:'Buscar...' },
+  'veh.all': { el:'Όλα', en:'All', de:'Alle', fr:'Tous', it:'Tutti', es:'Todos' },
+  'veh.noResults': { el:'Δεν βρέθηκαν αποτελέσματα', en:'No results found', de:'Keine Ergebnisse', fr:'Aucun résultat', it:'Nessun risultato', es:'Sin resultados' },
+  'veh.delete': { el:'Διαγραφή', en:'Delete', de:'Löschen', fr:'Supprimer', it:'Elimina', es:'Eliminar' },
+  'veh.deleteConfirm': { el:'Είστε σίγουροι;', en:'Are you sure?', de:'Sind Sie sicher?', fr:'Êtes-vous sûr?', it:'Sei sicuro?', es:'¿Estás seguro?' },
+  'veh.deleteConfirm2': { el:'Αυτή η ενέργεια δεν αναιρείται. Διαγραφή;', en:'This cannot be undone. Delete?', de:'Dies kann nicht rückgängig gemacht werden.', fr:'Cela ne peut pas être annulé.', it:'Questa azione non può essere annullata.', es:'Esta acción no se puede deshacer.' },
+  'veh.saved': { el:'Αποθηκεύτηκε', en:'Saved', de:'Gespeichert', fr:'Enregistré', it:'Salvato', es:'Guardado' },
+  'veh.saving': { el:'Αποθήκευση...', en:'Saving...', de:'Speichern...', fr:'Enregistrement...', it:'Salvataggio...', es:'Guardando...' },
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ENGLISH ━━━
-en: {
-  app:      { name:'AutoFleet Pro', tagline:'Vehicle Fleet Management' },
-  nav:      { dashboard:'Dashboard', vehicles:'Vehicles', newVehicle:'New Vehicle', settings:'Settings', main:'Main Menu', analytics:'Analytics', manifest:'Manifest' },
-  dashboard:{ title:'Dashboard', total:'Total Vehicles', inStock:'In Stock', sold:'Sold', inTransit:'In Transit', profit:'Total Profit', recent:'Recent Vehicles', noRecent:'No vehicles yet', statusOverview:'Fleet Status' },
-  vehicle:  { id:'ID', vin:'VIN', category:'Category', make:'Make', model:'Model', year:'Year', color:'Color', engine:'Engine (cc)', fuel:'Fuel', gearbox:'Gearbox', mileage:'Mileage (km)', firstReg:'First Reg.', regCountry:'Country', plate:'Plate', seats:'Seats', payload:'Payload (kg)', cocNum:'COC No.', condition:'Condition', status:'Status', notes:'Notes' },
-  tabs:     { info:'Vehicle Info', purchase:'Purchase', importT:'Import Transport', storage:'Storage', sale:'Sale', exportT:'Export Transport', documents:'Documents', financials:'Financials', listings:'🌍 Listings', inspection:'🔍 Inspection' },
-  purchase: { title:'Purchase', date:'Date', sellerName:'Seller', sellerCountry:'Country', sellerContact:'Contact', priceNet:'Price (net)', vatRate:'VAT %', priceGross:'Price (gross)', currency:'Currency', vatType:'VAT Type', invoiceNum:'Invoice No.', extraCosts:'Extra Costs', notes:'Notes', addCost:'+ Add Cost', costDesc:'Description', costAmt:'Amount' },
-  transport:{ title:'Transport', cmr:'CMR No.', carrier:'Carrier', carrierContact:'Contact', origin:'Loading Place', dest:'Delivery Place', depDate:'Departure', arrDate:'Arrival', cost:'Cost', currency:'Currency', truckPlate:'Truck Plate', driver:'Driver', notes:'Notes' },
-  storage:  { title:'Storage', location:'Location', locDetails:'Details', entryDate:'Entry Date', exitDate:'Exit Date', cpd:'Cost/Day', currency:'Currency', days:'Days', totalSC:'Total', workTitle:'Work Done', addWork:'+ Add Work', wDesc:'Description', wCost:'Cost', wDate:'Date', wBy:'By', notes:'Notes' },
-  sale:     { title:'Sale', date:'Date', buyerName:'Buyer', buyerCountry:'Country', buyerContact:'Contact', priceNet:'Price (net)', vatRate:'VAT %', priceGross:'Price (gross)', currency:'Currency', vatType:'VAT Type', invoiceNum:'Invoice No.', notes:'Notes' },
-  documents:{ title:'Documents', upload:'Upload', hint:'Drag or click (PDF, JPG)', name:'Name', type:'Type', date:'Date', aiExtract:'AI Extract', aiLoading:'Processing...', aiOk:'Data extracted!', aiErr:'Error', noDoc:'No documents', del:'Delete', view:'View' },
-  financials:{ title:'Financial Analysis', purchaseP:'Purchase Price', importC:'Import Cost', storageC:'Storage Cost', workC:'Work Costs', exportC:'Export Cost', extraC:'Extra', totalC:'TOTAL COSTS', saleP:'Sale Price', profit:'PROFIT / LOSS', margin:'Margin %', notSold:'Not sold yet' },
-  status:   { purchased:'Purchased', transit_in:'Import Transit', at_depot:'At Depot', for_sale:'For Sale', sold:'Sold', transit_out:'Export Transit', delivered:'Delivered' },
-  cat:      { car:'Car', truck:'Truck', van:'Van', bus:'Bus', moto:'Motorcycle', construction:'Construction Equip.' },
-  fuel:     { diesel:'Diesel', petrol:'Petrol', electric:'Electric', hybrid:'Hybrid', lpg:'LPG' },
-  gear:     { manual:'Manual', automatic:'Automatic' },
-  vat:      { standard:'Standard VAT', margin:'Margin Scheme', no_vat:'No VAT' },
-  cond:     { excellent:'Excellent', good:'Good', fair:'Fair', poor:'Poor' },
-  docType:  { invoice:'Invoice', registration:'Registration', coc:'COC', kteo:'Technical Insp.', cmr:'CMR', insurance:'Insurance', other:'Other' },
-  loc:      { de:'Germany', gr:'Greece', other:'Other' },
-  actions:  { save:'Save', cancel:'Cancel', delete:'Delete', back:'Back', pdf:'PDF', search:'Search', confirm:'Confirm', remove:'Remove', all:'All', add:'Add' },
-  msg:      { saved:'Saved ✓', deleted:'Deleted ✓', confirmDel:'Delete this vehicle?', noVeh:'No vehicles.', search:'Search VIN, plate, make...', apiMissing:'Add API Key in Settings' },
-  settings: { title:'Settings', company:'Company', compName:'Company Name', compDE:'Germany Address', compGR:'Greece Address', apiKey:'Anthropic API Key', apiHint:'For AI document extraction', lang:'Language', currency:'Currency', data:'Data', exportJson:'Export JSON', importJson:'Import JSON' },
-  report:   { title:'Vehicle Report', genOn:'Generated on', confid:'CONFIDENTIAL', vInfo:'VEHICLE INFO', pInfo:'PURCHASE', itInfo:'IMPORT TRANSPORT', stInfo:'STORAGE', sInfo:'SALE', etInfo:'EXPORT TRANSPORT', fInfo:'FINANCIALS' },
-  manifest: { title:'Fleet Manifest', subtitle:'Vehicle Status Report', printAll:'Print All', printStatus:'Print', noVehicles:'No vehicles in this category', generatedOn:'Generated on', totalVehicles:'Total Vehicles', page:'Page' },
-},
+  // Tabs
+  'tab.info': { el:'Στοιχεία', en:'Info', de:'Info', fr:'Info', it:'Info', es:'Info' },
+  'tab.purchase': { el:'Αγορά', en:'Purchase', de:'Kauf', fr:'Achat', it:'Acquisto', es:'Compra' },
+  'tab.transportIn': { el:'Μεταφορά Εισ.', en:'Transport In', de:'Transport Ein', fr:'Transport Entrée', it:'Trasporto In', es:'Transporte Entrada' },
+  'tab.storage': { el:'Αποθήκευση', en:'Storage', de:'Lagerung', fr:'Stockage', it:'Deposito', es:'Almacén' },
+  'tab.sale': { el:'Πώληση', en:'Sale', de:'Verkauf', fr:'Vente', it:'Vendita', es:'Venta' },
+  'tab.transportOut': { el:'Μεταφορά Εξ.', en:'Transport Out', de:'Transport Aus', fr:'Transport Sortie', it:'Trasporto Out', es:'Transporte Salida' },
+  'tab.documents': { el:'Έγγραφα', en:'Documents', de:'Dokumente', fr:'Documents', it:'Documenti', es:'Documentos' },
+  'tab.financials': { el:'Οικονομικά', en:'Financials', de:'Finanzen', fr:'Finances', it:'Finanze', es:'Finanzas' },
+  'tab.listings': { el:'Αγγελίες', en:'Listings', de:'Inserate', fr:'Annonces', it:'Inserzioni', es:'Anuncios' },
+  'tab.inspection': { el:'Επιθεώρηση', en:'Inspection', de:'Inspektion', fr:'Inspection', it:'Ispezione', es:'Inspección' },
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ DEUTSCH ━━━
-de: {
-  app:      { name:'AutoFleet Pro', tagline:'Fuhrparkmanagement' },
-  nav:      { dashboard:'Dashboard', vehicles:'Fahrzeuge', newVehicle:'Neues Fahrzeug', settings:'Einstellungen', main:'Hauptmenü', analytics:'Analysen', manifest:'Manifest' },
-  dashboard:{ title:'Dashboard', total:'Fahrzeuge gesamt', inStock:'Im Bestand', sold:'Verkauft', inTransit:'Im Transport', profit:'Gesamtgewinn', recent:'Letzte Fahrzeuge', noRecent:'Noch keine Fahrzeuge', statusOverview:'Flottenübersicht' },
-  vehicle:  { id:'ID', vin:'FIN', category:'Kategorie', make:'Marke', model:'Modell', year:'Baujahr', color:'Farbe', engine:'Motor (cm³)', fuel:'Kraftstoff', gearbox:'Getriebe', mileage:'Km-Stand', firstReg:'Erstzulassung', regCountry:'Land', plate:'Kennzeichen', seats:'Sitze', payload:'Nutzlast (kg)', cocNum:'COC-Nr.', condition:'Zustand', status:'Status', notes:'Bemerkungen' },
-  tabs:     { info:'Fahrzeugdaten', purchase:'Ankauf', importT:'Einfuhrtransport', storage:'Lagerung', sale:'Verkauf', exportT:'Ausfuhrtransport', documents:'Dokumente', financials:'Finanzen', listings:'🌍 Inserate', inspection:'🔍 Inspektion' },
-  purchase: { title:'Ankauf', date:'Datum', sellerName:'Verkäufer', sellerCountry:'Land', sellerContact:'Kontakt', priceNet:'Preis (netto)', vatRate:'MwSt %', priceGross:'Preis (brutto)', currency:'Währung', vatType:'MwSt-Art', invoiceNum:'Rechnungsnr.', extraCosts:'Zusatzkosten', notes:'Bemerkungen', addCost:'+ Hinzufügen', costDesc:'Beschreibung', costAmt:'Betrag' },
-  transport:{ title:'Transport', cmr:'CMR-Nr.', carrier:'Spediteur', carrierContact:'Kontakt', origin:'Abgangsort', dest:'Zielort', depDate:'Abgang', arrDate:'Ankunft', cost:'Kosten', currency:'Währung', truckPlate:'LKW-Kennzeichen', driver:'Fahrer', notes:'Bemerkungen' },
-  storage:  { title:'Lagerung', location:'Standort', locDetails:'Details', entryDate:'Einlagerung', exitDate:'Auslagerung', cpd:'Kosten/Tag', currency:'Währung', days:'Tage', totalSC:'Gesamt', workTitle:'Arbeiten', addWork:'+ Arbeit', wDesc:'Beschreibung', wCost:'Kosten', wDate:'Datum', wBy:'Von', notes:'Bemerkungen' },
-  sale:     { title:'Verkauf', date:'Datum', buyerName:'Käufer', buyerCountry:'Land', buyerContact:'Kontakt', priceNet:'Preis (netto)', vatRate:'MwSt %', priceGross:'Preis (brutto)', currency:'Währung', vatType:'MwSt-Art', invoiceNum:'Rechnungsnr.', notes:'Bemerkungen' },
-  documents:{ title:'Dokumente', upload:'Hochladen', hint:'Hierher ziehen (PDF, JPG)', name:'Name', type:'Typ', date:'Datum', aiExtract:'KI-Extraktion', aiLoading:'Verarbeitung...', aiOk:'Daten extrahiert!', aiErr:'Fehler', noDoc:'Keine Dokumente', del:'Löschen', view:'Anzeigen' },
-  financials:{ title:'Finanzanalyse', purchaseP:'Kaufpreis', importC:'Einfuhrkosten', storageC:'Lagerkosten', workC:'Arbeitskosten', exportC:'Ausfuhrkosten', extraC:'Sonstiges', totalC:'GESAMTKOSTEN', saleP:'Verkaufspreis', profit:'GEWINN / VERLUST', margin:'Marge %', notSold:'Noch nicht verkauft' },
-  status:   { purchased:'Angekauft', transit_in:'Einfuhrtransport', at_depot:'Im Depot', for_sale:'Zum Verkauf', sold:'Verkauft', transit_out:'Ausfuhrtransport', delivered:'Ausgeliefert' },
-  cat:      { car:'PKW', truck:'LKW', van:'Transporter', bus:'Bus', moto:'Motorrad', construction:'Baumaschinen' },
-  fuel:     { diesel:'Diesel', petrol:'Benzin', electric:'Elektrisch', hybrid:'Hybrid', lpg:'Flüssiggas' },
-  gear:     { manual:'Manuell', automatic:'Automatik' },
-  vat:      { standard:'Standard MwSt', margin:'Differenzbesteuerung', no_vat:'Ohne MwSt' },
-  cond:     { excellent:'Ausgezeichnet', good:'Gut', fair:'Befriedigend', poor:'Schlecht' },
-  docType:  { invoice:'Rechnung', registration:'Zulassung', coc:'COC', kteo:'HU/TÜV', cmr:'CMR', insurance:'Versicherung', other:'Sonstiges' },
-  loc:      { de:'Deutschland', gr:'Griechenland', other:'Anderer Standort' },
-  actions:  { save:'Speichern', cancel:'Abbrechen', delete:'Löschen', back:'Zurück', pdf:'PDF', search:'Suchen', confirm:'Bestätigen', remove:'Entfernen', all:'Alle', add:'Hinzufügen' },
-  msg:      { saved:'Gespeichert ✓', deleted:'Gelöscht ✓', confirmDel:'Dieses Fahrzeug löschen?', noVeh:'Keine Fahrzeuge.', search:'FIN, Kennzeichen, Marke suchen...', apiMissing:'API-Schlüssel in Einstellungen eingeben' },
-  settings: { title:'Einstellungen', company:'Firma', compName:'Firmenname', compDE:'Adresse Deutschland', compGR:'Adresse Griechenland', apiKey:'Anthropic API-Schlüssel', apiHint:'Für KI-Dokumentenextraktion', lang:'Sprache', currency:'Währung', data:'Daten', exportJson:'JSON exportieren', importJson:'JSON importieren' },
-  report:   { title:'Fahrzeugbericht', genOn:'Erstellt am', confid:'VERTRAULICH', vInfo:'FAHRZEUGDATEN', pInfo:'ANKAUF', itInfo:'EINFUHRTRANSPORT', stInfo:'LAGERUNG', sInfo:'VERKAUF', etInfo:'AUSFUHRTRANSPORT', fInfo:'FINANZEN' },
-  manifest: { title:'Flottenmanifest', subtitle:'Fahrzeugstatus-Bericht', printAll:'Alle drucken', printStatus:'Drucken', noVehicles:'Keine Fahrzeuge in dieser Kategorie', generatedOn:'Erstellt am', totalVehicles:'Fahrzeuge gesamt', page:'Seite' },
-},
+  // Fields
+  'field.make': { el:'Μάρκα', en:'Make', de:'Marke', fr:'Marque', it:'Marca', es:'Marca' },
+  'field.model': { el:'Μοντέλο', en:'Model', de:'Modell', fr:'Modèle', it:'Modello', es:'Modelo' },
+  'field.year': { el:'Έτος', en:'Year', de:'Jahr', fr:'Année', it:'Anno', es:'Año' },
+  'field.vin': { el:'VIN', en:'VIN', de:'Fahrgestellnr.', fr:'Numéro VIN', it:'Telaio', es:'Nº de bastidor' },
+  'field.plate': { el:'Πινακίδα', en:'Plate', de:'Kennzeichen', fr:'Immatriculation', it:'Targa', es:'Matrícula' },
+  'field.color': { el:'Χρώμα', en:'Color', de:'Farbe', fr:'Couleur', it:'Colore', es:'Color' },
+  'field.fuel': { el:'Καύσιμο', en:'Fuel', de:'Kraftstoff', fr:'Carburant', it:'Carburante', es:'Combustible' },
+  'field.gear': { el:'Κιβώτιο', en:'Gearbox', de:'Getriebe', fr:'Boîte de vitesses', it:'Cambio', es:'Caja de cambios' },
+  'field.engineCC': { el:'Κυβισμός (cc)', en:'Engine (cc)', de:'Hubraum (cc)', fr:'Cylindrée (cc)', it:'Cilindrata (cc)', es:'Cilindrada (cc)' },
+  'field.powerKW': { el:'Ισχύς (kW)', en:'Power (kW)', de:'Leistung (kW)', fr:'Puissance (kW)', it:'Potenza (kW)', es:'Potencia (kW)' },
+  'field.mileage': { el:'Χιλιόμετρα', en:'Mileage', de:'Kilometerstand', fr:'Kilométrage', it:'Chilometraggio', es:'Kilometraje' },
+  'field.seats': { el:'Θέσεις', en:'Seats', de:'Sitze', fr:'Sièges', it:'Posti', es:'Plazas' },
+  'field.weightKg': { el:'Βάρος (kg)', en:'Weight (kg)', de:'Gewicht (kg)', fr:'Poids (kg)', it:'Peso (kg)', es:'Peso (kg)' },
+  'field.payloadKg': { el:'Φορτίο (kg)', en:'Payload (kg)', de:'Nutzlast (kg)', fr:'Charge utile (kg)', it:'Portata (kg)', es:'Carga útil (kg)' },
+  'field.status': { el:'Κατάσταση', en:'Status', de:'Status', fr:'Statut', it:'Stato', es:'Estado' },
+  'field.category': { el:'Κατηγορία', en:'Category', de:'Kategorie', fr:'Catégorie', it:'Categoria', es:'Categoría' },
+  'field.notes': { el:'Σημειώσεις', en:'Notes', de:'Notizen', fr:'Notes', it:'Note', es:'Notas' },
+  'field.date': { el:'Ημερομηνία', en:'Date', de:'Datum', fr:'Date', it:'Data', es:'Fecha' },
+  'field.price': { el:'Τιμή', en:'Price', de:'Preis', fr:'Prix', it:'Prezzo', es:'Precio' },
+  'field.currency': { el:'Νόμισμα', en:'Currency', de:'Währung', fr:'Devise', it:'Valuta', es:'Moneda' },
+  'field.vatRegime': { el:'Καθεστώς ΦΠΑ', en:'VAT Regime', de:'MwSt.-Regelung', fr:'Régime TVA', it:'Regime IVA', es:'Régimen IVA' },
+  'field.vatAmount': { el:'Ποσό ΦΠΑ', en:'VAT Amount', de:'MwSt.-Betrag', fr:'Montant TVA', it:'Importo IVA', es:'Importe IVA' },
+  'field.invoiceNumber': { el:'Αρ. Τιμολογίου', en:'Invoice No.', de:'Rechnungsnr.', fr:'Nº de facture', it:'Nº fattura', es:'Nº factura' },
+  'field.seller': { el:'Πωλητής', en:'Seller', de:'Verkäufer', fr:'Vendeur', it:'Venditore', es:'Vendedor' },
+  'field.buyer': { el:'Αγοραστής', en:'Buyer', de:'Käufer', fr:'Acheteur', it:'Acquirente', es:'Comprador' },
+  'field.country': { el:'Χώρα', en:'Country', de:'Land', fr:'Pays', it:'Paese', es:'País' },
+  'field.phone': { el:'Τηλέφωνο', en:'Phone', de:'Telefon', fr:'Téléphone', it:'Telefono', es:'Teléfono' },
+  'field.cmr': { el:'CMR', en:'CMR', de:'CMR', fr:'CMR', it:'CMR', es:'CMR' },
+  'field.carrier': { el:'Μεταφορέας', en:'Carrier', de:'Spediteur', fr:'Transporteur', it:'Vettore', es:'Transportista' },
+  'field.driver': { el:'Οδηγός', en:'Driver', de:'Fahrer', fr:'Chauffeur', it:'Autista', es:'Conductor' },
+  'field.truckPlate': { el:'Πινακίδα Φορτηγού', en:'Truck Plate', de:'LKW-Kennzeichen', fr:'Plaque camion', it:'Targa autocarro', es:'Matrícula camión' },
+  'field.departure': { el:'Αναχώρηση', en:'Departure', de:'Abfahrt', fr:'Départ', it:'Partenza', es:'Salida' },
+  'field.arrival': { el:'Άφιξη', en:'Arrival', de:'Ankunft', fr:'Arrivée', it:'Arrivo', es:'Llegada' },
+  'field.origin': { el:'Προέλευση', en:'Origin', de:'Herkunft', fr:'Origine', it:'Origine', es:'Origen' },
+  'field.destination': { el:'Προορισμός', en:'Destination', de:'Ziel', fr:'Destination', it:'Destinazione', es:'Destino' },
+  'field.cost': { el:'Κόστος', en:'Cost', de:'Kosten', fr:'Coût', it:'Costo', es:'Costo' },
+  'field.location': { el:'Τοποθεσία', en:'Location', de:'Standort', fr:'Emplacement', it:'Posizione', es:'Ubicación' },
+  'field.address': { el:'Διεύθυνση', en:'Address', de:'Adresse', fr:'Adresse', it:'Indirizzo', es:'Dirección' },
+  'field.costPerDay': { el:'Κόστος/Ημέρα', en:'Cost/Day', de:'Kosten/Tag', fr:'Coût/jour', it:'Costo/giorno', es:'Costo/día' },
+  'field.workDone': { el:'Εργασίες', en:'Work Done', de:'Durchgeführte Arbeiten', fr:'Travaux effectués', it:'Lavori eseguiti', es:'Trabajos realizados' },
+  'field.totalCost': { el:'Συνολικό Κόστος', en:'Total Cost', de:'Gesamtkosten', fr:'Coût total', it:'Costo totale', es:'Costo total' },
+  'field.salePrice': { el:'Τιμή Πώλησης', en:'Sale Price', de:'Verkaufspreis', fr:'Prix de vente', it:'Prezzo di vendita', es:'Precio de venta' },
+  'field.profit': { el:'Κέρδος', en:'Profit', de:'Gewinn', fr:'Bénéfice', it:'Profitto', es:'Beneficio' },
+  'field.margin': { el:'Περιθώριο %', en:'Margin %', de:'Marge %', fr:'Marge %', it:'Margine %', es:'Margen %' },
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ FRANÇAIS ━━
-fr: {
-  app:      { name:'AutoFleet Pro', tagline:'Gestion de Flotte de Véhicules' },
-  nav:      { dashboard:'Tableau de Bord', vehicles:'Véhicules', newVehicle:'Nouveau Véhicule', settings:'Paramètres', main:'Menu Principal', analytics:'Analyses', manifest:'Manifeste' },
-  dashboard:{ title:'Tableau de Bord', total:'Total Véhicules', inStock:'En Stock', sold:'Vendus', inTransit:'En Transit', profit:'Bénéfice Total', recent:'Véhicules Récents', noRecent:'Aucun véhicule', statusOverview:'État de la Flotte' },
-  vehicle:  { id:'ID', vin:'VIN', category:'Catégorie', make:'Marque', model:'Modèle', year:'Année', color:'Couleur', engine:'Moteur (cc)', fuel:'Carburant', gearbox:'Boîte de Vitesse', mileage:'Kilométrage', firstReg:'1ère Immat.', regCountry:'Pays', plate:'Plaque', seats:'Places', payload:'Charge (kg)', cocNum:'N° COC', condition:'État', status:'Statut', notes:'Notes' },
-  tabs:     { info:'Informations', purchase:'Achat', importT:'Transport Entrée', storage:'Stockage', sale:'Vente', exportT:'Transport Sortie', documents:'Documents', financials:'Finances', listings:'🌍 Annonces', inspection:'🔍 Inspection' },
-  purchase: { title:'Détails Achat', date:'Date', sellerName:'Vendeur', sellerCountry:'Pays', sellerContact:'Contact', priceNet:'Prix (HT)', vatRate:'TVA %', priceGross:'Prix (TTC)', currency:'Devise', vatType:'Type TVA', invoiceNum:'N° Facture', extraCosts:'Frais Additionnels', notes:'Notes', addCost:'+ Ajouter', costDesc:'Description', costAmt:'Montant' },
-  transport:{ title:'Transport', cmr:'N° CMR', carrier:'Transporteur', carrierContact:'Contact', origin:'Lieu Chargement', dest:'Lieu Livraison', depDate:'Départ', arrDate:'Arrivée', cost:'Coût', currency:'Devise', truckPlate:'Plaque Camion', driver:'Chauffeur', notes:'Notes' },
-  storage:  { title:'Stockage', location:'Emplacement', locDetails:'Détails', entryDate:'Date Entrée', exitDate:'Date Sortie', cpd:'Coût/Jour', currency:'Devise', days:'Jours', totalSC:'Total', workTitle:'Travaux', addWork:'+ Travail', wDesc:'Description', wCost:'Coût', wDate:'Date', wBy:'Par', notes:'Notes' },
-  sale:     { title:'Détails Vente', date:'Date', buyerName:'Acheteur', buyerCountry:'Pays', buyerContact:'Contact', priceNet:'Prix (HT)', vatRate:'TVA %', priceGross:'Prix (TTC)', currency:'Devise', vatType:'Type TVA', invoiceNum:'N° Facture', notes:'Notes' },
-  documents:{ title:'Documents', upload:'Télécharger', hint:'Glisser ou cliquer (PDF, JPG)', name:'Nom', type:'Type', date:'Date', aiExtract:'Extraire IA', aiLoading:'Traitement...', aiOk:'Données extraites !', aiErr:'Erreur', noDoc:'Aucun document', del:'Supprimer', view:'Voir' },
-  financials:{ title:'Analyse Financière', purchaseP:'Prix Achat', importC:'Transport Entrée', storageC:'Stockage', workC:'Travaux', exportC:'Transport Sortie', extraC:'Frais', totalC:'COÛT TOTAL', saleP:'Prix Vente', profit:'BÉNÉFICE / PERTE', margin:'Marge %', notSold:'Pas encore vendu' },
-  status:   { purchased:'Acheté', transit_in:'Transit Entrée', at_depot:'Au Dépôt', for_sale:'À Vendre', sold:'Vendu', transit_out:'Transit Sortie', delivered:'Livré' },
-  cat:      { car:'Voiture', truck:'Camion', van:'Utilitaire', bus:'Bus', moto:'Moto', construction:'Engins de Chantier' },
-  fuel:     { diesel:'Diesel', petrol:'Essence', electric:'Électrique', hybrid:'Hybride', lpg:'GPL' },
-  gear:     { manual:'Manuelle', automatic:'Automatique' },
-  vat:      { standard:'TVA Normale', margin:'Régime Marge', no_vat:'Sans TVA' },
-  cond:     { excellent:'Excellent', good:'Bon', fair:'Moyen', poor:'Mauvais' },
-  docType:  { invoice:'Facture', registration:'Carte Grise', coc:'COC', kteo:'Contrôle Technique', cmr:'CMR', insurance:'Assurance', other:'Autre' },
-  loc:      { de:'Dépôt Allemagne', gr:'Dépôt Grèce', other:'Autre Lieu' },
-  actions:  { save:'Enregistrer', cancel:'Annuler', delete:'Supprimer', back:'Retour', pdf:'PDF', search:'Rechercher', confirm:'Confirmer', remove:'Retirer', all:'Tous', add:'Ajouter' },
-  msg:      { saved:'Enregistré ✓', deleted:'Supprimé ✓', confirmDel:'Supprimer ce véhicule ?', noVeh:'Aucun véhicule.', search:'Chercher VIN, plaque, marque...', apiMissing:'Ajoutez la clé API dans Paramètres' },
-  settings: { title:'Paramètres', company:'Entreprise', compName:'Nom de la Société', compDE:'Adresse Allemagne', compGR:'Adresse Grèce', apiKey:'Clé API Anthropic', apiHint:'Pour extraction documents IA', lang:'Langue', currency:'Devise', data:'Données', exportJson:'Exporter JSON', importJson:'Importer JSON' },
-  report:   { title:'Rapport Véhicule', genOn:'Généré le', confid:'CONFIDENTIEL', vInfo:'DONNÉES VÉHICULE', pInfo:'ACHAT', itInfo:'TRANSPORT ENTRÉE', stInfo:'STOCKAGE', sInfo:'VENTE', etInfo:'TRANSPORT SORTIE', fInfo:'FINANCES' },
-  manifest: { title:'Manifeste de Flotte', subtitle:'Rapport de Statut des Véhicules', printAll:'Tout imprimer', printStatus:'Imprimer', noVehicles:'Aucun véhicule dans cette catégorie', generatedOn:'Généré le', totalVehicles:'Total Véhicules', page:'Page' },
-},
+  // Status
+  'status.purchased': { el:'Αγοράστηκε', en:'Purchased', de:'Gekauft', fr:'Acheté', it:'Acquistato', es:'Comprado' },
+  'status.transit_in': { el:'Μεταφορά Εισ.', en:'Transit In', de:'Transport Ein', fr:'Transit Entrée', it:'Transito In', es:'Tránsito Entrada' },
+  'status.stored': { el:'Σε Αποθήκη', en:'In Storage', de:'Eingelagert', fr:'En stock', it:'In deposito', es:'En almacén' },
+  'status.for_sale': { el:'Προς Πώληση', en:'For Sale', de:'Zu verkaufen', fr:'À vendre', it:'In vendita', es:'En venta' },
+  'status.sold': { el:'Πωλήθηκε', en:'Sold', de:'Verkauft', fr:'Vendu', it:'Venduto', es:'Vendido' },
+  'status.transit_out': { el:'Μεταφορά Εξ.', en:'Transit Out', de:'Transport Aus', fr:'Transit Sortie', it:'Transito Out', es:'Tránsito Salida' },
+  'status.delivered': { el:'Παραδόθηκε', en:'Delivered', de:'Geliefert', fr:'Livré', it:'Consegnato', es:'Entregado' },
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ITALIANO ━━
-it: {
-  app:      { name:'AutoFleet Pro', tagline:'Gestione Parco Veicoli' },
-  nav:      { dashboard:'Pannello', vehicles:'Veicoli', newVehicle:'Nuovo Veicolo', settings:'Impostazioni', main:'Menu Principale', analytics:'Analisi', manifest:'Manifesto' },
-  dashboard:{ title:'Pannello di Controllo', total:'Totale Veicoli', inStock:'In Stock', sold:'Venduti', inTransit:'In Transito', profit:'Profitto Totale', recent:'Veicoli Recenti', noRecent:'Nessun veicolo ancora', statusOverview:'Stato del Parco' },
-  vehicle:  { id:'ID', vin:'Telaio (VIN)', category:'Categoria', make:'Marca', model:'Modello', year:'Anno', color:'Colore', engine:'Cilindrata (cc)', fuel:'Carburante', gearbox:'Cambio', mileage:'Chilometraggio', firstReg:'Prima Immat.', regCountry:'Paese', plate:'Targa', seats:'Posti', payload:'Portata (kg)', cocNum:'N. COC', condition:'Condizione', status:'Stato', notes:'Note' },
-  tabs:     { info:'Dati Veicolo', purchase:'Acquisto', importT:'Trasporto Entrata', storage:'Magazzino', sale:'Vendita', exportT:'Trasporto Uscita', documents:'Documenti', financials:'Finanze', listings:'🌍 Annunci', inspection:'🔍 Ispezione' },
-  purchase: { title:'Dettagli Acquisto', date:'Data', sellerName:'Venditore', sellerCountry:'Paese', sellerContact:'Contatto', priceNet:'Prezzo (netto)', vatRate:'IVA %', priceGross:'Prezzo (lordo)', currency:'Valuta', vatType:'Tipo IVA', invoiceNum:'N. Fattura', extraCosts:'Costi Aggiuntivi', notes:'Note', addCost:'+ Aggiungi', costDesc:'Descrizione', costAmt:'Importo' },
-  transport:{ title:'Trasporto', cmr:'N. CMR', carrier:'Vettore', carrierContact:'Contatto', origin:'Luogo di Carico', dest:'Luogo di Consegna', depDate:'Data Partenza', arrDate:'Data Arrivo', cost:'Costo', currency:'Valuta', truckPlate:'Targa Camion', driver:'Autista', notes:'Note' },
-  storage:  { title:'Magazzino', location:'Ubicazione', locDetails:'Dettagli', entryDate:'Data Entrata', exitDate:'Data Uscita', cpd:'Costo/Giorno', currency:'Valuta', days:'Giorni', totalSC:'Totale', workTitle:'Lavori Eseguiti', addWork:'+ Aggiungi Lavoro', wDesc:'Descrizione', wCost:'Costo', wDate:'Data', wBy:'Eseguito da', notes:'Note' },
-  sale:     { title:'Dettagli Vendita', date:'Data', buyerName:'Acquirente', buyerCountry:'Paese', buyerContact:'Contatto', priceNet:'Prezzo (netto)', vatRate:'IVA %', priceGross:'Prezzo (lordo)', currency:'Valuta', vatType:'Tipo IVA', invoiceNum:'N. Fattura', notes:'Note' },
-  documents:{ title:'Documenti e File', upload:'Carica Documento', hint:'Trascina o clicca (PDF, JPG)', name:'Nome', type:'Tipo', date:'Data', aiExtract:'Estrai con AI', aiLoading:'Elaborazione...', aiOk:'Dati estratti con successo!', aiErr:'Errore', noDoc:'Nessun documento caricato', del:'Elimina', view:'Visualizza' },
-  financials:{ title:'Analisi Finanziaria', purchaseP:'Prezzo di Acquisto', importC:'Costo Trasporto Entrata', storageC:'Costo Magazzino', workC:'Costo Lavori', exportC:'Costo Trasporto Uscita', extraC:'Costi Extra', totalC:'TOTALE COSTI', saleP:'Prezzo di Vendita', profit:'PROFITTO / PERDITA', margin:'Margine %', notSold:'Non ancora venduto' },
-  status:   { purchased:'Acquistato', transit_in:'Transito Entrata', at_depot:'In Deposito', for_sale:'In Vendita', sold:'Venduto', transit_out:'Transito Uscita', delivered:'Consegnato' },
-  cat:      { car:'Autovettura', truck:'Camion', van:'Furgone', bus:'Autobus', moto:'Motocicletta', construction:'Macchine Movimento Terra' },
-  fuel:     { diesel:'Diesel', petrol:'Benzina', electric:'Elettrico', hybrid:'Ibrido', lpg:'GPL' },
-  gear:     { manual:'Manuale', automatic:'Automatico' },
-  vat:      { standard:'IVA Ordinaria', margin:'Regime del Margine', no_vat:'Esente IVA' },
-  cond:     { excellent:'Ottimo', good:'Buono', fair:'Discreto', poor:'Scarso' },
-  docType:  { invoice:'Fattura', registration:'Libretto di Circolazione', coc:'COC', kteo:'Revisione', cmr:'CMR', insurance:'Assicurazione', other:'Altro' },
-  loc:      { de:'Deposito Germania', gr:'Deposito Grecia', other:'Altra Sede' },
-  actions:  { save:'Salva', cancel:'Annulla', delete:'Elimina', back:'Indietro', pdf:'PDF', search:'Cerca', confirm:'Conferma', remove:'Rimuovi', all:'Tutti', add:'Aggiungi' },
-  msg:      { saved:'Salvato ✓', deleted:'Eliminato ✓', confirmDel:'Eliminare questo veicolo?', noVeh:'Nessun veicolo presente.', search:'Cerca VIN, targa, marca...', apiMissing:'Inserire la chiave API nelle Impostazioni' },
-  settings: { title:'Impostazioni', company:'Dati Azienda', compName:'Ragione Sociale', compDE:'Indirizzo Germania', compGR:'Indirizzo Grecia', apiKey:'Chiave API Anthropic', apiHint:'Per l\'estrazione dati con AI', lang:'Lingua', currency:'Valuta', data:'Gestione Dati', exportJson:'Esporta JSON', importJson:'Importa JSON' },
-  report:   { title:'Scheda Veicolo', genOn:'Generato il', confid:'RISERVATO', vInfo:'DATI VEICOLO', pInfo:'ACQUISTO', itInfo:'TRASPORTO ENTRATA', stInfo:'MAGAZZINO', sInfo:'VENDITA', etInfo:'TRASPORTO USCITA', fInfo:'ANALISI FINANZIARIA' },
-  manifest: { title:'Manifesto del Parco', subtitle:'Riepilogo Stato Veicoli', printAll:'Stampa Tutto', printStatus:'Stampa Selezionati', noVehicles:'Nessun veicolo in questa categoria', generatedOn:'Generato il', totalVehicles:'Totale Veicoli', page:'Pagina' },
-},
+  // Category
+  'cat.car': { el:'Αυτοκίνητο', en:'Car', de:'PKW', fr:'Voiture', it:'Auto', es:'Coche' },
+  'cat.truck': { el:'Φορτηγό', en:'Truck', de:'LKW', fr:'Camion', it:'Camion', es:'Camión' },
+  'cat.van': { el:'Van', en:'Van', de:'Van', fr:'Van', it:'Van', es:'Furgoneta' },
+  'cat.bus': { el:'Λεωφορείο', en:'Bus', de:'Bus', fr:'Bus', it:'Bus', es:'Autobús' },
+  'cat.moto': { el:'Μοτοσυκλέτα', en:'Motorcycle', de:'Motorrad', fr:'Moto', it:'Moto', es:'Moto' },
+  'cat.construction': { el:'Μηχάνημα Έργων', en:'Construction', de:'Baumaschine', fr:'Engin de chantier', it:'Macchina da cantiere', es:'Maquinaria de obra' },
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ESPAÑOL ━━━
-es: {
-  app:      { name:'AutoFleet Pro', tagline:'Gestión de Flota de Vehículos' },
-  nav:      { dashboard:'Panel de Control', vehicles:'Vehículos', newVehicle:'Nuevo Vehículo', settings:'Ajustes', main:'Menú Principal', analytics:'Análisis', manifest:'Manifiesto' },
-  dashboard:{ title:'Panel de Control', total:'Total Vehículos', inStock:'En Stock', sold:'Vendidos', inTransit:'En Tránsito', profit:'Beneficio Total', recent:'Vehículos Recientes', noRecent:'Sin vehículos aún', statusOverview:'Estado de la Flota' },
-  vehicle:  { id:'ID', vin:'VIN', category:'Categoría', make:'Marca', model:'Modelo', year:'Año', color:'Color', engine:'Motor (cc)', fuel:'Combustible', gearbox:'Caja de Cambios', mileage:'Kilometraje', firstReg:'Primera Matrícula', regCountry:'País', plate:'Matrícula', seats:'Asientos', payload:'Carga (kg)', cocNum:'N.º COC', condition:'Estado', status:'Estado', notes:'Notas' },
-  tabs:     { info:'Datos del Vehículo', purchase:'Compra', importT:'Transporte Entrada', storage:'Almacén', sale:'Venta', exportT:'Transporte Salida', documents:'Documentos', financials:'Finanzas', listings:'🌍 Anuncios', inspection:'🔍 Inspección' },
-  purchase: { title:'Detalles de Compra', date:'Fecha', sellerName:'Vendedor', sellerCountry:'País', sellerContact:'Contacto', priceNet:'Precio (neto)', vatRate:'IVA %', priceGross:'Precio (bruto)', currency:'Moneda', vatType:'Tipo de IVA', invoiceNum:'N.º Factura', extraCosts:'Costes Adicionales', notes:'Notas', addCost:'+ Añadir Coste', costDesc:'Descripción', costAmt:'Importe' },
-  transport:{ title:'Transporte', cmr:'N.º CMR', carrier:'Transportista', carrierContact:'Contacto', origin:'Lugar de Carga', dest:'Lugar de Entrega', depDate:'Fecha Salida', arrDate:'Fecha Llegada', cost:'Coste', currency:'Moneda', truckPlate:'Matrícula Camión', driver:'Conductor', notes:'Notas' },
-  storage:  { title:'Almacén', location:'Ubicación', locDetails:'Detalles', entryDate:'Fecha Entrada', exitDate:'Fecha Salida', cpd:'Coste/Día', currency:'Moneda', days:'Días', totalSC:'Total', workTitle:'Trabajos Realizados', addWork:'+ Añadir Trabajo', wDesc:'Descripción', wCost:'Coste', wDate:'Fecha', wBy:'Realizado por', notes:'Notas' },
-  sale:     { title:'Detalles de Venta', date:'Fecha', buyerName:'Comprador', buyerCountry:'País', buyerContact:'Contacto', priceNet:'Precio (neto)', vatRate:'IVA %', priceGross:'Precio (bruto)', currency:'Moneda', vatType:'Tipo de IVA', invoiceNum:'N.º Factura', notes:'Notas' },
-  documents:{ title:'Documentos', upload:'Subir Documento', hint:'Arrastrar o hacer clic (PDF, JPG)', name:'Nombre', type:'Tipo', date:'Fecha', aiExtract:'Extraer con IA', aiLoading:'Procesando...', aiOk:'¡Datos extraídos!', aiErr:'Error', noDoc:'No hay documentos', del:'Eliminar', view:'Ver' },
-  financials:{ title:'Análisis Financiero', purchaseP:'Precio de Compra', importC:'Transporte Entrada', storageC:'Almacenamiento', workC:'Trabajos', exportC:'Transporte Salida', extraC:'Costes Extra', totalC:'COSTE TOTAL', saleP:'Precio de Venta', profit:'BENEFICIO / PÉRDIDA', margin:'Margen %', notSold:'No vendido aún' },
-  status:   { purchased:'Comprado', transit_in:'Tránsito Entrada', at_depot:'En Depósito', for_sale:'En Venta', sold:'Vendido', transit_out:'Tránsito Salida', delivered:'Entregado' },
-  cat:      { car:'Turismo', truck:'Camión', van:'Furgoneta', bus:'Autobús', moto:'Motocicleta', construction:'Maquinaria de Obra' },
-  fuel:     { diesel:'Diésel', petrol:'Gasolina', electric:'Eléctrico', hybrid:'Híbrido', lpg:'GLP' },
-  gear:     { manual:'Manual', automatic:'Automático' },
-  vat:      { standard:'IVA Normal', margin:'Régimen de Margen', no_vat:'Sin IVA' },
-  cond:     { excellent:'Excelente', good:'Bueno', fair:'Regular', poor:'Malo' },
-  docType:  { invoice:'Factura', registration:'Permiso de Circulación', coc:'COC', kteo:'ITV', cmr:'CMR', insurance:'Seguro', other:'Otro' },
-  loc:      { de:'Depósito Alemania', gr:'Depósito Grecia', other:'Otra Ubicación' },
-  actions:  { save:'Guardar', cancel:'Cancelar', delete:'Eliminar', back:'Volver', pdf:'PDF', search:'Buscar', confirm:'Confirmar', remove:'Quitar', all:'Todos', add:'Añadir' },
-  msg:      { saved:'Guardado ✓', deleted:'Eliminado ✓', confirmDel:'¿Eliminar este vehículo?', noVeh:'Sin vehículos.', search:'Buscar VIN, matrícula, marca...', apiMissing:'Añade la clave API en Ajustes' },
-  settings: { title:'Ajustes', company:'Datos de la Empresa', compName:'Razón Social', compDE:'Dirección Alemania', compGR:'Dirección Grecia', apiKey:'Clave API Anthropic', apiHint:'Para extracción de datos con IA', lang:'Idioma', currency:'Moneda', data:'Datos', exportJson:'Exportar JSON', importJson:'Importar JSON' },
-  report:   { title:'Ficha del Vehículo', genOn:'Generado el', confid:'CONFIDENCIAL', vInfo:'DATOS DEL VEHÍCULO', pInfo:'COMPRA', itInfo:'TRANSPORTE ENTRADA', stInfo:'ALMACÉN', sInfo:'VENTA', etInfo:'TRANSPORTE SALIDA', fInfo:'FINANZAS' },
-  manifest: { title:'Manifiesto de Flota', subtitle:'Resumen del Estado de Vehículos', printAll:'Imprimir Todo', printStatus:'Imprimir Selección', noVehicles:'No hay vehículos en esta categoría', generatedOn:'Generado el', totalVehicles:'Total Vehículos', page:'Página' },
-},
+  // Fuel
+  'fuel.diesel': { el:'Diesel', en:'Diesel', de:'Diesel', fr:'Diesel', it:'Diesel', es:'Diésel' },
+  'fuel.petrol': { el:'Βενζίνη', en:'Petrol', de:'Benzin', fr:'Essence', it:'Benzina', es:'Gasolina' },
+  'fuel.hybrid': { el:'Υβριδικό', en:'Hybrid', de:'Hybrid', fr:'Hybride', it:'Ibrido', es:'Híbrido' },
+  'fuel.electric': { el:'Ηλεκτρικό', en:'Electric', de:'Elektrisch', fr:'Électrique', it:'Elettrico', es:'Eléctrico' },
+  'fuel.lpg': { el:'LPG', en:'LPG', de:'LPG', fr:'GPL', it:'GPL', es:'GLP' },
+  'fuel.cng': { el:'CNG', en:'CNG', de:'CNG', fr:'GNV', it:'CNG', es:'GNC' },
+  'fuel.other': { el:'Άλλο', en:'Other', de:'Andere', fr:'Autre', it:'Altro', es:'Otro' },
 
-} // end I18N
+  // Actions
+  'action.save': { el:'Αποθήκευση', en:'Save', de:'Speichern', fr:'Enregistrer', it:'Salva', es:'Guardar' },
+  'action.cancel': { el:'Ακύρωση', en:'Cancel', de:'Abbrechen', fr:'Annuler', it:'Annulla', es:'Cancelar' },
+  'action.add': { el:'Προσθήκη', en:'Add', de:'Hinzufügen', fr:'Ajouter', it:'Aggiungi', es:'Añadir' },
+  'action.edit': { el:'Επεξεργασία', en:'Edit', de:'Bearbeiten', fr:'Modifier', it:'Modifica', es:'Editar' },
+  'action.delete': { el:'Διαγραφή', en:'Delete', de:'Löschen', fr:'Supprimer', it:'Elimina', es:'Eliminar' },
+  'action.print': { el:'Εκτύπωση', en:'Print', de:'Drucken', fr:'Imprimer', it:'Stampa', es:'Imprimir' },
+  'action.export': { el:'Εξαγωγή', en:'Export', de:'Exportieren', fr:'Exporter', it:'Esporta', es:'Exportar' },
+  'action.upload': { el:'Μεταφόρτωση', en:'Upload', de:'Hochladen', fr:'Télécharger', it:'Carica', es:'Subir' },
+  'action.download': { el:'Λήψη', en:'Download', de:'Herunterladen', fr:'Télécharger', it:'Scarica', es:'Descargar' },
+  'action.generate': { el:'Δημιουργία', en:'Generate', de:'Erstellen', fr:'Générer', it:'Genera', es:'Generar' },
+  'action.copy': { el:'Αντιγραφή', en:'Copy', de:'Kopieren', fr:'Copier', it:'Copia', es:'Copiar' },
+  'action.share': { el:'Κοινοποίηση', en:'Share', de:'Teilen', fr:'Partager', it:'Condividi', es:'Compartir' },
+  'action.viewAll': { el:'Προβολή Όλων', en:'View All', de:'Alle anzeigen', fr:'Voir tout', it:'Vedi tutti', es:'Ver todos' },
+  'action.backToList': { el:'Πίσω στη Λίστα', en:'Back to List', de:'Zurück zur Liste', fr:'Retour à la liste', it:'Torna alla lista', es:'Volver a la lista' },
+  'action.confirm': { el:'Επιβεβαίωση', en:'Confirm', de:'Bestätigen', fr:'Confirmer', it:'Conferma', es:'Confirmar' },
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Accessor: t(lang, 'section.key')
-// ─────────────────────────────────────────────────────────────────────────────
-export function t(lang: Lang, key: string): string {
-  const [section, ...rest] = key.split('.')
-  const subKey = rest.join('.')
-  const langData = I18N[lang] ?? I18N.en
-  const val = langData[section]?.[subKey]
-  if (typeof val === 'string' && val) return val
-  // Fallback to English
-  const fallback = I18N.en[section]?.[subKey]
-  if (typeof fallback === 'string' && fallback) return fallback
-  return key
+  // Manifest
+  'manifest.title': { el:'Μανιφέστο Στόλου', en:'Fleet Manifest', de:'Flottenmanifest', fr:'Manifeste de flotte', it:'Manifesto Flotta', es:'Manifiesto de Flota' },
+  'manifest.filterAll': { el:'Όλα', en:'All', de:'Alle', fr:'Tous', it:'Tutti', es:'Todos' },
+  'manifest.vehicles': { el:'Οχήματα', en:'Vehicles', de:'Fahrzeuge', fr:'Véhicules', it:'Veicoli', es:'Vehículos' },
+  'manifest.printPdf': { el:'Εκτύπωση PDF', en:'Print PDF', de:'PDF drucken', fr:'Imprimer PDF', it:'Stampa PDF', es:'Imprimir PDF' },
+
+  // Financials
+  'fin.purchaseCost': { el:'Κόστος Αγοράς', en:'Purchase Cost', de:'Kaufpreis', fr:'Coût d\'achat', it:'Costo acquisto', es:'Costo compra' },
+  'fin.transportInCost': { el:'Κόστος Μεταφοράς Εισ.', en:'Transport In Cost', de:'Transportkosten Ein', fr:'Coût transport entrée', it:'Costo trasporto in', es:'Costo transporte entrada' },
+  'fin.storageCost': { el:'Κόστος Αποθήκευσης', en:'Storage Cost', de:'Lagerkosten', fr:'Coût de stockage', it:'Costo deposito', es:'Costo almacén' },
+  'fin.workCost': { el:'Κόστος Εργασιών', en:'Work Cost', de:'Arbeitskosten', fr:'Coût des travaux', it:'Costo lavori', es:'Costo trabajos' },
+  'fin.transportOutCost': { el:'Κόστος Μεταφοράς Εξ.', en:'Transport Out Cost', de:'Transportkosten Aus', fr:'Coût transport sortie', it:'Costo trasporto out', es:'Costo transporte salida' },
+  'fin.totalCost': { el:'Συνολικό Κόστος', en:'Total Cost', de:'Gesamtkosten', fr:'Coût total', it:'Costo totale', es:'Costo total' },
+  'fin.saleRevenue': { el:'Έσοδα Πώλησης', en:'Sale Revenue', de:'Verkaufserlös', fr:'Recette de vente', it:'Ricavo vendita', es:'Ingreso venta' },
+  'fin.grossProfit': { el:'Μεικτό Κέρδος', en:'Gross Profit', de:'Bruttogewinn', fr:'Bénéfice brut', it:'Utile lordo', es:'Beneficio bruto' },
+  'fin.margin': { el:'Περιθώριο', en:'Margin', de:'Marge', fr:'Marge', it:'Margine', es:'Margen' },
+  'fin.storageDays': { el:'Ημέρες Αποθήκευσης', en:'Storage Days', de:'Lagertage', fr:'Jours de stockage', it:'Giorni deposito', es:'Días almacén' },
+
+  // Settings
+  'settings.title': { el:'Ρυθμίσεις', en:'Settings', de:'Einstellungen', fr:'Paramètres', it:'Impostazioni', es:'Configuración' },
+  'settings.company': { el:'Στοιχεία Εταιρείας', en:'Company Info', de:'Firmendaten', fr:'Infos entreprise', it:'Dati azienda', es:'Datos empresa' },
+  'settings.companyName': { el:'Επωνυμία', en:'Company Name', de:'Firmenname', fr:'Nom de l\'entreprise', it:'Ragione sociale', es:'Nombre empresa' },
+  'settings.aiKey': { el:'Anthropic API Key', en:'Anthropic API Key', de:'Anthropic API-Schlüssel', fr:'Clé API Anthropic', it:'Chiave API Anthropic', es:'Clave API Anthropic' },
+  'settings.language': { el:'Γλώσσα', en:'Language', de:'Sprache', fr:'Langue', it:'Lingua', es:'Idioma' },
+  'settings.backup': { el:'Αντίγραφο Ασφαλείας', en:'Backup', de:'Datensicherung', fr:'Sauvegarde', it:'Backup', es:'Copia de seguridad' },
+  'settings.exportAll': { el:'Εξαγωγή Όλων', en:'Export All', de:'Alle exportieren', fr:'Tout exporter', it:'Esporta tutto', es:'Exportar todo' },
+
+  // Errors / misc
+  'err.required': { el:'Υποχρεωτικό πεδίο', en:'Required field', de:'Pflichtfeld', fr:'Champ requis', it:'Campo obbligatorio', es:'Campo obligatorio' },
+  'err.notFound': { el:'Δεν βρέθηκε', en:'Not found', de:'Nicht gefunden', fr:'Non trouvé', it:'Non trovato', es:'No encontrado' },
+  'misc.daysInStorage': { el:'ημέρες σε αποθήκη', en:'days in storage', de:'Tage eingelagert', fr:'jours en stock', it:'giorni in deposito', es:'días en almacén' },
+  'misc.noPhoto': { el:'Χωρίς φωτογραφία', en:'No photo', de:'Kein Foto', fr:'Pas de photo', it:'Nessuna foto', es:'Sin foto' },
+  'misc.clickToUpload': { el:'Κλικ για μεταφόρτωση', en:'Click to upload', de:'Zum Hochladen klicken', fr:'Cliquez pour télécharger', it:'Clicca per caricare', es:'Clic para subir' },
+
+  // Onboarding
+  'onboard.title': { el:'Καλώς ήρθατε!', en:'Welcome!', de:'Willkommen!', fr:'Bienvenue!', it:'Benvenuto!', es:'¡Bienvenido!' },
+  'onboard.subtitle': { el:'Ρυθμίστε την εταιρεία σας', en:'Set up your company', de:'Richten Sie Ihr Unternehmen ein', fr:'Configurez votre entreprise', it:'Configura la tua azienda', es:'Configura tu empresa' },
+  'onboard.companyName': { el:'Επωνυμία Εταιρείας', en:'Company Name', de:'Firmenname', fr:'Nom de l\'entreprise', it:'Nome Azienda', es:'Nombre de empresa' },
+  'onboard.country': { el:'Χώρα Έδρας', en:'Country', de:'Sitzland', fr:'Pays', it:'Paese', es:'País' },
+  'onboard.continue': { el:'Συνέχεια', en:'Continue', de:'Weiter', fr:'Continuer', it:'Continua', es:'Continuar' },
+
+  // Login
+  'login.email': { el:'Email', en:'Email', de:'E-Mail', fr:'E-mail', it:'Email', es:'Correo' },
+  'login.password': { el:'Κωδικός', en:'Password', de:'Passwort', fr:'Mot de passe', it:'Password', es:'Contraseña' },
+  'login.signin': { el:'Σύνδεση', en:'Sign In', de:'Anmelden', fr:'Connexion', it:'Accedi', es:'Iniciar sesión' },
+  'login.signup': { el:'Εγγραφή', en:'Sign Up', de:'Registrieren', fr:'S\'inscrire', it:'Registrati', es:'Registrarse' },
+  'login.noAccount': { el:'Δεν έχετε λογαριασμό;', en:'No account?', de:'Kein Konto?', fr:'Pas de compte?', it:'Nessun account?', es:'¿Sin cuenta?' },
+  'login.hasAccount': { el:'Έχετε ήδη λογαριασμό;', en:'Have an account?', de:'Haben Sie bereits ein Konto?', fr:'Vous avez déjà un compte?', it:'Hai già un account?', es:'¿Ya tienes cuenta?' },
+  'login.error': { el:'Λάθος email ή κωδικός', en:'Wrong email or password', de:'Falsche E-Mail oder Passwort', fr:'E-mail ou mot de passe incorrect', it:'Email o password errati', es:'Email o contraseña incorrectos' },
 }
 
-// Shorthand: app name & tagline
-export function appName(lang: Lang): string { return I18N[lang]?.app?.name ?? 'AutoFleet Pro' }
-export function tagline(lang: Lang): string { return I18N[lang]?.app?.tagline ?? 'Fleet Management' }
+export function t(lang: Lang, key: string): string {
+  const entry = T[key]
+  if (!entry) return key
+  return entry[lang] || entry['en'] || key
+}
+
+export const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
+  { code: 'el', label: 'Ελληνικά', flag: '🇬🇷' },
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
+]
