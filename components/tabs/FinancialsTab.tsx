@@ -1,97 +1,72 @@
 'use client'
-
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
-import { fmtCur, fmtDate } from '@/lib/utils'
-import { computeFin } from '@/lib/financials'
-import type { Vehicle } from '@/lib/types'
-import { generateVehiclePDF } from '@/lib/pdf'
+import { calcFinancials, fmtCur } from '@/lib/financials'
 
-interface Props { vehicle: Vehicle }
+export default function FinancialsTab({ id }: { id: string }) {
+  const { vehicles, settings } = useFleetStore()
+  const lang = settings.lang
+  const v = vehicles.find(x => x.id === id)
+  if (!v) return null
+  const fin = calcFinancials(v)
 
-function Row({ label, value, highlight }: { label: string; value: string; highlight?: 'profit' | 'loss' | 'neutral' }) {
-  const colors = { profit: 'var(--success)', loss: 'var(--error)', neutral: 'var(--text)' }
-  return (
-    <div className="fin-row">
-      <span style={{ color: 'var(--muted)', fontSize: 13 }}>{label}</span>
-      <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 13, fontWeight: 500, color: highlight ? colors[highlight] : 'var(--text)' }}>{value}</span>
+  const Row = ({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) => (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '10px 0', borderBottom: '1px solid var(--border)',
+    }}>
+      <span style={{ color: 'var(--text2)', fontSize: 14 }}>{label}</span>
+      <span style={{ fontWeight: highlight ? 700 : 500, fontSize: highlight ? 16 : 14 }}>{value}</span>
     </div>
   )
-}
-
-function TotalRow({ label, value, highlight }: { label: string; value: string; highlight?: 'profit' | 'loss' }) {
-  return (
-    <div className="fin-total-row">
-      <span style={{ fontSize: 14 }}>{label}</span>
-      <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 14, color: highlight === 'profit' ? 'var(--success)' : highlight === 'loss' ? 'var(--error)' : 'var(--text)' }}>{value}</span>
-    </div>
-  )
-}
-
-export default function FinancialsTab({ vehicle: v }: Props) {
-  const { lang, settings } = useFleetStore()
-  const fin = computeFin(v)
-  const T = (k: string) => t(lang, `financials.${k}`)
-
-  const handlePDF = async () => {
-    await generateVehiclePDF(v, fin, lang, settings)
-  }
 
   return (
-    <div className="af-card">
-      <div className="af-section-title">{T('title')}</div>
+    <div>
+      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, marginTop: 0 }}>Cost Breakdown</h3>
+      <Row label={t(lang, 'fin.purchaseCost')} value={fmtCur(fin.purchaseCost)} />
+      <Row label={t(lang, 'fin.transportInCost')} value={fmtCur(fin.transportInCost)} />
+      <Row label={`${t(lang, 'fin.storageCost')} (${fin.storageDays} ${t(lang, 'misc.daysInStorage')})`} value={fmtCur(fin.storageCost)} />
+      <Row label={t(lang, 'fin.workCost')} value={fmtCur(fin.workCost)} />
+      <Row label={t(lang, 'fin.transportOutCost')} value={fmtCur(fin.transportOutCost)} />
 
-      {/* Cost breakdown */}
-      <div style={{ marginBottom: 4 }}>
-        {fin.pp > 0 && <Row label={`📥 ${T('purchaseP')}`} value={fmtCur(fin.pp, v.purchase?.currency)} />}
-        {fin.ic > 0 && <Row label={`🚛 ${T('importC')}`} value={fmtCur(fin.ic, v.importTransport?.currency)} />}
-        {fin.ec > 0 && <Row label={`🔧 ${T('extraC')}`} value={fmtCur(fin.ec)} />}
-        {fin.sc > 0 && <Row label={`🏭 ${T('storageC')} (${fin.storageDays}d)`} value={fmtCur(fin.sc, v.storage?.currency)} />}
-        {fin.wc > 0 && <Row label={`🔨 ${T('workC')}`} value={fmtCur(fin.wc)} />}
-        {fin.xc > 0 && <Row label={`🚚 ${T('exportC')}`} value={fmtCur(fin.xc, v.exportTransport?.currency)} />}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', padding: '10px 0',
+        borderBottom: '2px solid var(--border)', fontWeight: 700,
+      }}>
+        <span>{t(lang, 'fin.totalCost')}</span>
+        <span style={{ color: 'var(--danger)' }}>{fmtCur(fin.totalCost)}</span>
       </div>
-      <TotalRow label={`💰 ${T('totalC')}`} value={fmtCur(fin.total)} />
 
-      <div style={{ margin: '16px 0' }} />
+      <div style={{ margin: '16px 0 8px', fontWeight: 600, fontSize: 15 }}>Revenue</div>
+      <Row label={t(lang, 'fin.saleRevenue')} value={fmtCur(fin.saleRevenue)} />
 
-      {fin.sp > 0
-        ? <>
-          <Row label={`📤 ${T('saleP')}`} value={fmtCur(fin.sp, v.sale?.currency)} highlight="neutral" />
-          <TotalRow
-            label={`📊 ${T('profit')}`}
-            value={fin.profit !== null ? fmtCur(fin.profit) : '—'}
-            highlight={fin.profit !== null ? (fin.profit >= 0 ? 'profit' : 'loss') : undefined}
-          />
-          {fin.margin !== null && (
-            <div className="fin-row">
-              <span style={{ color: 'var(--muted)', fontSize: 13 }}>📈 {T('margin')}</span>
-              <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 13, fontWeight: 600, color: fin.margin >= 0 ? 'var(--success)' : 'var(--error)' }}>
-                {fin.margin.toFixed(1)}%
-              </span>
-            </div>
-          )}
-        </>
-        : <div style={{ color: 'var(--muted)', padding: '12px 0', fontSize: 13 }}>📤 {T('notSold')}</div>
-      }
-
-      {/* Work items detail */}
-      {(v.storage?.workDone || []).length > 0 && (
-        <div style={{ marginTop: 24 }}>
-          <div className="af-section-title">{t(lang, 'storage.workTitle')}</div>
-          {(v.storage?.workDone || []).map((w, i) => (
-            <div key={i} className="fin-row">
-              <span style={{ color: 'var(--muted)', fontSize: 13 }}>🔧 {w.desc || '—'} {w.date ? `(${fmtDate(w.date)})` : ''}</span>
-              <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 13 }}>{fmtCur(w.cost)}</span>
-            </div>
-          ))}
+      <div style={{
+        marginTop: 16, padding: 16, borderRadius: 10,
+        background: fin.grossProfit >= 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+        border: `1px solid ${fin.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)'}`,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ fontWeight: 600 }}>{t(lang, 'fin.grossProfit')}</span>
+          <span style={{
+            fontWeight: 700, fontSize: 22,
+            color: fin.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)',
+          }}>
+            {fmtCur(fin.grossProfit)}
+          </span>
         </div>
-      )}
-
-      <div style={{ marginTop: 20, textAlign: 'right' }}>
-        <button className="af-btn af-btn-secondary" onClick={handlePDF} style={{ background: 'rgba(240,165,0,0.1)', border: '1px solid rgba(240,165,0,0.3)', color: 'var(--accent)' }}>
-          📄 {t(lang, 'actions.pdf')}
-        </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: 'var(--text2)', fontSize: 13 }}>{t(lang, 'fin.margin')}</span>
+          <span style={{ fontWeight: 600, color: fin.margin >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+            {fin.margin.toFixed(1)}%
+          </span>
+        </div>
       </div>
+
+      {fin.saleRevenue === 0 && (
+        <p style={{ color: 'var(--text2)', fontSize: 13, marginTop: 12, textAlign: 'center' }}>
+          Add a sale price in the Sale tab to see profit.
+        </p>
+      )}
     </div>
   )
 }
