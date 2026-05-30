@@ -1,188 +1,145 @@
 export type Lang = 'el' | 'en' | 'de' | 'fr' | 'it' | 'es'
-export type Currency = 'EUR' | 'USD' | 'GBP' | 'CHF'
+export type VehicleStatus = 'purchased' | 'transit_in' | 'stored' | 'for_sale' | 'sold' | 'transit_out' | 'delivered'
 export type VehicleCategory = 'car' | 'truck' | 'van' | 'bus' | 'moto' | 'construction'
-export type FuelType = 'diesel' | 'petrol' | 'electric' | 'hybrid' | 'lpg'
-export type GearboxType = 'manual' | 'automatic'
-export type ConditionType = 'excellent' | 'good' | 'fair' | 'poor'
-export type VatType = 'standard' | 'margin' | 'no_vat'
-export type LocationKey = 'de' | 'gr' | 'other'
-export type DocType = 'invoice' | 'registration' | 'coc' | 'kteo' | 'cmr' | 'insurance' | 'other'
-
-export type VehicleStatus =
-  | 'purchased'
-  | 'transit_in'
-  | 'at_depot'
-  | 'for_sale'
-  | 'sold'
-  | 'transit_out'
-  | 'delivered'
-
-export interface ExtraCost {
-  desc: string
-  amt: string
-}
-
-export interface WorkItem {
-  desc: string
-  cost: string
-  date: string
-  by: string
-}
-
-export interface VehicleDocument {
-  id: string
-  name: string
-  mimeType: string
-  docType: DocType
-  storagePath: string
-  metadata?: Record<string, string | number | boolean | null>
-  uploadDate: string
-}
-
-export interface CreateUploadUrlInput {
-  vehicleId: string
-  documentType: DocType
-  mimeType: string
-  sizeBytes: number
-}
-
-export interface CreateUploadUrlResponse {
-  documentId: string
-  path: string
-  token: string
-}
+export type FuelType = 'diesel' | 'petrol' | 'hybrid' | 'electric' | 'lpg' | 'cng' | 'other'
+export type GearType = 'manual' | 'automatic' | 'semi'
+export type VatRegime = 'margin' | 'standard' | 'exempt'
 
 export interface PurchaseData {
   date?: string
+  price?: number
+  currency?: string
+  vatRegime?: VatRegime
+  vatAmount?: number
   sellerName?: string
   sellerCountry?: string
-  sellerContact?: string
-  priceNet?: string
-  vatRate?: string
-  priceGross?: string
-  currency?: Currency
-  vatType?: VatType
-  invoiceNum?: string
-  extraCosts?: ExtraCost[]
+  invoiceNumber?: string
+  invoiceDate?: string
+  additionalCosts?: number
   notes?: string
 }
 
 export interface TransportData {
-  cmr?: string
+  cmrNumber?: string
   carrier?: string
-  carrierContact?: string
-  origin?: string
-  dest?: string
-  depDate?: string
-  arrDate?: string
-  cost?: string
-  currency?: Currency
-  truckPlate?: string
   driver?: string
+  truckPlate?: string
+  trailerPlate?: string
+  departureDate?: string
+  arrivalDate?: string
+  origin?: string
+  destination?: string
+  distanceKm?: number
+  cost?: number
   notes?: string
 }
 
 export interface StorageData {
-  location?: LocationKey
-  locDetails?: string
-  entryDate?: string
-  exitDate?: string
-  cpd?: string
-  currency?: Currency
-  days?: string
-  workDone?: WorkItem[]
+  location?: 'DE' | 'GR' | 'IT' | 'other'
+  address?: string
+  arrivalDate?: string
+  costPerDay?: number
+  workDone?: string
+  workCost?: number
   notes?: string
 }
 
 export interface SaleData {
   date?: string
+  price?: number
+  currency?: string
+  vatRegime?: VatRegime
+  vatAmount?: number
   buyerName?: string
   buyerCountry?: string
-  buyerContact?: string
-  priceNet?: string
-  vatRate?: string
-  priceGross?: string
-  currency?: Currency
-  vatType?: VatType
-  invoiceNum?: string
+  buyerPhone?: string
+  invoiceNumber?: string
+  notes?: string
+}
+
+export interface TransportOutData {
+  cmrNumber?: string
+  carrier?: string
+  driver?: string
+  truckPlate?: string
+  trailerPlate?: string
+  departureDate?: string
+  arrivalDate?: string
+  origin?: string
+  destination?: string
+  distanceKm?: number
+  cost?: number
+  notes?: string
+}
+
+export interface VehicleDocument {
+  id: string
+  name: string
+  type: 'invoice' | 'registration' | 'coc' | 'inspection' | 'cmr' | 'other'
+  url?: string
+  uploadedAt: string
+}
+
+export interface InspectionItem {
+  area: string
+  condition: 'good' | 'fair' | 'poor' | 'na'
   notes?: string
 }
 
 export interface Vehicle {
   id: string
-  businessId: string
-  createdAt: string
-  updatedAt: string
-  status: VehicleStatus
-  category: VehicleCategory
-  vin?: string
+  org_id?: string
+  created_at?: string
+  updated_at?: string
+
+  // Basic Info
+  category?: VehicleCategory
   make?: string
   model?: string
-  year?: string
-  color?: string
-  engine?: string
-  fuel?: FuelType
-  gearbox?: GearboxType
-  mileage?: string
-  firstReg?: string
-  regCountry?: string
+  year?: number
+  vin?: string
   plate?: string
-  seats?: string
-  payload?: string
-  cocNum?: string
-  condition?: ConditionType
-  notes?: string
+  color?: string
+  fuelType?: FuelType
+  gearType?: GearType
+  engineCC?: number
+  powerKW?: number
+  mileage?: number
+  seats?: number
+  doors?: number
+  weightKg?: number
+  payloadKg?: number
+  status?: VehicleStatus
   photo?: string
-  inspection?: Record<string, unknown>
+  notes?: string
+
+  // Data sections
   purchase?: PurchaseData
-  importTransport?: TransportData
+  transportIn?: TransportData
   storage?: StorageData
   sale?: SaleData
-  exportTransport?: TransportData
+  transportOut?: TransportOutData
   documents?: VehicleDocument[]
+  inspection?: InspectionItem[]
 }
 
-export interface FinancialSummary {
-  pp: number   // purchase price gross
-  ic: number   // import transport cost
-  sc: number   // storage cost
-  wc: number   // work cost
-  xc: number   // export transport cost
-  ec: number   // extra purchase costs
-  total: number
-  sp: number   // sale price gross
-  profit: number | null
-  margin: number | null
-  storageDays: number
+export interface Organization {
+  id: string
+  name: string
+  country?: string
+  address_de?: string
+  address_gr?: string
+  vat_number?: string
+  phone?: string
+  email?: string
+  logo_url?: string
+  plan?: string
+  status?: string
+  trial_ends_at?: string
 }
 
 export interface AppSettings {
-  companyName: string
-  companyDE: string
-  companyGR: string
-  apiKey: string
-  defaultCurrency: Currency
+  lang: Lang
+  org?: Organization
+  anthropicKey?: string
 }
-
-export type SubscriptionPlan = 'trial' | 'starter' | 'professional' | 'enterprise'
-export type SubscriptionStatus =
-  | 'trialing'
-  | 'active'
-  | 'past_due'
-  | 'cancelled'
-  | 'unpaid'
-  | 'incomplete'
-  | 'incomplete_expired'
-  | 'paused'
-
-export interface SubscriptionRecord {
-  user_id: string
-  plan: SubscriptionPlan
-  status: SubscriptionStatus
-  stripe_customer_id?: string | null
-  stripe_subscription_id?: string | null
-  trial_ends_at?: string | null
-  current_period_end?: string | null
-}
-
-export type TabKey = 'info' | 'purchase' | 'importT' | 'storage' | 'sale' | 'exportT' | 'documents' | 'financials' | 'listings' | 'inspection'
