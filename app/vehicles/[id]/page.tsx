@@ -27,15 +27,35 @@ const TABS = [
 export default function VehicleDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
   const router = useRouter()
-  const { vehicles, deleteVehicle, settings } = useFleetStore()
+  const { vehicles, deleteVehicle, settings, loading } = useFleetStore()
   const lang = settings.lang
   const [activeTab, setActiveTab] = useState('info')
   const [deleting, setDeleting] = useState(false)
   const [confirmDel, setConfirmDel] = useState(0)
+  const [waited, setWaited] = useState(false)
 
   const v = vehicles.find(x => x.id === id)
 
   useEffect(() => { setActiveTab('info') }, [id])
+
+  // Wait up to 3s for vehicle to appear in store after creation
+  useEffect(() => {
+    if (v) return
+    const timer = setTimeout(() => setWaited(true), 3000)
+    return () => clearTimeout(timer)
+  }, [v])
+
+  // Still loading or waiting for new vehicle
+  if (!v && (loading || !waited)) {
+    return (
+      <AppShell>
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text2)' }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+          <p>Loading vehicle...</p>
+        </div>
+      </AppShell>
+    )
+  }
 
   if (!v) {
     return (
@@ -53,7 +73,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
   const handleDelete = async () => {
     if (confirmDel === 0) { setConfirmDel(1); return }
     if (confirmDel === 1) {
-      const ok = window.confirm(`Delete ${v.make} ${v.model} ${v.plate}? This cannot be undone.`)
+      const ok = window.confirm(`Delete ${v.make || ''} ${v.model || ''} ${v.plate || ''}? This cannot be undone.`)
       if (!ok) { setConfirmDel(0); return }
       setDeleting(true)
       await deleteVehicle(id)
@@ -70,7 +90,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
         </button>
         <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>
-            {v.make || '—'} {v.model || ''} {v.year ? `(${v.year})` : ''}
+            {v.make || '— New Vehicle —'} {v.model || ''} {v.year ? `(${v.year})` : ''}
           </h1>
           <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
             {v.plate && <span style={{ color: 'var(--text2)', fontSize: 13 }}>📋 {v.plate}</span>}
