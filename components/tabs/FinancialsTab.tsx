@@ -67,6 +67,16 @@ export default function FinancialsTab({ id }: { id: string }) {
           Add a sale price in the Sale tab to see profit.
         </p>
       )}
+
+      <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+        <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
+          onClick={async () => {
+            const { generateVehiclePDF } = await import('@/lib/pdf')
+            await generateVehiclePDF(v, settings.org?.name)
+          }}>
+          📄 Download PDF Report
+        </button>
+      </div>
     </div>
   )
 }
