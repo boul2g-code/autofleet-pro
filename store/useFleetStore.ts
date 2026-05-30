@@ -7,8 +7,8 @@ import {
 } from '../lib/supabase/db'
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
-let addingVehicle = false   // prevent double insert
-let loadedOnce = false       // prevent double loadAll from StrictMode
+let _addLock = false      // prevent double insert
+let _loadLock = false     // prevent double load from StrictMode
 
 interface FleetStore {
   vehicles: Vehicle[]
@@ -16,9 +16,8 @@ interface FleetStore {
   loading: boolean
   saving: boolean
   error: string | null
-
-  // Actions
   loadAll: () => Promise<void>
+  reload: () => Promise<void>
   addVehicle: (v?: Partial<Vehicle>) => Promise<Vehicle | null>
   updateVehicle: (id: string, patch: Partial<Vehicle>) => void
   deleteVehicle: (id: string) => Promise<boolean>
@@ -36,52 +35,55 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
   error: null,
 
   loadAll: async () => {
-    if (loadedOnce) return   // StrictMode calls this twice — ignore second call
-    loadedOnce = true
+    if (_loadLock) return
+    _loadLock = true
     set({ loading: true, error: null })
     try {
       const [vehicles, settings] = await Promise.all([
         dbGetVehicles(),
         dbGetSettings(),
       ])
-      set({
-        vehicles,
-        settings: settings || { lang: 'el' },
-        loading: false,
-      })
+      set({ vehicles, settings: settings || { lang: 'el' }, loading: false })
     } catch (e) {
-      loadedOnce = false  // allow retry on error
+      _loadLock = false
       set({ loading: false, error: String(e) })
     }
   },
 
-  addVehicle: async (initial = {}) => {
-    if (addingVehicle) return null  // prevent double insert
-    addingVehicle = true
-    const newV: Partial<Vehicle> = {
-      status: 'purchased',
-      category: 'car',
-      ...initial,
-    }
-    const created = await dbCreateVehicle(newV)
-    addingVehicle = false
-    if (!created) {
-      set({ error: 'Failed to create vehicle. Check Supabase connection.' })
-      return null
-    }
-    set(s => ({ vehicles: [created, ...s.vehicles] }))
-    return created
+  reload: async () => {
+    _loadLock = false
+    await get().loadAll()
   },
 
-  // Optimistic update locally, debounce DB write
+  addVehicle: async (initial = {}) => {
+    if (_addLock) return null
+    _addLock = true
+    try {
+      const created = await dbCreateVehicle({
+        status: 'purchased',
+        category: 'car',
+        ...initial,
+      })
+      if (!created) {
+        set({ error: 'Failed to create vehicle. Check Supabase.' })
+        return null
+      }
+      // Prevent duplicate in state
+      const exists = get().vehicles.find(v => v.id === created.id)
+      if (!exists) {
+        set(s => ({ vehicles: [created, ...s.vehicles] }))
+      }
+      return created
+    } finally {
+      setTimeout(() => { _addLock = false }, 2000)
+    }
+  },
+
   updateVehicle: (id, patch) => {
-    // Update locally immediately (fast UI)
     set(s => ({
       vehicles: s.vehicles.map(v => v.id === id ? { ...v, ...patch } : v),
       saving: true,
     }))
-
-    // Debounce: wait 1.5s after last keystroke before saving
     if (saveTimer) clearTimeout(saveTimer)
     saveTimer = setTimeout(async () => {
       const vehicle = get().vehicles.find(v => v.id === id)
