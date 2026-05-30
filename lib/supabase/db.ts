@@ -1,143 +1,203 @@
 import { createClient } from './client'
-import type { AppSettings, Vehicle } from '@/lib/types'
-import { parseAppSettingsValue, sanitizeAppSettings } from '@/lib/appSettings'
-import { rowToVehicle, type VehicleRow, vehicleToRow } from './vehicleMappers'
+import type { Vehicle, AppSettings, Organization } from '../types'
 
-async function getCurrentUserId(): Promise<string | null> {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+// ── Vehicles ────────────────────────────────────────────────
 
-  return user?.id ?? null
-}
-
-export async function fetchAllVehicles(): Promise<Vehicle[]> {
-  const supabase = createClient()
-  const { data, error } = await supabase
+export async function dbGetVehicles(): Promise<Vehicle[]> {
+  const sb = createClient()
+  const { data, error } = await sb
     .from('vehicles')
     .select('*')
     .order('created_at', { ascending: false })
-
   if (error) {
-    console.error('fetchAllVehicles:', error.message)
+    console.error('dbGetVehicles error:', error)
     return []
   }
-
   return (data || []).map(rowToVehicle)
 }
 
-export async function upsertVehicle(v: Vehicle): Promise<void> {
-  const supabase = createClient()
-  const userId = await getCurrentUserId()
-  if (!userId) throw new Error('Not authenticated')
-
-  const { error } = await supabase
+export async function dbGetVehicle(id: string): Promise<Vehicle | null> {
+  const sb = createClient()
+  const { data, error } = await sb
     .from('vehicles')
-    .upsert({ ...vehicleToRow(v), user_id: userId }, { onConflict: 'id' })
-
-  if (error) throw new Error(error.message)
-}
-
-export async function removeVehicle(id: string): Promise<void> {
-  const supabase = createClient()
-  const { error } = await supabase.from('vehicles').delete().eq('id', id)
-
-  if (error) throw new Error(error.message)
-}
-
-export async function fetchSettings(): Promise<AppSettings | null> {
-  const supabase = createClient()
-  const { data } = await supabase
-    .from('settings')
-    .select('value')
-    .eq('key', 'app')
+    .select('*')
+    .eq('id', id)
     .single()
-
-  return parseAppSettingsValue(data?.value)
+  if (error || !data) return null
+  return rowToVehicle(data)
 }
 
-export async function saveSettingsToDB(s: AppSettings): Promise<void> {
-  const supabase = createClient()
-  const userId = await getCurrentUserId()
-  if (!userId) return
-
-  await supabase
-    .from('settings')
-    .upsert(
-      { user_id: userId, key: 'app', value: JSON.stringify(sanitizeAppSettings(s)) },
-      { onConflict: 'user_id,key' },
-    )
-}
-
-export async function fetchLang(): Promise<string | null> {
-  const supabase = createClient()
-  const { data } = await supabase
-    .from('settings')
-    .select('value')
-    .eq('key', 'lang')
-    .single()
-
-  return data?.value ?? null
-}
-
-export async function saveLangToDB(lang: string): Promise<void> {
-  const supabase = createClient()
-  const userId = await getCurrentUserId()
-  if (!userId) return
-
-  await supabase
-    .from('settings')
-    .upsert({ user_id: userId, key: 'lang', value: lang }, { onConflict: 'user_id,key' })
-}
-
-export async function uploadDocumentToStorage(
-  path: string,
-  fileBody: Blob,
-  token: string,
-): Promise<string | null> {
-  const supabase = createClient()
-  const { error } = await supabase.storage
-    .from('documents')
-    .uploadToSignedUrl(path, token, fileBody)
-
-  if (error) {
-    console.error('uploadDoc:', error.message)
+export async function dbCreateVehicle(v: Partial<Vehicle>): Promise<Vehicle | null> {
+  const sb = createClient()
+  const { data: { user }, error: authErr } = await sb.auth.getUser()
+  if (authErr || !user) {
+    console.error('dbCreateVehicle: not authenticated', authErr)
     return null
   }
 
-  return path
-}
+  // Get org_id from settings
+  const { data: settingsRow } = await sb
+    .from('settings')
+    .select('org_id')
+    .eq('user_id', user.id)
+    .single()
 
-export async function deleteDocumentFromStorage(path: string): Promise<void> {
-  const supabase = createClient()
+  const row = vehicleToRow(v)
+  row.user_id = user.id
+  if (settingsRow?.org_id) row.org_id = settingsRow.org_id
 
-  await supabase.storage.from('documents').remove([path])
-}
+  const { data, error } = await sb
+    .from('vehicles')
+    .insert(row)
+    .select()
+    .single()
 
-export function subscribeToVehicles(
-  onUpsert: (v: Vehicle) => void,
-  onDelete: (id: string) => void,
-): () => void {
-  const supabase = createClient()
-  const channel = supabase
-    .channel('vehicles-realtime')
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'vehicles' },
-      payload => onUpsert(rowToVehicle(payload.new as VehicleRow)),
-    )
-    .on(
-      'postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'vehicles' },
-      payload => onUpsert(rowToVehicle(payload.new as VehicleRow)),
-    )
-    .on(
-      'postgres_changes',
-      { event: 'DELETE', schema: 'public', table: 'vehicles' },
-      payload => onDelete((payload.old as VehicleRow).id),
-    )
-    .subscribe()
-
-  return () => {
-    supabase.removeChannel(channel)
+  if (error) {
+    console.error('dbCreateVehicle error:', error)
+    return null
   }
+  return rowToVehicle(data)
+}
+
+export async function dbUpdateVehicle(id: string, v: Partial<Vehicle>): Promise<boolean> {
+  const sb = createClient()
+  const row = vehicleToRow(v)
+  row.updated_at = new Date().toISOString()
+  const { error } = await sb.from('vehicles').update(row).eq('id', id)
+  if (error) {
+    console.error('dbUpdateVehicle error:', error)
+    return false
+  }
+  return true
+}
+
+export async function dbDeleteVehicle(id: string): Promise<boolean> {
+  const sb = createClient()
+  const { error } = await sb.from('vehicles').delete().eq('id', id)
+  if (error) {
+    console.error('dbDeleteVehicle error:', error)
+    return false
+  }
+  return true
+}
+
+// ── Settings ────────────────────────────────────────────────
+
+export async function dbGetSettings(): Promise<AppSettings | null> {
+  const sb = createClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return null
+  const { data } = await sb.from('settings').select('*').eq('user_id', user.id).single()
+  if (!data) return null
+  return {
+    lang: data.lang || 'el',
+    anthropicKey: data.anthropic_key || '',
+    org: data.org_data || undefined,
+  }
+}
+
+export async function dbSaveSettings(s: Partial<AppSettings>): Promise<boolean> {
+  const sb = createClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return false
+  const { error } = await sb.from('settings').upsert({
+    user_id: user.id,
+    lang: s.lang,
+    anthropic_key: s.anthropicKey,
+    org_data: s.org,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id' })
+  if (error) { console.error('dbSaveSettings error:', error); return false }
+  return true
+}
+
+// ── Org ─────────────────────────────────────────────────────
+
+export async function dbGetOrg(): Promise<Organization | null> {
+  const sb = createClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return null
+  const { data } = await sb.from('settings').select('org_data').eq('user_id', user.id).single()
+  return data?.org_data || null
+}
+
+export async function dbSaveOrg(org: Organization): Promise<boolean> {
+  const sb = createClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return false
+  const { error } = await sb.from('settings').upsert({
+    user_id: user.id,
+    org_data: org,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id' })
+  if (error) { console.error('dbSaveOrg error:', error); return false }
+  return true
+}
+
+// ── Row converters ───────────────────────────────────────────
+
+function rowToVehicle(row: Record<string, unknown>): Vehicle {
+  return {
+    id: row.id as string,
+    org_id: row.org_id as string | undefined,
+    created_at: row.created_at as string | undefined,
+    updated_at: row.updated_at as string | undefined,
+    category: row.category as Vehicle['category'],
+    make: row.make as string | undefined,
+    model: row.model as string | undefined,
+    year: row.year as number | undefined,
+    vin: row.vin as string | undefined,
+    plate: row.plate as string | undefined,
+    color: row.color as string | undefined,
+    fuelType: row.fuel_type as Vehicle['fuelType'],
+    gearType: row.gear_type as Vehicle['gearType'],
+    engineCC: row.engine_cc as number | undefined,
+    powerKW: row.power_kw as number | undefined,
+    mileage: row.mileage as number | undefined,
+    seats: row.seats as number | undefined,
+    doors: row.doors as number | undefined,
+    weightKg: row.weight_kg as number | undefined,
+    payloadKg: row.payload_kg as number | undefined,
+    status: (row.status as Vehicle['status']) || 'purchased',
+    photo: row.photo as string | undefined,
+    notes: row.notes as string | undefined,
+    purchase: row.purchase as Vehicle['purchase'],
+    transportIn: row.transport_in as Vehicle['transportIn'],
+    storage: row.storage as Vehicle['storage'],
+    sale: row.sale as Vehicle['sale'],
+    transportOut: row.transport_out as Vehicle['transportOut'],
+    documents: (row.documents as Vehicle['documents']) || [],
+    inspection: (row.inspection as Vehicle['inspection']) || [],
+  }
+}
+
+function vehicleToRow(v: Partial<Vehicle>): Record<string, unknown> {
+  const row: Record<string, unknown> = {}
+  if (v.category !== undefined) row.category = v.category
+  if (v.make !== undefined) row.make = v.make
+  if (v.model !== undefined) row.model = v.model
+  if (v.year !== undefined) row.year = v.year
+  if (v.vin !== undefined) row.vin = v.vin
+  if (v.plate !== undefined) row.plate = v.plate
+  if (v.color !== undefined) row.color = v.color
+  if (v.fuelType !== undefined) row.fuel_type = v.fuelType
+  if (v.gearType !== undefined) row.gear_type = v.gearType
+  if (v.engineCC !== undefined) row.engine_cc = v.engineCC
+  if (v.powerKW !== undefined) row.power_kw = v.powerKW
+  if (v.mileage !== undefined) row.mileage = v.mileage
+  if (v.seats !== undefined) row.seats = v.seats
+  if (v.doors !== undefined) row.doors = v.doors
+  if (v.weightKg !== undefined) row.weight_kg = v.weightKg
+  if (v.payloadKg !== undefined) row.payload_kg = v.payloadKg
+  if (v.status !== undefined) row.status = v.status
+  if (v.photo !== undefined) row.photo = v.photo
+  if (v.notes !== undefined) row.notes = v.notes
+  if (v.purchase !== undefined) row.purchase = v.purchase
+  if (v.transportIn !== undefined) row.transport_in = v.transportIn
+  if (v.storage !== undefined) row.storage = v.storage
+  if (v.sale !== undefined) row.sale = v.sale
+  if (v.transportOut !== undefined) row.transport_out = v.transportOut
+  if (v.documents !== undefined) row.documents = v.documents
+  if (v.inspection !== undefined) row.inspection = v.inspection
+  return row
 }
