@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
@@ -18,6 +18,7 @@ export default function VehiclesPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'all'>('all')
   const [adding, setAdding] = useState(false)
+  const addingRef = useRef(false)  // ref-based lock immune to re-renders
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -30,19 +31,22 @@ export default function VehiclesPage() {
   }, [vehicles, search, statusFilter])
 
   const handleAdd = async () => {
-    if (adding) return
+    // Double protection: state + ref
+    if (adding || addingRef.current) return
+    addingRef.current = true
     setAdding(true)
     try {
       const v = await addVehicle()
       if (v) router.push(`/vehicles/${v.id}`)
     } finally {
       setAdding(false)
+      // Keep ref locked for 2s to prevent double-click
+      setTimeout(() => { addingRef.current = false }, 2000)
     }
   }
 
   return (
     <AppShell>
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, flex: 1 }}>{t(lang, 'nav.vehicles')}</h1>
         <button className="btn btn-primary" onClick={handleAdd} disabled={adding}>
@@ -50,7 +54,6 @@ export default function VehiclesPage() {
         </button>
       </div>
 
-      {/* Search + filter */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <input
           placeholder={`🔍 ${t(lang, 'veh.search')}`}
@@ -73,7 +76,6 @@ export default function VehiclesPage() {
         </div>
       </div>
 
-      {/* Table */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--text2)' }}>⏳</div>
       ) : filtered.length === 0 ? (
@@ -107,7 +109,7 @@ export default function VehiclesPage() {
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <td style={{ padding: '10px 12px', fontWeight: 500 }}>
-                        {v.make || '—'} {v.model || ''}
+                        {v.make || '— New —'} {v.model || ''}
                       </td>
                       <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.plate || '—'}</td>
                       <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.year || '—'}</td>
