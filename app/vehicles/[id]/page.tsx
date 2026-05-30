@@ -4,8 +4,6 @@ import { useRouter } from 'next/navigation'
 import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
-import { dbGetVehicle } from '@/lib/supabase/db'
-import type { Vehicle } from '@/lib/types'
 import InfoTab from '@/components/tabs/InfoTab'
 import PurchaseTab from '@/components/tabs/PurchaseTab'
 import TransportInTab from '@/components/tabs/TransportInTab'
@@ -29,45 +27,26 @@ const TABS = [
 export default function VehicleDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
   const router = useRouter()
-  const { vehicles, deleteVehicle, settings } = useFleetStore()
+  const { vehicles, deleteVehicle, settings, loading } = useFleetStore()
   const lang = settings.lang
   const [activeTab, setActiveTab] = useState('info')
   const [deleting, setDeleting] = useState(false)
   const [confirmDel, setConfirmDel] = useState(0)
-  const [fetchedVehicle, setFetchedVehicle] = useState<Vehicle | null>(null)
-  const [fetching, setFetching] = useState(true)
+  const [waited, setWaited] = useState(false)
 
-  // Try to get from store first, otherwise fetch directly from DB
-  const storeVehicle = vehicles.find(x => x.id === id)
+  const v = vehicles.find(x => x.id === id)
 
+  useEffect(() => { setActiveTab('info') }, [id])
+
+  // Wait up to 3s for vehicle to appear in store after creation
   useEffect(() => {
-    setActiveTab('info')
-    setFetching(true)
-    
-    if (storeVehicle) {
-      setFetchedVehicle(null)
-      setFetching(false)
-      return
-    }
+    if (v) return
+    const timer = setTimeout(() => setWaited(true), 3000)
+    return () => clearTimeout(timer)
+  }, [v])
 
-    // Not in store yet — fetch directly from Supabase
-    dbGetVehicle(id).then(v => {
-      if (v) {
-        setFetchedVehicle(v)
-        // Also add to store so it's available
-        useFleetStore.setState(s => {
-          const exists = s.vehicles.find(x => x.id === id)
-          if (exists) return s
-          return { vehicles: [v, ...s.vehicles] }
-        })
-      }
-      setFetching(false)
-    })
-  }, [id])
-
-  const v = storeVehicle || fetchedVehicle
-
-  if (fetching) {
+  // Still loading or waiting for new vehicle
+  if (!v && (loading || !waited)) {
     return (
       <AppShell>
         <div style={{ textAlign: 'center', padding: 60, color: 'var(--text2)' }}>
@@ -104,6 +83,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
 
   return (
     <AppShell>
+      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <button className="btn btn-ghost" onClick={() => router.push('/vehicles')} style={{ padding: '6px 12px' }}>
           ← {t(lang, 'action.backToList')}
@@ -118,11 +98,13 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
             <span className={`badge status-${v.status}`}>{t(lang, `status.${v.status}`)}</span>
           </div>
         </div>
-        <button className="btn btn-danger" onClick={handleDelete} disabled={deleting} style={{ fontSize: 13 }}>
+        <button className="btn btn-danger" onClick={handleDelete} disabled={deleting}
+          style={{ fontSize: 13 }}>
           {confirmDel === 1 ? '⚠️ Confirm Delete' : `🗑️ ${t(lang, 'action.delete')}`}
         </button>
       </div>
 
+      {/* Tabs */}
       <div style={{ display: 'flex', gap: 0, marginBottom: 16, overflowX: 'auto', borderBottom: '1px solid var(--border)' }}>
         {TABS.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -138,6 +120,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
         ))}
       </div>
 
+      {/* Tab content */}
       <div className="card">
         {activeTab === 'info' && <InfoTab id={id} />}
         {activeTab === 'purchase' && <PurchaseTab id={id} />}
