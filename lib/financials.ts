@@ -1,25 +1,53 @@
-import type { Vehicle, FinancialSummary } from './types'
+import type { Vehicle } from './types'
 
-export function computeFin(v: Vehicle): FinancialSummary {
-  const pp = parseFloat(v.purchase?.priceGross ?? '') || 0
-  const ic = parseFloat(v.importTransport?.cost ?? '') || 0
-  const ec = (v.purchase?.extraCosts || []).reduce((s, c) => s + (parseFloat(c.amt ?? '') || 0), 0)
+export interface FinancialSummary {
+  purchaseCost: number
+  transportInCost: number
+  storageCost: number
+  workCost: number
+  transportOutCost: number
+  totalCost: number
+  saleRevenue: number
+  grossProfit: number
+  margin: number
+  storageDays: number
+}
 
-  let sc = 0
+export function calcFinancials(v: Vehicle): FinancialSummary {
+  const purchaseCost = (v.purchase?.price || 0) + (v.purchase?.additionalCosts || 0)
+  const transportInCost = v.transportIn?.cost || 0
+  const workCost = v.storage?.workCost || 0
+
+  // Storage cost: days × cost/day
   let storageDays = 0
-  if (v.storage?.entryDate && v.storage?.cpd) {
-    const end = v.storage.exitDate ? new Date(v.storage.exitDate) : new Date()
-    storageDays = Math.max(0, Math.round((end.getTime() - new Date(v.storage.entryDate).getTime()) / 86_400_000))
-    sc = storageDays * (parseFloat(v.storage.cpd ?? '') || 0)
+  let storageCost = 0
+  if (v.storage?.arrivalDate) {
+    const arrival = new Date(v.storage.arrivalDate)
+    const end = v.sale?.date ? new Date(v.sale.date) : new Date()
+    storageDays = Math.max(0, Math.floor((end.getTime() - arrival.getTime()) / 86400000))
+    storageCost = storageDays * (v.storage?.costPerDay || 0)
   }
 
-  const wc = (v.storage?.workDone || []).reduce((s, w) => s + (parseFloat(w.cost ?? '') || 0), 0)
-  const xc = parseFloat(v.exportTransport?.cost ?? '') || 0
-  const total = pp + ic + sc + wc + xc + ec
+  const transportOutCost = v.transportOut?.cost || 0
+  const totalCost = purchaseCost + transportInCost + storageCost + workCost + transportOutCost
+  const saleRevenue = v.sale?.price || 0
+  const grossProfit = saleRevenue - totalCost
+  const margin = saleRevenue > 0 ? (grossProfit / saleRevenue) * 100 : 0
 
-  const sp = parseFloat(v.sale?.priceGross ?? '') || 0
-  const profit = sp ? sp - total : null
-  const margin = profit !== null && total > 0 ? (profit / total) * 100 : null
+  return {
+    purchaseCost,
+    transportInCost,
+    storageCost,
+    workCost,
+    transportOutCost,
+    totalCost,
+    saleRevenue,
+    grossProfit,
+    margin,
+    storageDays,
+  }
+}
 
-  return { pp, ic, sc, wc, xc, ec, total, sp, profit, margin, storageDays }
+export function fmtCur(n: number, currency = 'EUR'): string {
+  return new Intl.NumberFormat('de-DE', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n)
 }
