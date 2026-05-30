@@ -7,7 +7,8 @@ import {
 } from '../lib/supabase/db'
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
-let addingVehicle = false  // prevent double-click double insert
+let addingVehicle = false   // prevent double insert
+let loadedOnce = false       // prevent double loadAll from StrictMode
 
 interface FleetStore {
   vehicles: Vehicle[]
@@ -35,6 +36,8 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
   error: null,
 
   loadAll: async () => {
+    if (loadedOnce) return   // StrictMode calls this twice — ignore second call
+    loadedOnce = true
     set({ loading: true, error: null })
     try {
       const [vehicles, settings] = await Promise.all([
@@ -47,6 +50,7 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
         loading: false,
       })
     } catch (e) {
+      loadedOnce = false  // allow retry on error
       set({ loading: false, error: String(e) })
     }
   },
