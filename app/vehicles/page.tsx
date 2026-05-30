@@ -1,161 +1,139 @@
 'use client'
-
-import Link from 'next/link'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import AppShell from '@/components/layout/AppShell'
+import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
-import { computeFin } from '@/lib/financials'
-import { fmtCur, fmtNum, catIcon, ALL_STATUSES } from '@/lib/utils'
-import { exportVehiclesCSV } from '@/lib/csvExport'
-import StatusBadge from '@/components/vehicles/StatusBadge'
+import { calcFinancials, fmtCur } from '@/lib/financials'
 import type { VehicleStatus } from '@/lib/types'
 
+const STATUS_FILTERS: (VehicleStatus | 'all')[] = [
+  'all','purchased','transit_in','stored','for_sale','sold','transit_out','delivered'
+]
+
 export default function VehiclesPage() {
-  const { vehicles, lang, searchQuery, filterStatus, setSearchQuery, setFilterStatus, addVehicle, deleteVehicle, showToast } = useFleetStore()
   const router = useRouter()
-  const T = (k: string) => t(lang, k)
+  const { vehicles, addVehicle, settings, loading } = useFleetStore()
+  const lang = settings.lang
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'all'>('all')
+  const [adding, setAdding] = useState(false)
 
-  const filtered = vehicles.filter(v => {
-    const q = searchQuery.toLowerCase()
-    const matchSearch = !q || [v.businessId, v.vin, v.make, v.model, v.plate, v.purchase?.sellerName, v.sale?.buyerName].some(f => (f || '').toLowerCase().includes(q))
-    const matchFilter = filterStatus === 'all' || v.status === filterStatus
-    return matchSearch && matchFilter
-  })
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase()
+    return vehicles.filter(v => {
+      if (statusFilter !== 'all' && v.status !== statusFilter) return false
+      if (!q) return true
+      return [v.make, v.model, v.plate, v.vin, v.color, String(v.year || '')]
+        .some(f => (f || '').toLowerCase().includes(q))
+    })
+  }, [vehicles, search, statusFilter])
 
-  const handleNew = async () => {
-    const id = await addVehicle()
-    showToast(T('msg.saved'))
-    router.push(`/vehicles/${id}`)
-  }
-
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.preventDefault(); e.stopPropagation()
-    if (!confirm(T('msg.confirmDel'))) return
-    await deleteVehicle(id)
-    showToast(T('msg.deleted'))
+  const handleAdd = async () => {
+    if (adding) return
+    setAdding(true)
+    try {
+      const v = await addVehicle()
+      if (v) router.push(`/vehicles/${v.id}`)
+    } finally {
+      setAdding(false)
+    }
   }
 
   return (
     <AppShell>
-      {/* Search bar */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input
-          className="af-input"
-          type="text"
-          placeholder={T('msg.search')}
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          style={{ flex: 1, minWidth: 200 }}
-        />
-        <select
-          className="af-input"
-          style={{ width: 'auto', cursor: 'pointer' }}
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value as 'all' | VehicleStatus)}
-        >
-          <option value="all">{T('actions.all')}</option>
-          {ALL_STATUSES.map(s => <option key={s} value={s}>{T(`status.${s}`)}</option>)}
-        </select>
-        <button className="af-btn af-btn-primary af-btn-sm" onClick={handleNew}>+ {T('nav.newVehicle')}</button>
-        <button className="af-btn af-btn-secondary af-btn-sm" onClick={() => exportVehiclesCSV(filtered)} title="Export current list to CSV">📊 CSV</button>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, flex: 1 }}>{t(lang, 'nav.vehicles')}</h1>
+        <button className="btn btn-primary" onClick={handleAdd} disabled={adding}>
+          {adding ? '⏳ ...' : `+ ${t(lang, 'veh.new')}`}
+        </button>
       </div>
 
-      {/* Empty state */}
-      {filtered.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.4 }}>🚗</div>
-          <div style={{ color: 'var(--muted)', fontSize: 15, marginBottom: 20 }}>{T('msg.noVeh')}</div>
-          <button className="af-btn af-btn-primary" onClick={handleNew}>+ {T('nav.newVehicle')}</button>
+      {/* Search + filter */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          placeholder={`🔍 ${t(lang, 'veh.search')}`}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ maxWidth: 280 }}
+        />
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {STATUS_FILTERS.map(s => (
+            <button key={s} onClick={() => setStatusFilter(s)}
+              style={{
+                padding: '5px 10px', borderRadius: 6, border: 'none', fontSize: 12,
+                cursor: 'pointer', fontWeight: statusFilter === s ? 700 : 400,
+                background: statusFilter === s ? 'var(--primary)' : 'var(--surface2)',
+                color: 'var(--text)',
+              }}>
+              {s === 'all' ? t(lang, 'veh.all') : t(lang, `status.${s}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text2)' }}>⏳</div>
+      ) : filtered.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text2)' }}>
+          <div style={{ fontSize: 40 }}>🚗</div>
+          <p>{vehicles.length === 0 ? t(lang, 'dash.addFirst') : t(lang, 'veh.noResults')}</p>
+          {vehicles.length === 0 && (
+            <button className="btn btn-primary" onClick={handleAdd} disabled={adding} style={{ marginTop: 8 }}>
+              {adding ? '⏳' : `+ ${t(lang, 'veh.new')}`}
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
+                  {['Make / Model', 'Plate', 'Year', 'km', 'Status', 'Purchase', 'Profit'].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text2)', fontWeight: 500, fontSize: 12, whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(v => {
+                  const fin = calcFinancials(v)
+                  return (
+                    <tr key={v.id}
+                      onClick={() => router.push(`/vehicles/${v.id}`)}
+                      style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background 0.1s' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <td style={{ padding: '10px 12px', fontWeight: 500 }}>
+                        {v.make || '—'} {v.model || ''}
+                      </td>
+                      <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.plate || '—'}</td>
+                      <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.year || '—'}</td>
+                      <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>
+                        {v.mileage ? v.mileage.toLocaleString() : '—'}
+                      </td>
+                      <td style={{ padding: '10px 12px' }}>
+                        <span className={`badge status-${v.status}`}>{t(lang, `status.${v.status}`)}</span>
+                      </td>
+                      <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>
+                        {v.purchase?.price ? fmtCur(v.purchase.price) : '—'}
+                      </td>
+                      <td style={{ padding: '10px 12px', fontWeight: 500, color: fin.saleRevenue > 0 ? (fin.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)') : 'var(--text2)' }}>
+                        {fin.saleRevenue > 0 ? fmtCur(fin.grossProfit) : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)', color: 'var(--text2)', fontSize: 12 }}>
+            {filtered.length} vehicles
+          </div>
         </div>
       )}
-
-      {/* Desktop table */}
-      {filtered.length > 0 && (
-        <div style={{ overflowX: 'auto' }} className="desktop-table">
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                {[`${T('vehicle.make')} / ${T('vehicle.model')}`, T('vehicle.vin'), T('vehicle.plate'), T('vehicle.year'), T('vehicle.mileage'), T('vehicle.status'), T('purchase.priceGross'), T('sale.priceGross'), 'P&L', ''].map((h, i) => (
-                  <th key={i} style={{ textAlign: 'left', padding: '10px 12px', fontSize: 11, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(v => {
-                const fin = computeFin(v)
-                return (
-                  <tr
-                    key={v.id}
-                    onClick={() => router.push(`/vehicles/${v.id}`)}
-                    style={{ cursor: 'pointer' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).querySelectorAll('td').forEach(td => (td.style.background = 'rgba(240,165,0,0.03)'))}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).querySelectorAll('td').forEach(td => (td.style.background = ''))}
-                  >
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)' }}>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{catIcon(v.category)} {v.make || '—'} {v.model}</div>
-                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{v.businessId} · {T(`cat.${v.category}`)} {v.color ? `· ${v.color}` : ''}</div>
-                    </td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)', fontFamily: 'IBM Plex Mono', fontSize: 11, color: 'var(--muted)' }}>{v.vin || '—'}</td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)' }}>
-                      {v.plate ? <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 12, background: 'var(--surface)', padding: '2px 8px', borderRadius: 4, border: '1px solid var(--border)' }}>{v.plate}</span> : '—'}
-                    </td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)' }}>{v.year || '—'}</td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)' }}>{v.mileage ? fmtNum(v.mileage) + ' km' : '—'}</td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)' }}><StatusBadge status={v.status} label={T(`status.${v.status}`)} /></td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)', fontFamily: 'IBM Plex Mono', fontSize: 13 }}>{v.purchase?.priceGross ? fmtCur(v.purchase.priceGross, v.purchase.currency) : '—'}</td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)', fontFamily: 'IBM Plex Mono', fontSize: 13 }}>{v.sale?.priceGross ? fmtCur(v.sale.priceGross, v.sale.currency) : '—'}</td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)', fontFamily: 'IBM Plex Mono', fontSize: 13, color: fin.profit === null ? 'var(--muted)' : fin.profit >= 0 ? 'var(--success)' : 'var(--error)' }}>
-                      {fin.profit !== null ? fmtCur(fin.profit) : '—'}
-                    </td>
-                    <td style={{ padding: '12px', borderBottom: '1px solid rgba(42,42,62,0.5)' }} onClick={e => handleDelete(e, v.id)}>
-                      <button className="af-btn af-btn-danger af-btn-xs">✕</button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Mobile cards */}
-      {filtered.length > 0 && (
-        <div className="mobile-cards">
-          {filtered.map(v => {
-            const fin = computeFin(v)
-            return (
-              <Link key={v.id} href={`/vehicles/${v.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div className="af-card" style={{ marginBottom: 10, cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{catIcon(v.category)} {v.make || '—'} {v.model} {v.year}</div>
-                      <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'IBM Plex Mono' }}>{v.businessId}{v.vin ? ` · VIN: ${v.vin}` : ''}</div>
-                    </div>
-                    <StatusBadge status={v.status} label={''} />
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    {v.plate && <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 11, background: 'var(--surface)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>{v.plate}</span>}
-                    <span style={{ flex: 1, fontSize: 11, color: 'var(--muted)' }}>{v.mileage ? fmtNum(v.mileage) + ' km' : ''}</span>
-                    <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 12, color: fin.profit !== null ? (fin.profit >= 0 ? 'var(--success)' : 'var(--error)') : 'var(--muted)' }}>
-                      {fin.profit !== null ? fmtCur(fin.profit) : '—'}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-      )}
-
-      <style>{`
-        .desktop-table { display: block; }
-        .mobile-cards { display: none; }
-        @media(max-width: 768px) {
-          .desktop-table { display: none !important; }
-          .mobile-cards { display: block !important; }
-        }
-      `}</style>
     </AppShell>
   )
 }
