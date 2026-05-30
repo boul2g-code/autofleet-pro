@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-// v6.2 - fixed for Next.js 16
+// v6.3 - inline vehicle view, no redirect timing issue
 const nextConfig = {
   reactStrictMode: false,
   images: { unoptimized: true },
