@@ -1,93 +1,101 @@
 'use client'
-
-import Link from 'next/link'
-import AppShell from '@/components/layout/AppShell'
+import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
-import { computeFin } from '@/lib/financials'
-import { fmtCur, catIcon, statusIcon, ALL_STATUSES } from '@/lib/utils'
-import StatusBadge from '@/components/vehicles/StatusBadge'
-import type { VehicleStatus } from '@/lib/types'
+import { calcFinancials, fmtCur } from '@/lib/financials'
+import Link from 'next/link'
 
 export default function DashboardPage() {
-  const { vehicles, lang } = useFleetStore()
-  const T = (k: string) => t(lang, k)
+  const { vehicles, settings } = useFleetStore()
+  const lang = settings.lang
 
-  const total = vehicles.length
-  const inStock = vehicles.filter(v => ['purchased', 'transit_in', 'at_depot', 'for_sale'].includes(v.status)).length
-  const sold = vehicles.filter(v => ['sold', 'transit_out', 'delivered'].includes(v.status)).length
-  const inTransit = vehicles.filter(v => ['transit_in', 'transit_out'].includes(v.status)).length
-  const totalProfit = vehicles.filter(v => v.sale?.priceGross).reduce((s, v) => s + (computeFin(v).profit ?? 0), 0)
-  const recent = vehicles.slice(0, 8)
+  const inStock = vehicles.filter(v => ['purchased','transit_in','stored','for_sale'].includes(v.status || ''))
+  const sold = vehicles.filter(v => ['sold','transit_out','delivered'].includes(v.status || ''))
+  const revenue = sold.reduce((s, v) => s + (v.sale?.price || 0), 0)
+  const profit = sold.reduce((s, v) => {
+    const f = calcFinancials(v)
+    return s + f.grossProfit
+  }, 0)
 
-  const statCard = (label: string, value: string | number, color: string) => (
-    <div className="af-card" style={{ padding: '16px 20px' }}>
-      <div style={{ fontFamily: 'IBM Plex Mono', fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6, letterSpacing: 0.5 }}>{label}</div>
-    </div>
-  )
+  const KPI = [
+    { label: t(lang, 'dash.total'), value: vehicles.length, icon: '🚗', color: '#3b82f6' },
+    { label: t(lang, 'dash.inStock'), value: inStock.length, icon: '📦', color: '#f59e0b' },
+    { label: t(lang, 'dash.sold'), value: sold.length, icon: '✅', color: '#22c55e' },
+    { label: t(lang, 'dash.revenue'), value: fmtCur(revenue), icon: '💶', color: '#8b5cf6' },
+    { label: t(lang, 'dash.profit'), value: fmtCur(profit), icon: '📈', color: profit >= 0 ? '#22c55e' : '#ef4444' },
+  ]
 
   return (
     <AppShell>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px,1fr))', gap: 12, marginBottom: 20 }}>
-        {statCard(T('dashboard.total'), total, 'var(--text)')}
-        {statCard(T('dashboard.inStock'), inStock, 'var(--blue)')}
-        {statCard(T('dashboard.sold'), sold, 'var(--success)')}
-        {statCard(T('dashboard.inTransit'), inTransit, '#ff7043')}
-        {statCard(T('dashboard.profit'), `€${(totalProfit / 1000).toFixed(1)}k`, totalProfit >= 0 ? 'var(--success)' : 'var(--error)')}
-      </div>
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20 }}>
+        {t(lang, 'nav.dashboard')}
+      </h1>
 
-      <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
-        {/* Recent */}
-        <div className="af-card">
-          <div className="af-section-title">{T('dashboard.recent')}</div>
-          {recent.length === 0
-            ? <div style={{ color: 'var(--muted)', textAlign: 'center', padding: 20 }}>{T('dashboard.noRecent')}</div>
-            : recent.map(v => {
-              const fin = computeFin(v)
-              return (
-                <Link key={v.id} href={`/vehicles/${v.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(42,42,62,0.5)', cursor: 'pointer' }}>
-                    <div style={{ width: 40, height: 40, background: 'var(--surface)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, border: '1px solid var(--border)' }}>
-                      {catIcon(v.category)}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{v.make || '—'} {v.model} {v.year}</div>
-                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: 'IBM Plex Mono', color: 'var(--accent)' }}>{v.businessId}</span>
-                        {v.plate && <span style={{ fontFamily: 'IBM Plex Mono', background: 'var(--surface)', padding: '1px 6px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 11 }}>{v.plate}</span>}
-                        <StatusBadge status={v.status} label={T(`status.${v.status}`)} />
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right', fontFamily: 'IBM Plex Mono', fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>
-                      {v.purchase?.priceGross ? fmtCur(v.purchase.priceGross, v.purchase.currency) : '—'}
-                    </div>
-                  </div>
-                </Link>
-              )
-            })
-          }
-          <div style={{ marginTop: 12, textAlign: 'right' }}>
-            <Link href="/vehicles"><button className="af-btn af-btn-ghost af-btn-sm">{T('actions.all')} →</button></Link>
+      {/* KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+        {KPI.map(k => (
+          <div key={k.label} className="card" style={{ borderLeft: `3px solid ${k.color}` }}>
+            <div style={{ fontSize: 22 }}>{k.icon}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4, color: k.color }}>{k.value}</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>{k.label}</div>
           </div>
-        </div>
-
-        {/* Status overview */}
-        <div className="af-card">
-          <div className="af-section-title">{T('dashboard.statusOverview')}</div>
-          {ALL_STATUSES.map(s => {
-            const cnt = vehicles.filter(v => v.status === s).length
-            return (
-              <div key={s} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(42,42,62,0.5)' }}>
-                <StatusBadge status={s as VehicleStatus} label={T(`status.${s}`)} />
-                <div style={{ fontFamily: 'IBM Plex Mono', fontWeight: 600, color: cnt > 0 ? 'var(--accent)' : 'var(--muted)' }}>{cnt}</div>
-              </div>
-            )
-          })}
-        </div>
+        ))}
       </div>
 
-      <style>{`@media(max-width:640px){ .dash-grid { grid-template-columns: 1fr !important; } }`}</style>
+      {/* Recent vehicles */}
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{t(lang, 'dash.recentVehicles')}</h2>
+          <Link href="/vehicles" style={{ color: 'var(--primary)', fontSize: 13, textDecoration: 'none' }}>
+            {t(lang, 'action.viewAll')} →
+          </Link>
+        </div>
+        {vehicles.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text2)' }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>🚗</div>
+            <p>{t(lang, 'dash.noVehicles')}</p>
+            <Link href="/vehicles">
+              <button className="btn btn-primary" style={{ marginTop: 8 }}>
+                + {t(lang, 'veh.new')}
+              </button>
+            </Link>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  {['Make/Model','Plate','Year','Status','Profit'].map(h => (
+                    <th key={h} style={{ padding: '6px 10px', textAlign: 'left', color: 'var(--text2)', fontWeight: 500, fontSize: 12 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {vehicles.slice(0, 10).map(v => {
+                  const fin = calcFinancials(v)
+                  return (
+                    <tr key={v.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '8px 10px' }}>
+                        <Link href={`/vehicles/${v.id}`} style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: 500 }}>
+                          {v.make} {v.model}
+                        </Link>
+                      </td>
+                      <td style={{ padding: '8px 10px', color: 'var(--text2)' }}>{v.plate || '—'}</td>
+                      <td style={{ padding: '8px 10px', color: 'var(--text2)' }}>{v.year || '—'}</td>
+                      <td style={{ padding: '8px 10px' }}>
+                        <span className={`badge status-${v.status}`}>{t(lang, `status.${v.status}`)}</span>
+                      </td>
+                      <td style={{ padding: '8px 10px', color: fin.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 500 }}>
+                        {fin.saleRevenue > 0 ? fmtCur(fin.grossProfit) : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </AppShell>
   )
 }
