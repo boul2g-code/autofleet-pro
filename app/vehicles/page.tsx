@@ -1,24 +1,46 @@
 'use client'
 import { useState, useMemo, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import { calcFinancials, fmtCur } from '@/lib/financials'
-import type { VehicleStatus } from '@/lib/types'
+import type { VehicleStatus, Vehicle } from '@/lib/types'
+import AppShell from '@/components/AppShell'
+import InfoTab from '@/components/tabs/InfoTab'
+import PurchaseTab from '@/components/tabs/PurchaseTab'
+import TransportInTab from '@/components/tabs/TransportInTab'
+import StorageTab from '@/components/tabs/StorageTab'
+import SaleTab from '@/components/tabs/SaleTab'
+import TransportOutTab from '@/components/tabs/TransportOutTab'
+import DocumentsTab from '@/components/tabs/DocumentsTab'
+import FinancialsTab from '@/components/tabs/FinancialsTab'
 
 const STATUS_FILTERS: (VehicleStatus | 'all')[] = [
   'all','purchased','transit_in','stored','for_sale','sold','transit_out','delivered'
 ]
 
+const TABS = [
+  { key: 'info', label: 'tab.info' },
+  { key: 'purchase', label: 'tab.purchase' },
+  { key: 'transportIn', label: 'tab.transportIn' },
+  { key: 'storage', label: 'tab.storage' },
+  { key: 'sale', label: 'tab.sale' },
+  { key: 'transportOut', label: 'tab.transportOut' },
+  { key: 'documents', label: 'tab.documents' },
+  { key: 'financials', label: 'tab.financials' },
+]
+
 export default function VehiclesPage() {
-  const router = useRouter()
-  const { vehicles, addVehicle, settings, loading } = useFleetStore()
+  const { vehicles, addVehicle, deleteVehicle, settings, loading } = useFleetStore()
   const lang = settings.lang
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'all'>('all')
   const [adding, setAdding] = useState(false)
-  const addingRef = useRef(false)  // ref-based lock immune to re-renders
+  const addingRef = useRef(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('info')
+  const [confirmDel, setConfirmDel] = useState(0)
+
+  const v = selectedId ? vehicles.find(x => x.id === selectedId) || null : null
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -31,20 +53,85 @@ export default function VehiclesPage() {
   }, [vehicles, search, statusFilter])
 
   const handleAdd = async () => {
-    // Double protection: state + ref
     if (adding || addingRef.current) return
     addingRef.current = true
     setAdding(true)
     try {
-      const v = await addVehicle()
-      if (v) router.push(`/vehicles/${v.id}`)
+      const created = await addVehicle()
+      if (created) {
+        setSelectedId(created.id)
+        setActiveTab('info')
+      }
     } finally {
       setAdding(false)
-      // Keep ref locked for 2s to prevent double-click
       setTimeout(() => { addingRef.current = false }, 2000)
     }
   }
 
+  const handleDelete = async () => {
+    if (!selectedId) return
+    if (confirmDel === 0) { setConfirmDel(1); return }
+    const veh = vehicles.find(x => x.id === selectedId)
+    const ok = window.confirm(`Delete ${veh?.make || ''} ${veh?.model || ''} ${veh?.plate || ''}? Cannot be undone.`)
+    if (!ok) { setConfirmDel(0); return }
+    await deleteVehicle(selectedId)
+    setSelectedId(null)
+    setConfirmDel(0)
+  }
+
+  // VEHICLE DETAIL VIEW
+  if (selectedId) {
+    return (
+      <AppShell>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+          <button className="btn btn-ghost" onClick={() => { setSelectedId(null); setConfirmDel(0) }} style={{ padding: '6px 12px' }}>
+            ← {t(lang, 'action.backToList')}
+          </button>
+          <div style={{ flex: 1 }}>
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>
+              {v?.make || '— New Vehicle —'} {v?.model || ''} {v?.year ? `(${v.year})` : ''}
+            </h1>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+              {v?.plate && <span style={{ color: 'var(--text2)', fontSize: 13 }}>📋 {v.plate}</span>}
+              {v?.vin && <span style={{ color: 'var(--text2)', fontSize: 13 }}>🔢 {v.vin}</span>}
+              {v?.status && <span className={`badge status-${v.status}`}>{t(lang, `status.${v.status}`)}</span>}
+            </div>
+          </div>
+          <button className="btn btn-danger" onClick={handleDelete} style={{ fontSize: 13 }}>
+            {confirmDel === 1 ? '⚠️ Confirm?' : `🗑️ ${t(lang, 'action.delete')}`}
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 0, marginBottom: 16, overflowX: 'auto', borderBottom: '1px solid var(--border)' }}>
+          {TABS.map(tab => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              style={{
+                padding: '9px 14px', fontSize: 13, border: 'none', cursor: 'pointer',
+                background: 'transparent', whiteSpace: 'nowrap',
+                color: activeTab === tab.key ? 'var(--primary)' : 'var(--text2)',
+                borderBottom: activeTab === tab.key ? '2px solid var(--primary)' : '2px solid transparent',
+                fontWeight: activeTab === tab.key ? 600 : 400,
+              }}>
+              {t(lang, tab.label)}
+            </button>
+          ))}
+        </div>
+
+        <div className="card">
+          {activeTab === 'info' && <InfoTab id={selectedId} />}
+          {activeTab === 'purchase' && <PurchaseTab id={selectedId} />}
+          {activeTab === 'transportIn' && <TransportInTab id={selectedId} />}
+          {activeTab === 'storage' && <StorageTab id={selectedId} />}
+          {activeTab === 'sale' && <SaleTab id={selectedId} />}
+          {activeTab === 'transportOut' && <TransportOutTab id={selectedId} />}
+          {activeTab === 'documents' && <DocumentsTab id={selectedId} />}
+          {activeTab === 'financials' && <FinancialsTab id={selectedId} />}
+        </div>
+      </AppShell>
+    )
+  }
+
+  // VEHICLE LIST VIEW
   return (
     <AppShell>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -104,24 +191,18 @@ export default function VehiclesPage() {
                   const fin = calcFinancials(v)
                   return (
                     <tr key={v.id}
-                      onClick={() => router.push(`/vehicles/${v.id}`)}
-                      style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background 0.1s' }}
+                      onClick={() => { setSelectedId(v.id); setActiveTab('info'); setConfirmDel(0) }}
+                      style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <td style={{ padding: '10px 12px', fontWeight: 500 }}>
-                        {v.make || '— New —'} {v.model || ''}
-                      </td>
+                      <td style={{ padding: '10px 12px', fontWeight: 500 }}>{v.make || '— New —'} {v.model || ''}</td>
                       <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.plate || '—'}</td>
                       <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.year || '—'}</td>
-                      <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>
-                        {v.mileage ? v.mileage.toLocaleString() : '—'}
-                      </td>
+                      <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.mileage ? v.mileage.toLocaleString() : '—'}</td>
                       <td style={{ padding: '10px 12px' }}>
                         <span className={`badge status-${v.status}`}>{t(lang, `status.${v.status}`)}</span>
                       </td>
-                      <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>
-                        {v.purchase?.price ? fmtCur(v.purchase.price) : '—'}
-                      </td>
+                      <td style={{ padding: '10px 12px', color: 'var(--text2)' }}>{v.purchase?.price ? fmtCur(v.purchase.price) : '—'}</td>
                       <td style={{ padding: '10px 12px', fontWeight: 500, color: fin.saleRevenue > 0 ? (fin.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)') : 'var(--text2)' }}>
                         {fin.saleRevenue > 0 ? fmtCur(fin.grossProfit) : '—'}
                       </td>
