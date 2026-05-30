@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
+// v6.1 - fixed duplicate insert
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   optimizeFonts: false,
   images: { unoptimized: true },
 }
