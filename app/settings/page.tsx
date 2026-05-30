@@ -60,6 +60,13 @@ export default function SettingsPage() {
         <button className="btn btn-ghost" onClick={exportJSON}>
           📥 {t(lang, 'settings.exportAll')} (JSON)
         </button>
+        <button className="btn btn-ghost" style={{ marginLeft: 8 }}
+          onClick={async () => {
+            const { exportVehiclesToExcel } = await import('@/lib/xlsxExport')
+            await exportVehiclesToExcel(vehicles, 'AutoFleet_Export')
+          }}>
+          📊 Export Excel (.xlsx)
+        </button>
       </div>
 
       <button className="btn btn-primary" onClick={save}>
