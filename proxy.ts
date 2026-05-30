@@ -3,10 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const PUBLIC = ['/login', '/auth/callback', '/landing', '/pricing', '/contact', '/v/']
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC.some(p => pathname.startsWith(p))
-
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -18,24 +17,15 @@ export async function proxy(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
         },
       },
     }
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user && !isPublic) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  if (user && pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
+  if (!user && !isPublic) return NextResponse.redirect(new URL('/login', request.url))
+  if (user && pathname === '/login') return NextResponse.redirect(new URL('/dashboard', request.url))
   return response
 }
 
