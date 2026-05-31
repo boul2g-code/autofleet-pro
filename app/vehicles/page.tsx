@@ -15,6 +15,7 @@ import DocumentsTab from '@/components/tabs/DocumentsTab'
 import FinancialsTab from '@/components/tabs/FinancialsTab'
 import ListingsTab from '@/components/tabs/ListingsTab'
 import InspectionTab from '@/components/tabs/InspectionTab'
+import FlyerTab from '@/components/tabs/FlyerTab'
 
 const STATUS_FILTERS: (VehicleStatus | 'all')[] = [
   'all','purchased','transit_in','stored','for_sale','sold','transit_out','delivered'
@@ -31,6 +32,7 @@ const TABS = [
   { key: 'financials', label: 'tab.financials' },
   { key: 'inspection', label: 'tab.inspection' },
   { key: 'listings', label: 'tab.listings' },
+  { key: 'flyer', label: 'tab.flyer' },
 ]
 
 export default function VehiclesPage() {
@@ -136,6 +138,7 @@ export default function VehiclesPage() {
           {activeTab === 'financials' && <FinancialsTab id={selectedId} />}
           {activeTab === 'inspection' && <InspectionTab id={selectedId} />}
           {activeTab === 'listings' && <ListingsTab id={selectedId} />}
+          {activeTab === 'flyer' && <FlyerTab id={selectedId} />}
         </div>
       </AppShell>
     )
