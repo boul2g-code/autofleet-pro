@@ -143,6 +143,7 @@ const T: Record<string, Record<Lang, string>> = {
   'manifest.filterAll': { el:'Όλα', en:'All', de:'Alle', fr:'Tous', it:'Tutti', es:'Todos' },
   'manifest.vehicles': { el:'Οχήματα', en:'Vehicles', de:'Fahrzeuge', fr:'Véhicules', it:'Veicoli', es:'Vehículos' },
   'manifest.printPdf': { el:'Εκτύπωση PDF', en:'Print PDF', de:'PDF drucken', fr:'Imprimer PDF', it:'Stampa PDF', es:'Imprimir PDF' },
+  'manifest.empty': { el:'Δεν υπάρχουν οχήματα', en:'No vehicles in this status', de:'Keine Fahrzeuge', fr:'Aucun véhicule', it:'Nessun veicolo', es:'Sin vehículos' },
 
   // Financials
   'fin.purchaseCost': { el:'Κόστος Αγοράς', en:'Purchase Cost', de:'Kaufpreis', fr:'Coût d\'achat', it:'Costo acquisto', es:'Costo compra' },
