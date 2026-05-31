@@ -66,12 +66,11 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
     return () => clearTimeout(timer)
   }, [v])
 
-  // Show local "saved" when savedId matches
   useEffect(() => {
     if (savedId === id) {
       setLocalSaved(true)
-      const t = setTimeout(() => setLocalSaved(false), 2000)
-      return () => clearTimeout(t)
+      const t2 = setTimeout(() => setLocalSaved(false), 2500)
+      return () => clearTimeout(t2)
     }
   }, [savedId, id])
 
@@ -80,9 +79,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
     setActiveTab(tabKey)
   }, [id, flushSave])
 
-  const handleSave = async () => {
-    await flushSave(id)
-  }
+  const handleSave = async () => { await flushSave(id) }
 
   const handleBack = async () => {
     await flushSave(id)
@@ -91,11 +88,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (saving) {
-        e.preventDefault()
-        e.returnValue = ''
-        flushAll()
-      }
+      if (saving) { e.preventDefault(); e.returnValue = ''; flushAll() }
     }
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
@@ -128,7 +121,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
   const handleDelete = async () => {
     if (confirmDel === 0) { setConfirmDel(1); return }
     if (confirmDel === 1) {
-      const ok = window.confirm(`Delete ${v.make || ''} ${v.model || ''} ${v.plate || ''}? This cannot be undone.`)
+      const ok = window.confirm(`Delete ${v.make || ''} ${v.model || ''} ${v.plate || ''}?`)
       if (!ok) { setConfirmDel(0); return }
       setDeleting(true)
       await deleteVehicle(id)
@@ -139,71 +132,87 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
   return (
     <AppShell>
       <style>{`
-        @keyframes spin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
-        .save-btn-area { display:flex; align-items:center; gap:8px; flex-shrink:0; }
-        .vehicle-header { display:flex; align-items:flex-start; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
-        .vehicle-title-block { flex:1; min-width:0; }
-        .vehicle-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+        @keyframes spin { from{transform:rotate(0deg)}to{transform:rotate(360deg)} }
       `}</style>
 
-      {/* ── Header row ── */}
-      <div className="vehicle-header">
-        <button className="btn btn-ghost" onClick={handleBack} style={{ padding: '6px 12px', flexShrink: 0 }}>
-          ←
+      {/* ── ROW 1: Back + Title + Delete ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+        <button className="btn btn-ghost" onClick={handleBack} style={{ padding: '5px 10px', fontSize: 13, flexShrink: 0 }}>
+          ← {t(lang, 'action.backToList')}
         </button>
 
-        <div className="vehicle-title-block">
-          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {v.make || '— New Vehicle —'} {v.model || ''} {v.year ? `(${v.year})` : ''}
           </h1>
-          <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 6, marginTop: 3, flexWrap: 'wrap', alignItems: 'center' }}>
             {v.plate && <span style={{ color: 'var(--text2)', fontSize: 12 }}>📋 {v.plate}</span>}
             {v.vin && <span style={{ color: 'var(--text2)', fontSize: 12 }}>🔢 {v.vin}</span>}
             <span className={`badge status-${v.status}`}>{t(lang, `status.${v.status}`)}</span>
           </div>
         </div>
 
-        {/* ── SAVE AREA — always visible ── */}
-        <div className="vehicle-actions">
-          {saving && (
-            <span style={{ fontSize: 12, color: 'var(--text2)', whiteSpace: 'nowrap' }}>
-              <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⏳</span>{' '}
-              {SAVING_LABELS[lang] || 'Saving...'}
-            </span>
-          )}
-          {!saving && localSaved && (
-            <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 600, whiteSpace: 'nowrap' }}>
-              {SAVED_LABELS[lang] || '✓ Saved'}
-            </span>
-          )}
-          {/* 💾 SAVE BUTTON — always visible */}
-          <button
-            className="btn btn-primary"
-            onClick={handleSave}
-            disabled={saving}
-            style={{ fontSize: 13, padding: '7px 16px', minWidth: 80 }}
-          >
-            💾 {SAVE_LABELS[lang] || 'Save'}
-          </button>
-
-          <button
-            className="btn btn-danger"
-            onClick={handleDelete}
-            disabled={deleting}
-            style={{ fontSize: 13, padding: '7px 12px' }}
-          >
-            {confirmDel === 1 ? '⚠️ OK?' : '🗑️'}
-          </button>
-        </div>
+        <button className="btn btn-danger" onClick={handleDelete} disabled={deleting}
+          style={{ fontSize: 12, padding: '5px 10px', flexShrink: 0 }}>
+          {confirmDel === 1 ? '⚠️ OK?' : '🗑️'}
+        </button>
       </div>
 
-      {/* ── Tabs ── */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 16, overflowX: 'auto',
-        borderBottom: '1px solid var(--border)', WebkitOverflowScrolling: 'touch' }}>
+      {/* ── ROW 2: SAVE BAR — full width, always visible ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        background: 'var(--surface2)', borderRadius: 8,
+        padding: '8px 12px', marginBottom: 12,
+        border: '1px solid var(--border)',
+      }}>
+        {/* Big visible Save button */}
+        <button
+          className="btn btn-primary"
+          onClick={handleSave}
+          disabled={saving}
+          style={{ fontSize: 14, padding: '8px 20px', fontWeight: 600, minWidth: 120 }}
+        >
+          {saving
+            ? `⏳ ${SAVING_LABELS[lang] || 'Saving...'}`
+            : `💾 ${SAVE_LABELS[lang] || 'Save'}`
+          }
+        </button>
+
+        {/* Status text */}
+        {!saving && localSaved && (
+          <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 600 }}>
+            {SAVED_LABELS[lang] || '✓ Saved'}
+          </span>
+        )}
+        {saving && (
+          <span style={{ fontSize: 12, color: 'var(--text2)' }}>
+            {lang === 'el' ? 'Αποθηκεύεται αυτόματα μετά από 1.5 δευτερόλεπτα παύσης' :
+             lang === 'it' ? 'Salvataggio automatico dopo 1.5 secondi' :
+             lang === 'de' ? 'Auto-Speicherung nach 1.5 Sek.' :
+             'Auto-saves 1.5s after last change'}
+          </span>
+        )}
+        {!saving && !localSaved && (
+          <span style={{ fontSize: 12, color: 'var(--text2)' }}>
+            {lang === 'el' ? 'Πάτα για άμεση αποθήκευση ή αποθηκεύεται αυτόματα' :
+             lang === 'it' ? 'Premi per salvare subito o si salva automaticamente' :
+             lang === 'de' ? 'Drücken zum sofortigen Speichern oder auto-speichern' :
+             lang === 'fr' ? 'Appuyer pour sauvegarder ou sauvegarde automatique' :
+             lang === 'es' ? 'Pulsar para guardar o guardado automático' :
+             'Press to save now, or auto-saves after typing stops'}
+          </span>
+        )}
+      </div>
+
+      {/* ── TABS ── */}
+      <div style={{
+        display: 'flex', gap: 0, marginBottom: 12, overflowX: 'auto',
+        borderBottom: '1px solid var(--border)', WebkitOverflowScrolling: 'touch',
+      }}>
         {TABS.map(tab => (
           <button key={tab.key} onClick={() => handleTabChange(tab.key)}
             style={{
-              padding: '9px 12px', fontSize: 13, border: 'none', cursor: 'pointer',
+              padding: '8px 12px', fontSize: 13, border: 'none', cursor: 'pointer',
               background: 'transparent', whiteSpace: 'nowrap', flexShrink: 0,
               color: activeTab === tab.key ? 'var(--primary)' : 'var(--text2)',
               borderBottom: activeTab === tab.key ? '2px solid var(--primary)' : '2px solid transparent',
@@ -214,7 +223,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
         ))}
       </div>
 
-      {/* ── Tab content ── */}
+      {/* ── TAB CONTENT ── */}
       <div className="card">
         {activeTab === 'info'         && <InfoTab id={id} />}
         {activeTab === 'purchase'     && <PurchaseTab id={id} />}
