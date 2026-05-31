@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const PUBLIC = ['/login', '/auth/callback', '/landing', '/pricing', '/contact', '/v/']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC.some(p => pathname.startsWith(p))
   let response = NextResponse.next({ request })
