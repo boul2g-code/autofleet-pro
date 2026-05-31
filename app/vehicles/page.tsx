@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client'
 import { useState, useMemo, useRef } from 'react'
 import { useFleetStore } from '@/store/useFleetStore'
