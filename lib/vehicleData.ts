@@ -77,7 +77,47 @@ export const VEHICLE_MODELS: Record<string, string[]> = {
   'Liebherr': ['A316','A918','A924','R906','R916','R924','R936','L550','L566','LTM 1050','LTM 1100'],
   'Volvo CE': ['EC140','EC200','EC250','EC300','EC380','L70','L90','L120','L150','A25','A30','A40'],
   'Hitachi': ['ZX130','ZX200','ZX250','ZX300','ZX490','EX2600'],
-}
+
+  // Missing car brands
+  'Chevrolet': ['Aveo','Spark','Cruze','Malibu','Camaro','Corvette','Equinox','Trax','Captiva','Orlando','Traverse','Tahoe','Suburban','Silverado','Colorado','Trailblazer','Blazer','Bolt','Volt'],
+  'Chrysler': ['300','300C','300S','Voyager','Grand Voyager','Pacifica','Sebring','PT Cruiser','Crossfire'],
+  'Ferrari': ['488','F8','Roma','Portofino','SF90','812','GTC4Lusso','California','458','F430','360','355'],
+  'Jaguar': ['XE','XF','XJ','F-Type','E-Pace','F-Pace','I-Pace','XK','S-Type','X-Type'],
+  'Lamborghini': ['Huracán','Urus','Aventador','Gallardo','Murciélago','Diablo','Countach'],
+  'Lexus': ['CT200h','IS200','IS300','IS350','ES300','ES350','GS300','GS350','GS450h','LS400','LS460','LS600h','NX200','NX300h','RX300','RX350','RX400h','RX450h','UX','LC500'],
+  'Maserati': ['Ghibli','Quattroporte','Levante','GranTurismo','GranCabrio','Grecale','MC20'],
+  'MG': ['MG3','MG5','MG6','ZS','HS','EHS','ZS EV','5 EV','MG4','Cyberster'],
+  'Smart': ['Fortwo','Forfour','Roadster','Smart #1','Smart #3'],
+  // Trucks missing
+  'Ford Trucks': ['Transit','Transit Custom','Cargo','F-Max','Trucks 4142'],
+  'Isuzu': ['D-Max','N-Series','F-Series','NLR','NMR','NQR','NPR','FVR','FTR'],
+  'Mitsubishi Fuso': ['Canter','Fighter','Super Great','Ecanter'],
+  'Tata': ['Prima','LPT','Ultra','Starbus','Signa','Xenon'],
+  'Hino': ['300','500','700','XL','FD','FG','FL','FM','FS','GH'],
+  // Bus
+  'Irisbus': ['Crossway','Arway','Evadys','Daily','Agora'],
+  'Setra': ['S 415','S 416','S 417','S 431','S 511','S 516','S 517','S 531'],
+  'Neoplan': ['Cityliner','Tourliner','Starliner','Skyliner','Euroliner'],
+  'Otokar': ['Sultan','Doruk','Territo','Navigo','Vectio','Tempo'],
+  'BMC': ['Probus','Procity','Belde','Neocity'],
+  // Moto
+  'Ducati': ['Panigale V2','Panigale V4','Monster','Multistrada','Diavel','SuperSport','Scrambler','Hypermotard','XDiavel'],
+  'Harley-Davidson': ['Sportster','Softail','Touring','Dyna','V-Rod','Street','Pan America','Nightster','Low Rider'],
+  'Kawasaki': ['Ninja 300','Ninja 400','Ninja 650','Ninja 1000','Z400','Z650','Z900','Z1000','Versys 650','Versys 1000','ER-6','ZX-10R','ZX-6R','KLX'],
+  'KTM': ['Duke 390','Duke 790','Duke 890','Duke 990','RC 390','RC 8','Adventure 390','Adventure 790','Adventure 890','Adventure 1290','Super Duke'],
+  'Piaggio': ['Beverly','MP3','Medley','Fly','Typhoon','Zip','Liberty','X-Evo'],
+  'Triumph': ['Bonneville','Tiger','Speed Triple','Thruxton','Scrambler','Trident','Rocket','Street Twin','Daytona'],
+  'Vespa': ['GTS 125','GTS 150','GTS 300','GTS Super','Primavera 50','Primavera 125','Sprint 125','Elettrica'],
+  'Yamaha': ['MT-03','MT-07','MT-09','MT-10','YZF-R1','YZF-R3','YZF-R6','Tracer 700','Tracer 900','Ténéré 700','NMAX','XMAX','TMAX','FZ6','FZ8'],
+  // Construction missing
+  'John Deere': ['310','410','510','710','324','330','332','344','324G','330G','332G','344G','380G','410G','460G','544','624','644','724','844'],
+  'Manitou': ['MLT 625','MLT 630','MLT 635','MLT 737','MLT 840','MHT 10120','MC 18','MT 625','MT 732','MT 932'],
+  'Merlo': ['P27.6','P32.6','P38.13','P40.17','P55.9','TF35.7','TF42.7','TF50.8'],
+  'Terex': ['AC40','AC50','AC80','AC100','AC200','RT35','RT50','RT100','RT130'],
+  'Doosan': ['DX140','DX180','DX225','DX255','DX300','DX380','DX420','DX530','DX700'],
+  'Hyundai CE': ['R55','R80','R140','R160','R210','R250','R300','R380','R500','HL740','HL760','HL780'],
+  'Case CE': ['580','590','695','770','780','821','856','921','1021','1221','WX148','WX168'],
+  }
 
 export const COLORS = [
   { code: 'white', el: 'Λευκό', en: 'White', de: 'Weiß', fr: 'Blanc', it: 'Bianco', es: 'Blanco', hex: '#FFFFFF' },
