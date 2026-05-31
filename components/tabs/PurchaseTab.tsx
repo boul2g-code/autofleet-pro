@@ -3,7 +3,6 @@ import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import type { PurchaseData, VatRegime } from '@/lib/types'
 
-// EU VAT rates (standard rate per country)
 const VAT_RATES: Record<string, number> = {
   DE: 19, FR: 20, IT: 22, ES: 21, GR: 24, PT: 23, NL: 21,
   BE: 21, AT: 20, PL: 23, CZ: 21, HU: 27, RO: 19, BG: 20,
@@ -12,8 +11,20 @@ const VAT_RATES: Record<string, number> = {
   CH: 8, GB: 20, NO: 25, TR: 20, UA: 20,
 }
 
-function calcVAT(price: number, countryCode: string): number {
-  const rate = VAT_RATES[countryCode.toUpperCase()]
+const COUNTRY_NAMES: Record<string, string> = {
+  DE:'🇩🇪 Germania', FR:'🇫🇷 Francia', IT:'🇮🇹 Italia', ES:'🇪🇸 Spagna',
+  GR:'🇬🇷 Grecia', PT:'🇵🇹 Portogallo', NL:'🇳🇱 Paesi Bassi', BE:'🇧🇪 Belgio',
+  AT:'🇦🇹 Austria', PL:'🇵🇱 Polonia', CZ:'🇨🇿 Rep. Ceca', HU:'🇭🇺 Ungheria',
+  RO:'🇷🇴 Romania', BG:'🇧🇬 Bulgaria', HR:'🇭🇷 Croazia', SK:'🇸🇰 Slovacchia',
+  SI:'🇸🇮 Slovenia', LT:'🇱🇹 Lituania', LV:'🇱🇻 Lettonia', EE:'🇪🇪 Estonia',
+  FI:'🇫🇮 Finlandia', SE:'🇸🇪 Svezia', DK:'🇩🇰 Danimarca', IE:'🇮🇪 Irlanda',
+  LU:'🇱🇺 Lussemburgo', MT:'🇲🇹 Malta', CY:'🇨🇾 Cipro',
+  CH:'🇨🇭 Svizzera', GB:'🇬🇧 Gran Bretagna', NO:'🇳🇴 Norvegia',
+  TR:'🇹🇷 Turchia', UA:'🇺🇦 Ucraina',
+}
+
+function calcVAT(price: number, code: string) {
+  const rate = VAT_RATES[code.toUpperCase()]
   if (!rate) return 0
   return Math.round(price * rate / (100 + rate))
 }
@@ -31,34 +42,23 @@ export default function PurchaseTab({ id }: { id: string }) {
   const isStandard = p.vatRegime === 'standard'
 
   const handlePrice = (price: number) => {
-    if (isStandard && country && vatRate) {
-      up({ price, vatAmount: calcVAT(price, country) })
-    } else {
-      up({ price })
-    }
+    if (isStandard && country && vatRate) up({ price, vatAmount: calcVAT(price, country) })
+    else up({ price })
   }
-
   const handleCountry = (c: string) => {
     const rate = VAT_RATES[c.toUpperCase()]
-    if (isStandard && rate && p.price) {
-      up({ sellerCountry: c, vatAmount: calcVAT(p.price, c) })
-    } else {
-      up({ sellerCountry: c })
-    }
+    if (isStandard && rate && p.price) up({ sellerCountry: c, vatAmount: calcVAT(p.price, c) })
+    else up({ sellerCountry: c })
   }
-
   const handleRegime = (regime: VatRegime) => {
-    if (regime === 'standard' && country && vatRate && p.price) {
-      up({ vatRegime: regime, vatAmount: calcVAT(p.price, country) })
-    } else if (regime !== 'standard') {
-      up({ vatRegime: regime, vatAmount: 0 })
-    } else {
-      up({ vatRegime: regime })
-    }
+    if (regime === 'standard' && country && vatRate && p.price) up({ vatRegime: regime, vatAmount: calcVAT(p.price, country) })
+    else if (regime !== 'standard') up({ vatRegime: regime, vatAmount: 0 })
+    else up({ vatRegime: regime })
   }
 
   return (
     <div>
+      {/* Row 1: Date + Invoice */}
       <div className="field-row">
         <div className="field-group">
           <label>{t(lang, 'field.date')}</label>
@@ -70,6 +70,28 @@ export default function PurchaseTab({ id }: { id: string }) {
         </div>
       </div>
 
+      {/* Row 2: Seller + Country (WITH VAT %) */}
+      <div className="field-row">
+        <div className="field-group">
+          <label>{t(lang, 'field.seller')}</label>
+          <input value={p.sellerName || ''} onChange={e => up({ sellerName: e.target.value })} placeholder="Seller name / company" />
+        </div>
+        <div className="field-group">
+          <label>
+            {t(lang, 'field.country')}
+            {vatRate && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: 'var(--primary)' }}>{country} — IVA {vatRate}%</span>}
+          </label>
+          <select value={p.sellerCountry || ''} onChange={e => handleCountry(e.target.value)}>
+            <option value="">— {t(lang, 'field.country')} —</option>
+            {Object.entries(COUNTRY_NAMES).map(([code, name]) => (
+              <option key={code} value={code}>{name} — {VAT_RATES[code]}% IVA</option>
+            ))}
+            <option value="OTHER">🌐 Other</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Row 3: Price + VAT Regime */}
       <div className="field-row">
         <div className="field-group">
           <label>{t(lang, 'field.price')} (€)</label>
@@ -85,23 +107,20 @@ export default function PurchaseTab({ id }: { id: string }) {
         </div>
       </div>
 
+      {/* Row 4: VAT amount (auto) + Extra costs */}
       <div className="field-row">
         <div className="field-group">
           <label>
             {t(lang, 'field.vatAmount')} (€)
             {isStandard && vatRate && (
-              <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--success)', fontWeight: 600 }}>
+              <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--success)', fontWeight: 700 }}>
                 auto {vatRate}% {country}
               </span>
             )}
           </label>
-          <input
-            type="number"
-            value={p.vatAmount || ''}
-            onChange={e => up({ vatAmount: +e.target.value })}
-            placeholder="0"
+          <input type="number" value={p.vatAmount || ''} onChange={e => up({ vatAmount: +e.target.value })} placeholder="0"
             style={{ borderColor: isStandard && vatRate ? 'var(--success)' : undefined }}
-          />
+            readOnly={isStandard && !!vatRate} />
         </div>
         <div className="field-group">
           <label>{t(lang, 'field.cost')} + extras (€)</label>
@@ -109,31 +128,12 @@ export default function PurchaseTab({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="field-row">
-        <div className="field-group">
-          <label>{t(lang, 'field.seller')}</label>
-          <input value={p.sellerName || ''} onChange={e => up({ sellerName: e.target.value })} placeholder="Seller name / company" />
-        </div>
-        <div className="field-group">
-          <label>
-            {t(lang, 'field.country')}
-            {vatRate && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text2)' }}>VAT {vatRate}%</span>}
-          </label>
-          <select value={p.sellerCountry || ''} onChange={e => handleCountry(e.target.value)}>
-            <option value="">— Select country —</option>
-            {Object.entries(VAT_RATES).map(([code, rate]) => (
-              <option key={code} value={code}>{code} — {rate}% VAT</option>
-            ))}
-            <option value="OTHER">Other</option>
-          </select>
-        </div>
-      </div>
-
+      {/* Breakdown box */}
       {isStandard && p.price && vatRate && (
-        <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid var(--success)', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13 }}>
-          💡 Net price (excl. VAT): <strong>€{(p.price - (p.vatAmount || 0)).toLocaleString()}</strong>
-          {' · '}VAT ({vatRate}%): <strong>€{(p.vatAmount || 0).toLocaleString()}</strong>
-          {' · '}Gross: <strong>€{p.price.toLocaleString()}</strong>
+        <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid var(--success)', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13 }}>
+          💡 Net (excl. IVA): <strong>€{(p.price - (p.vatAmount || 0)).toLocaleString()}</strong>
+          {' · '}IVA ({vatRate}%): <strong>€{(p.vatAmount || 0).toLocaleString()}</strong>
+          {' · '}Lordo: <strong>€{p.price.toLocaleString()}</strong>
         </div>
       )}
 
