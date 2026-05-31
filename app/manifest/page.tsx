@@ -67,7 +67,7 @@ export default function ManifestPage() {
     <h1>Fleet Manifest — ${filterLabel}</h1>
     <div class="meta">${new Date().toLocaleDateString('el-GR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })} &nbsp;·&nbsp; ${filtered.length} vehicles</div>
   </div>
-  <div class="logo">AutoFleet Pro<br><span style="font-size:10px;font-weight:400;color:#6b7280">${(settings as Record<string,unknown> & { org?: { name?: string } })?.org?.name || ''}</span></div>
+  <div class="logo">AutoFleet Pro<br><span style="font-size:10px;font-weight:400;color:#6b7280">${(settings as unknown as { org?: { name?: string } })?.org?.name || ''}</span></div>
 </div>
 <table>
   <thead>
