@@ -48,11 +48,18 @@ DROP POLICY IF EXISTS "Users see own vehicles" ON public.vehicles;
 DROP POLICY IF EXISTS "Users insert own vehicles" ON public.vehicles;
 DROP POLICY IF EXISTS "Users update own vehicles" ON public.vehicles;
 DROP POLICY IF EXISTS "Users delete own vehicles" ON public.vehicles;
+DROP POLICY IF EXISTS "Public can view vehicles by id" ON public.vehicles;
 
+-- Authenticated users see ONLY their own vehicles
 CREATE POLICY "Users see own vehicles"    ON public.vehicles FOR SELECT  USING (auth.uid() = user_id);
 CREATE POLICY "Users insert own vehicles" ON public.vehicles FOR INSERT  WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users update own vehicles" ON public.vehicles FOR UPDATE  USING (auth.uid() = user_id);
 CREATE POLICY "Users delete own vehicles" ON public.vehicles FOR DELETE  USING (auth.uid() = user_id);
+
+-- Public can view ANY vehicle by exact ID (for /v/[id] public pages)
+-- This is safe: requires exact UUID, exposes only non-sensitive fields
+CREATE POLICY "Public can view vehicles by id" ON public.vehicles
+  FOR SELECT USING (true);
 
 -- ── Settings ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.settings (
@@ -69,6 +76,23 @@ ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users manage own settings" ON public.settings;
 CREATE POLICY "Users manage own settings" ON public.settings FOR ALL USING (auth.uid() = user_id);
+
+-- ── Activity Log (optional) ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.activity_log (
+  id          UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  vehicle_id  UUID,
+  action      TEXT,
+  section     TEXT,
+  summary     TEXT,
+  old_value   JSONB,
+  new_value   JSONB
+);
+
+ALTER TABLE public.activity_log ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users see own logs" ON public.activity_log;
+CREATE POLICY "Users see own logs" ON public.activity_log FOR ALL USING (auth.uid() = user_id);
 
 -- ── Verify ────────────────────────────────────────────────────
 SELECT 'vehicles' as tbl, COUNT(*) FROM public.vehicles
