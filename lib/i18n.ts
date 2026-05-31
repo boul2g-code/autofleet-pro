@@ -44,6 +44,7 @@ const T: Record<string, Record<Lang, string>> = {
   'tab.transportOut': { el:'Μεταφορά Εξ.', en:'Transport Out', de:'Transport Aus', fr:'Transport Sortie', it:'Trasporto Out', es:'Transporte Salida' },
   'tab.documents': { el:'Έγγραφα', en:'Documents', de:'Dokumente', fr:'Documents', it:'Documenti', es:'Documentos' },
   'tab.financials': { el:'Οικονομικά', en:'Financials', de:'Finanzen', fr:'Finances', it:'Finanze', es:'Finanzas' },
+  'tab.score': { el:'Score', en:'Score', de:'Score', fr:'Score', it:'Score', es:'Score' },
   'tab.flyer': { el:'Φυλλάδιο', en:'Flyer', de:'Flyer', fr:'Flyer', it:'Volantino', es:'Folleto' },
   'tab.listings': { el:'Αγγελίες', en:'Listings', de:'Inserate', fr:'Annonces', it:'Inserzioni', es:'Anuncios' },
   'tab.inspection': { el:'Επιθεώρηση', en:'Inspection', de:'Inspektion', fr:'Inspection', it:'Ispezione', es:'Inspección' },
