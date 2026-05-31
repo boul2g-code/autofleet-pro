@@ -12,50 +12,101 @@ export default function TransportInTab({ id }: { id: string }) {
   const up = (patch: Partial<TransportData>) => updateVehicle(id, { transportIn: { ...tr, ...patch } })
 
   const printCMR = () => {
-    const win = window.open('', '_blank')
-    if (!win) return
-    win.document.write(`
-      <html><head><title>CMR - ${v.plate || ''}</title>
-      <style>
-        body{font-family:Arial,sans-serif;font-size:12px;padding:20px}
-        h2{text-align:center;font-size:16px;margin-bottom:16px}
-        table{width:100%;border-collapse:collapse;margin-bottom:12px}
-        td,th{border:1px solid #000;padding:6px 8px;vertical-align:top}
-        th{background:#eee;font-weight:bold;font-size:11px}
-        .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        @media print{body{padding:10px}}
-      </style></head><body>
-      <h2>CMR INTERNATIONAL CONSIGNMENT NOTE</h2>
-      <table>
-        <tr><th colspan="4">1. SENDER</th></tr>
-        <tr><td colspan="4" style="height:40px">${v.purchase?.sellerName || ''}<br>${tr.origin || ''}</td></tr>
-        <tr><th colspan="4">2. CONSIGNEE</th></tr>
-        <tr><td colspan="4" style="height:40px">${settings.org?.name || 'AutoFleet Pro'}<br>${tr.destination || ''}</td></tr>
-        <tr><th>3. CMR No.</th><td>${tr.cmrNumber || ''}</td><th>4. Date</th><td>${tr.departureDate || ''}</td></tr>
-        <tr><th>5. CARRIER</th><td colspan="3">${tr.carrier || ''}</td></tr>
-        <tr><th>6. DRIVER</th><td>${tr.driver || ''}</td><th>7. TRUCK PLATE</th><td>${tr.truckPlate || ''} / ${tr.trailerPlate || ''}</td></tr>
-        <tr><th>8. VEHICLE</th><td>${v.make || ''} ${v.model || ''} ${v.year || ''}</td><th>9. VIN</th><td>${v.vin || ''}</td></tr>
-        <tr><th>10. PLATE</th><td>${v.plate || ''}</td><th>11. COLOR</th><td>${v.color || ''}</td></tr>
-        <tr><th>12. KM</th><td>${v.mileage ? v.mileage.toLocaleString() + ' km' : ''}</td><th>13. COST</th><td>€${tr.cost || ''}</td></tr>
-        <tr><th>14. ARRIVAL</th><td colspan="3">${tr.arrivalDate || ''}</td></tr>
-        <tr><th colspan="4">15. NOTES</th></tr>
-        <tr><td colspan="4" style="height:40px">${tr.notes || ''}</td></tr>
-      </table>
-      <div class="row2">
-        <div><strong>SENDER SIGNATURE</strong><div style="border:1px solid #000;height:60px;margin-top:4px"></div></div>
-        <div><strong>CARRIER SIGNATURE</strong><div style="border:1px solid #000;height:60px;margin-top:4px"></div></div>
-      </div>
-      <script>window.onload=()=>{window.print()}</script>
-      </body></html>
-    `)
-    win.document.close()
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>CMR - ${v.plate || ''}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;font-size:11px;padding:15px;color:#000}
+  h2{text-align:center;font-size:14px;font-weight:bold;margin-bottom:4px;border-bottom:2px solid #000;padding-bottom:4px}
+  .subtitle{text-align:center;font-size:10px;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse;margin-bottom:8px}
+  td,th{border:1px solid #000;padding:5px 7px;vertical-align:top;font-size:10px}
+  th{background:#f0f0f0;font-weight:bold;font-size:9px;text-transform:uppercase;width:35%}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .section-title{background:#ddd;font-weight:bold;padding:4px 7px;font-size:10px;border:1px solid #000;border-bottom:none}
+  .sig-box{height:60px;border:1px solid #000;margin-top:4px}
+  .footer{margin-top:12px;font-size:9px;color:#666;text-align:center}
+  @media print{body{padding:8px}@page{margin:1cm}}
+</style></head><body>
+<h2>CMR — INTERNATIONAL CONSIGNMENT NOTE</h2>
+<p class="subtitle">Convention relative au contrat de transport international de marchandises par route</p>
+
+<div class="grid2">
+<table>
+  <tr><th>1. Sender / Expediteur</th></tr>
+  <tr><td style="height:50px">${v.purchase?.sellerName || ''}<br>${tr.origin || ''}</td></tr>
+</table>
+<table>
+  <tr><th>2. Consignee / Destinataire</th></tr>
+  <tr><td style="height:50px">${settings.org?.name || 'AutoFleet Pro'}<br>${tr.destination || ''}</td></tr>
+</table>
+</div>
+
+<table>
+  <tr><th>3. Place of delivery</th><td>${tr.destination || ''}</td><th>4. Place & date of taking over</th><td>${tr.origin || ''}, ${tr.departureDate || ''}</td></tr>
+</table>
+
+<table>
+  <tr><th>5. CMR Number</th><td>${tr.cmrNumber || ''}</td><th>6. Date</th><td>${tr.departureDate || ''}</td></tr>
+</table>
+
+<table>
+  <tr><th>7. Carrier / Transporteur</th><td colspan="3">${tr.carrier || ''}</td></tr>
+  <tr><th>8. Driver / Conducteur</th><td>${tr.driver || ''}</td><th>Truck plate</th><td>${tr.truckPlate || ''} ${tr.trailerPlate ? '/ ' + tr.trailerPlate : ''}</td></tr>
+</table>
+
+<table>
+  <tr><th>9. Goods / Marchandise</th><td colspan="3">
+    <strong>${v.make || ''} ${v.model || ''} ${v.year || ''}</strong><br>
+    VIN: ${v.vin || '—'} | Plate: ${v.plate || '—'} | Color: ${v.color || '—'}<br>
+    Mileage: ${v.mileage ? v.mileage.toLocaleString() + ' km' : '—'} | Fuel: ${v.fuelType || '—'}
+  </td></tr>
+  <tr><th>10. Weight / Poids</th><td>${v.weightKg ? v.weightKg + ' kg' : '—'}</td><th>11. Transport cost</th><td>EUR ${tr.cost || '—'}</td></tr>
+  <tr><th>12. Arrival / Livraison</th><td colspan="3">${tr.arrivalDate || ''}</td></tr>
+</table>
+
+${tr.notes ? `<table><tr><th>13. Notes / Réserves</th><td>${tr.notes}</td></tr></table>` : ''}
+
+<div class="grid2" style="margin-top:16px">
+  <div>
+    <div class="section-title">Sender / Expéditeur</div>
+    <div class="sig-box"></div>
+    <p style="font-size:9px;margin-top:3px">Place & date: _______________</p>
+  </div>
+  <div>
+    <div class="section-title">Carrier / Transporteur</div>
+    <div class="sig-box"></div>
+    <p style="font-size:9px;margin-top:3px">Place & date: _______________</p>
+  </div>
+</div>
+<div style="margin-top:8px">
+  <div class="section-title">Consignee / Destinataire</div>
+  <div class="sig-box"></div>
+  <p style="font-size:9px;margin-top:3px">Place, date & signature: _______________</p>
+</div>
+
+<p class="footer">AutoFleet Pro — CMR Generated ${new Date().toLocaleDateString('en-GB')}</p>
+<script>window.onload=function(){window.print()}</script>
+</body></html>`
+
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const win = window.open(url, '_blank')
+    if (!win) {
+      // Fallback: create download link
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CMR_${v.plate || id}_${tr.cmrNumber || 'draft'}.html`
+      a.click()
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
   }
 
   return (
     <div>
       <div className="field-row">
         <div className="field-group">
-          <label>{t(lang, 'field.cmr')} Number</label>
+          <label>CMR {t(lang, 'field.cmr')} Number</label>
           <input value={tr.cmrNumber || ''} onChange={e => up({ cmrNumber: e.target.value })} placeholder="CMR-001" />
         </div>
         <div className="field-group">
@@ -107,7 +158,7 @@ export default function TransportInTab({ id }: { id: string }) {
         <label>{t(lang, 'field.notes')}</label>
         <textarea value={tr.notes || ''} onChange={e => up({ notes: e.target.value })} rows={3} />
       </div>
-      <button className="btn btn-ghost" onClick={printCMR} style={{ marginTop: 8 }}>
+      <button className="btn btn-primary" onClick={printCMR} style={{ marginTop: 8 }}>
         🖨️ Print CMR
       </button>
     </div>
