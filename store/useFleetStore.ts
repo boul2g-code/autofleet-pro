@@ -6,15 +6,20 @@ import {
   dbGetSettings, dbSaveSettings,
 } from '../lib/supabase/db'
 
-let saveTimer: ReturnType<typeof setTimeout> | null = null
-let _addLock = false      // prevent double insert
-let _loadLock = false     // prevent double load from StrictMode
+// Per-vehicle save timers (not a single shared timer)
+const saveTimers: Record<string, ReturnType<typeof setTimeout>> = {}
+// Tracks which vehicles have unsaved changes
+const pendingSaves: Record<string, Partial<Vehicle>> = {}
+
+let _addLock = false
+let _loadLock = false
 
 interface FleetStore {
   vehicles: Vehicle[]
   settings: AppSettings
   loading: boolean
-  saving: boolean
+  saving: boolean        // true = at least one vehicle is saving
+  savedId: string | null // last saved vehicle id (for ✓ indicator)
   error: string | null
   loadAll: () => Promise<void>
   reload: () => Promise<void>
@@ -25,6 +30,7 @@ interface FleetStore {
   saveSetting: (patch: Partial<AppSettings>) => void
   getVehicle: (id: string) => Vehicle | undefined
   flushSave: (id: string) => Promise<void>
+  flushAll: () => Promise<void>
 }
 
 export const useFleetStore = create<FleetStore>((set, get) => ({
@@ -32,6 +38,7 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
   settings: { lang: 'el' },
   loading: false,
   saving: false,
+  savedId: null,
   error: null,
 
   loadAll: async () => {
@@ -68,7 +75,6 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
         set({ error: 'Failed to create vehicle. Check Supabase.' })
         return null
       }
-      // Prevent duplicate in state
       const exists = get().vehicles.find(v => v.id === created.id)
       if (!exists) {
         set(s => ({ vehicles: [created, ...s.vehicles] }))
@@ -80,20 +86,41 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
   },
 
   updateVehicle: (id, patch) => {
+    // 1. Update UI immediately (optimistic)
     set(s => ({
       vehicles: s.vehicles.map(v => v.id === id ? { ...v, ...patch } : v),
       saving: true,
+      savedId: null,
     }))
-    if (saveTimer) clearTimeout(saveTimer)
-    saveTimer = setTimeout(async () => {
+
+    // 2. Accumulate all pending changes for this vehicle
+    pendingSaves[id] = { ...pendingSaves[id], ...patch }
+
+    // 3. Debounce: reset timer on every keystroke
+    if (saveTimers[id]) clearTimeout(saveTimers[id])
+    saveTimers[id] = setTimeout(async () => {
       const vehicle = get().vehicles.find(v => v.id === id)
       if (!vehicle) return
-      await dbUpdateVehicle(id, vehicle)
-      set({ saving: false })
+      try {
+        await dbUpdateVehicle(id, vehicle)
+        delete pendingSaves[id]
+        delete saveTimers[id]
+        // Check if any other vehicles are still saving
+        const stillSaving = Object.keys(saveTimers).length > 0
+        set({ saving: stillSaving, savedId: id })
+        // Clear the ✓ after 2 seconds
+        setTimeout(() => set(s => s.savedId === id ? { savedId: null } : {}), 2000)
+      } catch (e) {
+        console.error('[store] save error:', e)
+        set({ saving: false })
+      }
     }, 1500)
   },
 
   deleteVehicle: async (id) => {
+    // Cancel any pending save for this vehicle
+    if (saveTimers[id]) { clearTimeout(saveTimers[id]); delete saveTimers[id] }
+    delete pendingSaves[id]
     const ok = await dbDeleteVehicle(id)
     if (ok) set(s => ({ vehicles: s.vehicles.filter(v => v.id !== id) }))
     return ok
@@ -112,12 +139,35 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
 
   getVehicle: (id) => get().vehicles.find(v => v.id === id),
 
+  // Force immediate save for one vehicle (called on tab change / page leave)
   flushSave: async (id) => {
-    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
+    if (saveTimers[id]) { clearTimeout(saveTimers[id]); delete saveTimers[id] }
     const vehicle = get().vehicles.find(v => v.id === id)
     if (!vehicle) return
     set({ saving: true })
-    await dbUpdateVehicle(id, vehicle)
+    try {
+      await dbUpdateVehicle(id, vehicle)
+      delete pendingSaves[id]
+      set({ saving: false, savedId: id })
+      setTimeout(() => set(s => s.savedId === id ? { savedId: null } : {}), 2000)
+    } catch (e) {
+      console.error('[store] flushSave error:', e)
+      set({ saving: false })
+    }
+  },
+
+  // Save ALL pending vehicles (called on page unload / navigation)
+  flushAll: async () => {
+    const ids = Object.keys(pendingSaves)
+    if (ids.length === 0) return
+    for (const id of ids) {
+      if (saveTimers[id]) { clearTimeout(saveTimers[id]); delete saveTimers[id] }
+      const vehicle = get().vehicles.find(v => v.id === id)
+      if (vehicle) {
+        try { await dbUpdateVehicle(id, vehicle) } catch {}
+        delete pendingSaves[id]
+      }
+    }
     set({ saving: false })
   },
 }))
