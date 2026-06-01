@@ -179,7 +179,7 @@ export default function DashboardPage() {
               <div style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 10px', marginBottom:4, background:'rgba(239,68,68,0.04)', borderRadius:8, cursor:'pointer' }}
                 onMouseEnter={e=>(e.currentTarget.style.background='rgba(239,68,68,0.1)')}
                 onMouseLeave={e=>(e.currentTarget.style.background='rgba(239,68,68,0.04)')}>
-                {v.photo ? <img src={v.photo} alt="" style={{ width:34, height:24, objectFit:'cover', borderRadius:4, flexShrink:0 }}/> : <span style={{ fontSize:16 }}>🚗</span>}
+                {v.photo ? <img src={v.photo} alt="" style={{ width:34, height:24, objectFit:'cover', borderRadius:4, flexShrink:0 }}/> : <span style={{ fontSize:16 }}>{{'car':'🚗','truck':'🚛','van':'🚐','bus':'🚌','moto':'🏍️','construction':'🏗️'}[v.category||'car']||'🚗'}</span>}
                 <div style={{ flex:1, fontSize:13, fontWeight:500, color:'var(--text)' }}>{v.make} {v.model} {v.plate ? `· ${v.plate}` : ''}</div>
                 <div style={{ textAlign:'right', flexShrink:0 }}>
                   <span style={{ color:'var(--danger)', fontWeight:700, fontSize:13 }}>⚠️ {v.days}d</span>
@@ -243,7 +243,7 @@ export default function DashboardPage() {
             return (
               <Link key={v.id} href="/vehicles" style={{ textDecoration:'none', color:'var(--text)' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', borderBottom:'1px solid var(--border)' }}>
-                  {v.photo ? <img src={v.photo} alt="" style={{ width:34, height:24, objectFit:'cover', borderRadius:3, flexShrink:0 }}/> : <div style={{ width:34, height:24, background:'var(--surface2)', borderRadius:3, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>🚗</div>}
+                  {v.photo ? <img src={v.photo} alt="" style={{ width:34, height:24, objectFit:'cover', borderRadius:3, flexShrink:0 }}/> : <div style={{ width:34, height:24, background:'var(--surface2)', borderRadius:3, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>{{'car':'🚗','truck':'🚛','van':'🚐','bus':'🚌','moto':'🏍️','construction':'🏗️'}[v.category||'car']||'🚗'}</div>}
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontWeight:500, fontSize:13, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{v.make} {v.model} {v.year ? `'${String(v.year).slice(-2)}` : ''}</div>
                     <div style={{ fontSize:11, color:'var(--text2)' }}>{v.plate || '—'}</div>
