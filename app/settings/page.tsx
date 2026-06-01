@@ -10,11 +10,8 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
 
   const [companyName, setCompanyName] = useState(settings.org?.name || '')
-  const [apiKey, setApiKey] = useState(settings.anthropicKey || '')
-
   const save = () => {
     saveSetting({
-      anthropicKey: apiKey,
       org: { ...settings.org, id: settings.org?.id || 'default', name: companyName },
     })
     setSaved(true)
@@ -41,16 +38,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, marginTop: 0, marginBottom: 12 }}>AI Settings</h2>
-        <div className="field-group">
-          <label>{t(lang, 'settings.aiKey')}</label>
-          <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-ant-..." />
-        </div>
-        <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>
-          Used for AI document extraction. Get it at console.anthropic.com
-        </p>
-      </div>
+
 
       <div className="card" style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 16, fontWeight: 600, marginTop: 0, marginBottom: 12 }}>{t(lang, 'settings.backup')}</h2>
