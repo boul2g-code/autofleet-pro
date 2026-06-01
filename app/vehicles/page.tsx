@@ -38,6 +38,19 @@ const TABS = [
   { key: 'score', label: 'tab.score' },
 ]
 
+type SortKey = 'make' | 'plate' | 'year' | 'mileage' | 'status' | 'purchase' | 'profit'
+type SortDir = 'asc' | 'desc'
+
+const COLS: { key: SortKey; label: string }[] = [
+  { key: 'make',     label: 'Make / Model' },
+  { key: 'plate',    label: 'Plate' },
+  { key: 'year',     label: 'Year' },
+  { key: 'mileage',  label: 'km' },
+  { key: 'status',   label: 'Status' },
+  { key: 'purchase', label: 'Purchase €' },
+  { key: 'profit',   label: 'Profit €' },
+]
+
 export default function VehiclesPage() {
   const { vehicles, addVehicle, deleteVehicle, settings, loading } = useFleetStore()
   const lang = settings.lang
@@ -48,18 +61,62 @@ export default function VehiclesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('info')
   const [confirmDel, setConfirmDel] = useState(0)
+  const [sortKey, setSortKey] = useState<SortKey>('make')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
 
   const v = selectedId ? vehicles.find(x => x.id === selectedId) || null : null
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    return vehicles.filter(v => {
+    const list = vehicles.filter(v => {
       if (statusFilter !== 'all' && v.status !== statusFilter) return false
       if (!q) return true
       return [v.make, v.model, v.plate, v.vin, v.color, String(v.year || ''), v.purchase?.sellerName, v.sale?.buyerName]
         .some(f => (f || '').toLowerCase().includes(q))
     })
-  }, [vehicles, search, statusFilter])
+
+    return [...list].sort((a, b) => {
+      let valA: number | string = 0
+      let valB: number | string = 0
+
+      if (sortKey === 'make') {
+        valA = `${a.make || ''} ${a.model || ''}`.trim().toLowerCase()
+        valB = `${b.make || ''} ${b.model || ''}`.trim().toLowerCase()
+      } else if (sortKey === 'plate') {
+        valA = (a.plate || '').toLowerCase()
+        valB = (b.plate || '').toLowerCase()
+      } else if (sortKey === 'year') {
+        valA = a.year || 0
+        valB = b.year || 0
+      } else if (sortKey === 'mileage') {
+        valA = a.mileage || 0
+        valB = b.mileage || 0
+      } else if (sortKey === 'status') {
+        valA = a.status || ''
+        valB = b.status || ''
+      } else if (sortKey === 'purchase') {
+        valA = a.purchase?.price || 0
+        valB = b.purchase?.price || 0
+      } else if (sortKey === 'profit') {
+        valA = calcFinancials(a).grossProfit
+        valB = calcFinancials(b).grossProfit
+      }
+
+      if (typeof valA === 'string') {
+        return sortDir === 'asc' ? valA.localeCompare(valB as string) : (valB as string).localeCompare(valA)
+      }
+      return sortDir === 'asc' ? (valA as number) - (valB as number) : (valB as number) - (valA as number)
+    })
+  }, [vehicles, search, statusFilter, sortKey, sortDir])
 
   const handleAdd = async () => {
     if (adding || addingRef.current) return
@@ -93,7 +150,6 @@ export default function VehiclesPage() {
   if (selectedId) {
     return (
       <AppShell>
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
           <button className="btn btn-ghost" onClick={() => { setSelectedId(null); setConfirmDel(0) }} style={{ padding: '6px 12px' }}>
             ← {t(lang, 'action.backToList')}
@@ -114,7 +170,6 @@ export default function VehiclesPage() {
           </button>
         </div>
 
-        {/* Tabs */}
         <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
           {TABS.map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -198,14 +253,27 @@ export default function VehiclesPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
-                  {['Make / Model', 'Plate', 'Year', 'km', 'Status', 'Purchase €', 'Profit €'].map(h => (
-                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text2)', fontWeight: 500, fontSize: 12, whiteSpace: 'nowrap' }}>{h}</th>
+                  {COLS.map(col => (
+                    <th key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      style={{
+                        padding: '10px 12px', textAlign: 'left', fontWeight: 500, fontSize: 12,
+                        whiteSpace: 'nowrap', cursor: 'pointer', userSelect: 'none',
+                        color: sortKey === col.key ? 'var(--primary)' : 'var(--text2)',
+                        transition: 'color 0.15s',
+                      }}>
+                      {col.label}
+                      {sortKey === col.key
+                        ? (sortDir === 'asc' ? ' ↑' : ' ↓')
+                        : ' ↕'}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(v => {
                   const fin = calcFinancials(v)
+                  const catIcon: Record<string, string> = { car:'🚗', truck:'🚛', van:'🚐', bus:'🚌', moto:'🏍️', construction:'🏗️' }
                   return (
                     <tr key={v.id}
                       onClick={() => { setSelectedId(v.id); setActiveTab('info'); setConfirmDel(0) }}
@@ -213,6 +281,7 @@ export default function VehiclesPage() {
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <td style={{ padding: '10px 12px', fontWeight: 500 }}>
+                        <span style={{ marginRight: 6 }}>{catIcon[v.category || 'car'] || '🚗'}</span>
                         {v.photo && <img src={v.photo} alt="" style={{ width: 32, height: 24, objectFit: 'cover', borderRadius: 4, marginRight: 8, verticalAlign: 'middle' }} />}
                         {v.make || '— New —'} {v.model || ''}
                       </td>
@@ -233,7 +302,8 @@ export default function VehiclesPage() {
             </table>
           </div>
           <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)', color: 'var(--text2)', fontSize: 12 }}>
-            {filtered.length} vehicles
+            {filtered.length} {t(lang, 'manifest.vehicles')}
+            {sortKey && <span style={{ marginLeft: 8 }}>· {t(lang, 'veh.sortedBy') || 'sorted by'} {COLS.find(c => c.key === sortKey)?.label} {sortDir === 'asc' ? '↑' : '↓'}</span>}
           </div>
         </div>
       )}
