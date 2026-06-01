@@ -83,9 +83,10 @@ async function runOCR(dataUrl: string, isPDF: boolean): Promise<string> {
     const script = document.getElementById('tesseract-script') as HTMLScriptElement | null
     const doOCR = () => {
       // @ts-ignore
-      const Tesseract = (window as Window & { Tesseract?: { recognize: (src: string, lang: string) => Promise<{ data: { text: string } }> } }).Tesseract
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const Tesseract = (window as any).Tesseract
       if (!Tesseract) { resolve(''); return }
-      Tesseract.recognize(dataUrl, 'eng+ita+deu+ell', {})
+      Tesseract.recognize(dataUrl, 'eng+ita+deu+ell')
         .then((result: { data: { text: string } }) => resolve(result.data.text))
         .catch(() => resolve(''))
     }
