@@ -16,7 +16,7 @@ export default function AnalyticsPage() {
     : 0
 
   const byMake = vehicles.reduce((acc, v) => {
-    const make = v.make || 'Unknown'
+    const make = v.make || t(lang,'analytics.unknown')
     acc[make] = (acc[make] || 0) + 1
     return acc
   }, {} as Record<string, number>)
@@ -40,10 +40,10 @@ export default function AnalyticsPage() {
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 12, marginBottom: 24 }}>
         {[
-          { label: 'Total Sold', value: sold.length, color: '#22c55e' },
-          { label: 'Total Revenue', value: fmtCur(totalRevenue), color: '#3b82f6' },
-          { label: 'Total Profit', value: fmtCur(totalProfit), color: totalProfit >= 0 ? '#22c55e' : '#ef4444' },
-          { label: 'Avg Margin', value: avgMargin.toFixed(1) + '%', color: '#8b5cf6' },
+          { label: t(lang,'analytics.totalSold'), value: sold.length, color: '#22c55e' },
+          { label: t(lang,'analytics.totalRevenue'), value: fmtCur(totalRevenue), color: '#3b82f6' },
+          { label: t(lang,'analytics.totalProfit'), value: fmtCur(totalProfit), color: totalProfit >= 0 ? '#22c55e' : '#ef4444' },
+          { label: t(lang,'analytics.avgMargin'), value: avgMargin.toFixed(1) + '%', color: '#8b5cf6' },
         ].map(k => (
           <div key={k.label} className="card" style={{ borderLeft: `3px solid ${k.color}` }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: k.color }}>{k.value}</div>
@@ -55,7 +55,7 @@ export default function AnalyticsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         {/* By Make */}
         <div className="card">
-          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12 }}>Fleet by Make</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12 }}>{t(lang,'analytics.byMake')}</h3>
           {topMakes.map(([make, count]) => (
             <div key={make} style={{ marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, fontSize: 13 }}>
@@ -71,7 +71,7 @@ export default function AnalyticsPage() {
 
         {/* By Status */}
         <div className="card">
-          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12 }}>Fleet by Status</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12 }}>{t(lang,'analytics.byStatus')}</h3>
           {byStatus.filter(s => s.count > 0).map(s => (
             <div key={s.status} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
               <span className={`badge status-${s.status}`}>{t(lang, `status.${s.status}`)}</span>
@@ -85,13 +85,13 @@ export default function AnalyticsPage() {
       {/* Top profitable */}
       {topProfitable.length > 0 && (
         <div className="card">
-          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12 }}>Top 5 Most Profitable</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12 }}>{t(lang,'analytics.top5')}</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '6px 8px', textAlign: 'left', color: 'var(--text2)', fontWeight: 500 }}>Vehicle</th>
-                <th style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--text2)', fontWeight: 500 }}>Profit</th>
-                <th style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--text2)', fontWeight: 500 }}>Margin</th>
+                <th style={{ padding: '6px 8px', textAlign: 'left', color: 'var(--text2)', fontWeight: 500 }}>{t(lang,'analytics.vehicle')}</th>
+                <th style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--text2)', fontWeight: 500 }}>{t(lang,'analytics.profit')}</th>
+                <th style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--text2)', fontWeight: 500 }}>{t(lang,'analytics.margin')}</th>
               </tr>
             </thead>
             <tbody>
