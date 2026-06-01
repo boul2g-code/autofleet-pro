@@ -91,7 +91,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginBottom: 10 }}>
             {LANGUAGES.map(l => (
               <button key={l.code} onClick={() => setLang(l.code)}
-                title={l.name}
+                title={l.label}
                 style={{
                   background: lang === l.code ? '#2563EB' : 'rgba(255,255,255,0.06)',
                   border: lang === l.code ? '1px solid rgba(37,99,235,0.5)' : '1px solid transparent',
