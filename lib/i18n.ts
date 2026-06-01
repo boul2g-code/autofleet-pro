@@ -156,6 +156,17 @@ const T: Record<string, Record<Lang, string>> = {
   'manifest.filterAll': { el:'Όλα', en:'All', de:'Alle', fr:'Tous', it:'Tutti', es:'Todos' },
   'manifest.vehicles': { el:'Οχήματα', en:'Vehicles', de:'Fahrzeuge', fr:'Véhicules', it:'Veicoli', es:'Vehículos' },
   'manifest.printPdf': { el:'Εκτύπωση PDF', en:'Print PDF', de:'PDF drucken', fr:'Imprimer PDF', it:'Stampa PDF', es:'Imprimir PDF' },
+  'analytics.totalSold':    { el:'Σύνολο Πωλήσεων',         en:'Total Sold',           de:'Gesamt verkauft',    fr:'Total vendu',           it:'Totale venduto',    es:'Total vendido' },
+  'analytics.totalRevenue': { el:'Συνολικά Έσοδα',           en:'Total Revenue',        de:'Gesamtumsatz',       fr:'Chiffre total',         it:'Ricavi totali',     es:'Ingresos totales' },
+  'analytics.totalProfit':  { el:'Συνολικό Κέρδος',          en:'Total Profit',         de:'Gesamtgewinn',       fr:'Bénéfice total',        it:'Profitto totale',   es:'Beneficio total' },
+  'analytics.avgMargin':    { el:'Μέσο Περιθώριο',           en:'Avg Margin',           de:'Ø Marge',            fr:'Marge moyenne',         it:'Margine medio',     es:'Margen promedio' },
+  'analytics.byMake':       { el:'Στόλος ανά Μάρκα',         en:'Fleet by Make',        de:'Flotte nach Marke',  fr:'Flotte par marque',     it:'Flotta per marca',  es:'Flota por marca' },
+  'analytics.byStatus':     { el:'Στόλος ανά Κατάσταση',     en:'Fleet by Status',      de:'Flotte nach Status', fr:'Flotte par statut',     it:'Flotta per stato',  es:'Flota por estado' },
+  'analytics.top5':         { el:'Κορυφαία 5 Πιο Κερδοφόρα', en:'Top 5 Most Profitable', de:'Top 5 profitabelste', fr:'Top 5 plus rentables', it:'Top 5 più redditizi', es:'Top 5 más rentables' },
+  'analytics.vehicle':      { el:'Όχημα',                    en:'Vehicle',              de:'Fahrzeug',           fr:'Véhicule',              it:'Veicolo',           es:'Vehículo' },
+  'analytics.profit':       { el:'Κέρδος',                   en:'Profit',               de:'Gewinn',             fr:'Bénéfice',              it:'Profitto',          es:'Beneficio' },
+  'analytics.margin':       { el:'Περιθώριο',                en:'Margin',               de:'Marge',              fr:'Marge',                 it:'Margine',           es:'Margen' },
+  'analytics.unknown':      { el:'Άγνωστο',                  en:'Unknown',              de:'Unbekannt',          fr:'Inconnu',               it:'Sconosciuto',       es:'Desconocido' },
   'manifest.empty': { el:'Δεν υπάρχουν οχήματα', en:'No vehicles in this status', de:'Keine Fahrzeuge', fr:'Aucun véhicule', it:'Nessun veicolo', es:'Sin vehículos' },
 
   // Financials
