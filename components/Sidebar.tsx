@@ -64,8 +64,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
                   fontWeight: active ? 600 : 400,
                   transition: 'all 0.12s',
                 }}
-                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#E2E8F0' }}
-                onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#94A3B8' } }}
+
               >
                 <span style={{ fontSize: 16, width: 20, textAlign: 'center', opacity: active ? 1 : 0.7 }}>
                   {item.icon === '▦' ? '⊞' : item.icon === '◈' ? '🚗' : item.icon === '≡' ? '☰' : item.icon === '↗' ? '📈' : item.icon === '↓' ? '📥' : '⚙️'}
@@ -115,8 +114,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
               color: '#64748B', fontSize: 13, cursor: 'pointer',
               transition: 'all 0.12s',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(220,38,38,0.15)'; (e.currentTarget as HTMLElement).style.color = '#FCA5A5' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = '#64748B' }}
+
           >
             🚪 {t(lang, 'nav.logout')}
           </button>
