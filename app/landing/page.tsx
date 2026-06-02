@@ -103,8 +103,8 @@ export default function LandingPage() {
               <button key={l} onClick={() => setLang(l)}
                 title={l.toUpperCase()}
                 style={{
-                  background: lang===l ? '#2563EB' : 'var(--surface,#f8fafc)',
-                  border: lang===l ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                  background: lang===l ? '#6366F1' : 'var(--surface,#f8fafc)',
+                  border: lang===l ? '2px solid #6366F1' : '1px solid #E5E7EB',
                   borderRadius:6, padding:'4px 8px', cursor:'pointer', fontSize:16,
                   opacity: lang===l ? 1 : 0.65,
                   transform: lang===l ? 'scale(1.1)' : 'scale(1)',
@@ -115,11 +115,11 @@ export default function LandingPage() {
             ))}
           </div>
           <Link href="/login"
-            style={{ fontSize:14, color:'#2563EB', textDecoration:'none', fontWeight:500 }}>
+            style={{ fontSize:14, color:'#6366F1', textDecoration:'none', fontWeight:500 }}>
             {t('navLogin', lang)}
           </Link>
           <Link href="/login"
-            style={{ background:'#2563EB', color:'white', padding:'8px 16px', borderRadius:7, fontSize:14, fontWeight:600, textDecoration:'none' }}>
+            style={{ background:'#6366F1', color:'white', padding:'8px 16px', borderRadius:7, fontSize:14, fontWeight:600, textDecoration:'none' }}>
             {t('cta', lang)}
           </Link>
         </div>
@@ -129,7 +129,7 @@ export default function LandingPage() {
       <section style={{ background:'white', padding:'72px 24px 60px' }}>
         <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' }}>
           {/* Badge */}
-          <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'#EFF6FF', color:'#2563EB', borderRadius:20, padding:'6px 14px', fontSize:13, fontWeight:600, marginBottom:24 }}>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'#EEF2FF', color:'#6366F1', borderRadius:20, padding:'6px 14px', fontSize:13, fontWeight:600, marginBottom:24 }}>
             🎯 Starter €49 · Pro €99 · {lang==='el'?'14 ημέρες δωρεάν':lang==='de'?'14 Tage gratis':lang==='fr'?'14 jours gratuits':lang==='es'?'14 días gratis':'14 giorni gratis'}
           </div>
 
@@ -142,11 +142,11 @@ export default function LandingPage() {
 
           <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap', marginBottom:12 }}>
             <Link href="/login"
-              style={{ background:'#2563EB', color:'white', padding:'14px 28px', borderRadius:8, fontSize:16, fontWeight:700, textDecoration:'none', boxShadow:'0 4px 14px rgba(37,99,235,0.3)' }}>
+              style={{ background:'#6366F1', color:'white', padding:'14px 28px', borderRadius:8, fontSize:16, fontWeight:700, textDecoration:'none', boxShadow:'0 4px 14px rgba(99,102,241,0.3)' }}>
               {t('cta', lang)}
             </Link>
             <a href="#demo"
-              style={{ background:'white', color:'#2563EB', padding:'14px 24px', borderRadius:8, fontSize:16, fontWeight:600, textDecoration:'none', border:'2px solid #2563EB' }}>
+              style={{ background:'white', color:'#6366F1', padding:'14px 24px', borderRadius:8, fontSize:16, fontWeight:600, textDecoration:'none', border:'2px solid #6366F1' }}>
               {t('cta2', lang)}
             </a>
           </div>
@@ -199,7 +199,7 @@ export default function LandingPage() {
                 {/* KPI row */}
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
                   {[
-                    { label: lang==='el'?'Σύνολο':lang==='de'?'Gesamt':lang==='fr'?'Total':lang==='es'?'Total':'Totale', value:'56', color:'#2563EB', icon:'🚗' },
+                    { label: lang==='el'?'Σύνολο':lang==='de'?'Gesamt':lang==='fr'?'Total':lang==='es'?'Total':'Totale', value:'56', color:'#6366F1', icon:'🚗' },
                     { label: lang==='el'?'Αξία Stock':lang==='de'?'Lagerwert':lang==='fr'?'Valeur Stock':lang==='es'?'Valor Stock':'Valore Stock', value:'€1.58M', color:'#059669', icon:'💶' },
                     { label: lang==='el'?'Κέρδος Μήνα':lang==='de'?'Gewinn Monat':lang==='fr'?'Profit Mois':lang==='es'?'Ganancia Mes':'Profitto Mese', value:'+€6.2k', color:'#059669', icon:'📅' },
                     { label: lang==='el'?'Πωλήθηκαν':lang==='de'?'Verkauft':lang==='fr'?'Vendus':lang==='es'?'Vendidos':'Venduti', value:'10', color:'#16A34A', icon:'✅' },
@@ -330,16 +330,16 @@ export default function LandingPage() {
               <div style={{ color:'#6B7280', fontSize:13, marginBottom:20 }}>/{lang==='el'?'μήνα':lang==='de'?'Monat':lang==='fr'?'mois':lang==='es'?'mes':'mese'}</div>
               {['100 '+( lang==='el'?'οχήματα':lang==='it'?'veicoli':lang==='de'?'Fahrzeuge':lang==='fr'?'véhicules':lang==='es'?'vehículos':'vehicles'),'Dashboard + Alerts','PDF, CMR, Excel','1 '+( lang==='el'?'χρήστης':lang==='it'?'utente':lang==='de'?'Benutzer':lang==='fr'?'utilisateur':lang==='es'?'usuario':'user'),'14 '+(lang==='el'?'ημέρες δωρεάν':lang==='it'?'giorni gratis':lang==='de'?'Tage kostenlos':lang==='fr'?'jours gratuits':lang==='es'?'días gratis':'days free')].map((f,i)=>(
                 <div key={i} style={{ display:'flex', gap:8, marginBottom:8, fontSize:13, color:'#374151' }}>
-                  <span style={{ color:'#2563EB', fontWeight:700 }}>✓</span><span>{f}</span>
+                  <span style={{ color:'#6366F1', fontWeight:700 }}>✓</span><span>{f}</span>
                 </div>
               ))}
-              <Link href="/login" style={{ display:'block', background:'#2563EB', color:'white', padding:'12px 20px', borderRadius:8, fontSize:14, fontWeight:700, textDecoration:'none', marginTop:20, textAlign:'center' }}>
+              <Link href="/login" style={{ display:'block', background:'#6366F1', color:'white', padding:'12px 20px', borderRadius:8, fontSize:14, fontWeight:700, textDecoration:'none', marginTop:20, textAlign:'center' }}>
                 {t('trialBtn', lang)}
               </Link>
             </div>
             {/* Pro */}
-            <div style={{ background:'#1E293B', border:'2px solid #3B82F6', borderRadius:14, padding:28, boxShadow:'0 8px 30px rgba(37,99,235,0.2)', position:'relative' }}>
-              <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', background:'#2563EB', color:'white', borderRadius:20, padding:'4px 14px', fontSize:11, fontWeight:700, whiteSpace:'nowrap' }}>
+            <div style={{ background:'#1E293B', border:'2px solid #818CF8', borderRadius:14, padding:28, boxShadow:'0 8px 30px rgba(99,102,241,0.2)', position:'relative' }}>
+              <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', background:'#6366F1', color:'white', borderRadius:20, padding:'4px 14px', fontSize:11, fontWeight:700, whiteSpace:'nowrap' }}>
                 {lang==='el'?'ΔΗΜΟΦΙΛΕΣΤΕΡΟ':lang==='it'?'PIÙ POPOLARE':lang==='de'?'BELIEBTESTE':lang==='fr'?'PLUS POPULAIRE':lang==='es'?'MÁS POPULAR':'MOST POPULAR'}
               </div>
               <div style={{ fontSize:13, fontWeight:600, color:'#94A3B8', marginBottom:8 }}>Pro</div>
@@ -347,10 +347,10 @@ export default function LandingPage() {
               <div style={{ color:'#64748B', fontSize:13, marginBottom:20 }}>/{lang==='el'?'μήνα':lang==='de'?'Monat':lang==='fr'?'mois':lang==='es'?'mes':'mese'}</div>
               {[(lang==='el'?'Απεριόριστα οχήματα':lang==='it'?'Veicoli illimitati':lang==='de'?'Unbegrenzte Fahrzeuge':lang==='fr'?'Véhicules illimités':lang==='es'?'Vehículos ilimitados':'Unlimited vehicles'),(lang==='el'?'Πολλαπλοί χρήστες':lang==='it'?'Utenti multipli':lang==='de'?'Mehrere Benutzer':lang==='fr'?'Utilisateurs multiples':lang==='es'?'Usuarios múltiples':'Multiple users'),'Dashboard + Alerts + Analytics','PDF, CMR, Excel, Flyer',(lang==='el'?'Branding με το λογότυπό σου':lang==='it'?'Branding con il tuo logo':lang==='de'?'Branding mit deinem Logo':lang==='fr'?'Branding avec votre logo':lang==='es'?'Branding con tu logo':'Branding with your logo'),'14 '+(lang==='el'?'ημέρες δωρεάν':lang==='it'?'giorni gratis':lang==='de'?'Tage kostenlos':lang==='fr'?'jours gratuits':lang==='es'?'días gratis':'days free')].map((f,i)=>(
                 <div key={i} style={{ display:'flex', gap:8, marginBottom:8, fontSize:13, color:'#E2E8F0' }}>
-                  <span style={{ color:'#60A5FA', fontWeight:700 }}>✓</span><span>{f}</span>
+                  <span style={{ color:'#A5B4FC', fontWeight:700 }}>✓</span><span>{f}</span>
                 </div>
               ))}
-              <Link href="/login" style={{ display:'block', background:'#2563EB', color:'white', padding:'12px 20px', borderRadius:8, fontSize:14, fontWeight:700, textDecoration:'none', marginTop:20, textAlign:'center', boxShadow:'0 4px 14px rgba(37,99,235,0.4)' }}>
+              <Link href="/login" style={{ display:'block', background:'#6366F1', color:'white', padding:'12px 20px', borderRadius:8, fontSize:14, fontWeight:700, textDecoration:'none', marginTop:20, textAlign:'center', boxShadow:'0 4px 14px rgba(99,102,241,0.4)' }}>
                 {t('trialBtn', lang)}
               </Link>
             </div>
