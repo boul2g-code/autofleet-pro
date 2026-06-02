@@ -73,7 +73,7 @@ function tArr(key: keyof typeof T, lang: Lang): string[] {
 }
 
 export default function LandingPage() {
-  const [lang, setLang] = useState<Lang>('it')
+  const [lang, setLang] = useState<Lang>('en')
 
   useEffect(() => {
     const nav = navigator.language.toLowerCase()
@@ -103,10 +103,12 @@ export default function LandingPage() {
               <button key={l} onClick={() => setLang(l)}
                 title={l.toUpperCase()}
                 style={{
-                  background: lang===l ? '#2563EB' : 'transparent',
-                  border: lang===l ? 'none' : '1px solid #E5E7EB',
-                  borderRadius:5, padding:'3px 6px', cursor:'pointer', fontSize:14,
-                  opacity: lang===l ? 1 : 0.6,
+                  background: lang===l ? '#2563EB' : 'var(--surface,#f8fafc)',
+                  border: lang===l ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                  borderRadius:6, padding:'4px 8px', cursor:'pointer', fontSize:16,
+                  opacity: lang===l ? 1 : 0.65,
+                  transform: lang===l ? 'scale(1.1)' : 'scale(1)',
+                  transition:'all 0.15s',
                 }}>
                 {flags[l]}
               </button>
