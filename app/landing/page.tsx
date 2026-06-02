@@ -1,136 +1,355 @@
-/* eslint-disable react/no-unescaped-entities */
 'use client'
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 
-type Lang = 'en' | 'it' | 'de' | 'el' | 'fr' | 'es'
+const LANGS = ['it', 'el', 'de', 'fr', 'es', 'en'] as const
+type Lang = typeof LANGS[number]
 
-const T: Record<string, Record<Lang, string>> = {
-  hero: {
-    en: 'The Fleet Management System for Used Vehicle Dealers',
-    it: 'Il sistema di gestione flotta per commercianti di veicoli usati',
-    de: 'Das Flottenmanagement-System für Gebrauchtwagenhändler',
-    el: 'Το σύστημα διαχείρισης στόλου για εμπόρους μεταχειρισμένων',
-    fr: "Le système de gestion de flotte pour marchands de véhicules d'occasion",
-    es: 'El sistema de gestión de flota para comerciantes de vehículos usados',
+const T = {
+  // Hero headline — pain-first
+  h1: {
+    it: 'Sai esattamente quali auto ti fanno perdere soldi?',
+    el: 'Ξέρεις ακριβώς ποια αυτοκίνητα σου τρώνε χρήματα;',
+    de: 'Weißt du genau, welche Autos dir Geld kosten?',
+    fr: 'Savez-vous exactement quelles voitures vous font perdre de l\'argent ?',
+    es: '¿Sabes exactamente qué coches te están haciendo perder dinero?',
+    en: 'Do you know exactly which vehicles are costing you money?',
   },
-  sub: {
-    en: 'Track every vehicle from purchase to delivery. CMR, financials, documents — all in one place.',
-    it: "Traccia ogni veicolo dall'acquisto alla consegna. CMR, finanze, documenti — tutto in un posto.",
-    de: 'Verfolge jedes Fahrzeug vom Kauf bis zur Lieferung. CMR, Finanzen, Dokumente — alles an einem Ort.',
-    el: 'Παρακολούθησε κάθε όχημα από την αγορά έως την παράδοση. CMR, οικονομικά, έγγραφα — όλα σε ένα μέρος.',
-    fr: "Suivez chaque véhicule de l'achat à la livraison. CMR, finances, documents — tout en un seul endroit.",
-    es: 'Rastrea cada vehículo desde la compra hasta la entrega. CMR, finanzas, documentos — todo en un lugar.',
+  // Hero subheadline
+  h2: {
+    it: 'AutoFleet Pro mostra quali veicoli sono fermi da troppo tempo, il margine reale su ogni auto e gestisce stock, trasporti e documenti in un unico pannello.',
+    el: 'Το AutoFleet Pro δείχνει ποια οχήματα είναι σταματημένα πολύ καιρό, το πραγματικό κέρδος ανά αυτοκίνητο και οργανώνει stock, μεταφορές και έγγραφα σε ένα μέρος.',
+    de: 'AutoFleet Pro zeigt, welche Fahrzeuge zu lange stillstehen, die echte Marge pro Fahrzeug und verwaltet Stock, Transporte und Dokumente in einem Panel.',
+    fr: 'AutoFleet Pro montre quels véhicules sont immobiles depuis trop longtemps, la marge réelle par véhicule et gère stock, transports et documents en un seul endroit.',
+    es: 'AutoFleet Pro muestra qué vehículos llevan demasiado tiempo parados, el margen real por vehículo y gestiona stock, transportes y documentos en un solo lugar.',
+    en: 'AutoFleet Pro shows which vehicles have been sitting too long, the real profit margin per vehicle and manages stock, transport and documents in one place.',
   },
-  trial: {
-    en: 'Start Free Trial', it: 'Inizia Prova Gratuita', de: 'Kostenlos testen',
-    el: 'Δωρεάν Δοκιμή', fr: 'Essai Gratuit', es: 'Prueba Gratuita',
+  // CTA
+  cta: { it:'Prova gratis 14 giorni', el:'Δοκίμασε δωρεάν 14 ημέρες', de:'14 Tage kostenlos testen', fr:'Essai gratuit 14 jours', es:'Prueba gratis 14 días', en:'Free trial 14 days' },
+  cta2: { it:'Guarda demo →', el:'Δες demo →', de:'Demo ansehen →', fr:'Voir démo →', es:'Ver demo →', en:'Watch demo →' },
+  // No CC
+  nocc: { it:'Nessuna carta di credito richiesta', el:'Χωρίς πιστωτική κάρτα', de:'Keine Kreditkarte erforderlich', fr:'Aucune carte de crédit requise', es:'Sin tarjeta de crédito', en:'No credit card required' },
+  // Dashboard label
+  dashLabel: { it:'Dashboard in tempo reale', el:'Dashboard σε πραγματικό χρόνο', de:'Echtzeit-Dashboard', fr:'Tableau de bord en temps réel', es:'Panel en tiempo real', en:'Real-time dashboard' },
+  // Pain/Gain section
+  painTitle: { it:'Smetti di perdere denaro con Excel e WhatsApp', el:'Σταμάτα να χάνεις χρήμα με Excel και WhatsApp', de:'Hör auf, mit Excel und WhatsApp Geld zu verlieren', fr:'Arrêtez de perdre de l\'argent avec Excel et WhatsApp', es:'Deja de perder dinero con Excel y WhatsApp', en:'Stop losing money with Excel and WhatsApp' },
+  // Features
+  f1t: { it:'Sai sempre dove sono i tuoi soldi', el:'Ξέρεις πάντα πού είναι τα χρήματά σου', de:'Du weißt immer, wo dein Geld ist', fr:'Vous savez toujours où est votre argent', es:'Siempre sabes dónde está tu dinero', en:'Always know where your money is' },
+  f1d: { it:'Valore totale del magazzino, margine per veicolo e alert su auto ferme — tutto aggiornato in tempo reale.', el:'Συνολική αξία stock, κέρδος ανά όχημα και alerts για σταματημένα αυτοκίνητα — όλα ενημερωμένα σε πραγματικό χρόνο.', de:'Gesamtwert des Lagers, Marge pro Fahrzeug und Alerts für stillstehende Autos — alles in Echtzeit aktualisiert.', fr:'Valeur totale du stock, marge par véhicule et alertes sur les voitures immobiles — tout mis à jour en temps réel.', es:'Valor total del stock, margen por vehículo y alertas sobre coches parados — todo actualizado en tiempo real.', en:'Total stock value, margin per vehicle and alerts on idle vehicles — all updated in real time.' },
+  f2t: { it:'Da acquisto a consegna in un click', el:'Από αγορά μέχρι παράδοση σε ένα κλικ', de:'Von Kauf bis Lieferung mit einem Klick', fr:'De l\'achat à la livraison en un clic', es:'De compra a entrega en un clic', en:'From purchase to delivery in one click' },
+  f2d: { it:'Gestisci acquisto, trasporto, magazzino, vendita e documenti per ogni veicolo. Esporta CMR e PDF professionali con il tuo logo.', el:'Διαχείρισε αγορά, μεταφορά, αποθήκη, πώληση και έγγραφα για κάθε όχημα. Εξαγωγή CMR και επαγγελματικών PDF με το λογότυπό σου.', de:'Verwalte Kauf, Transport, Lager, Verkauf und Dokumente für jedes Fahrzeug. Exportiere CMR und professionelle PDFs mit deinem Logo.', fr:'Gérez achat, transport, stock, vente et documents pour chaque véhicule. Exportez CMR et PDF professionnels avec votre logo.', es:'Gestiona compra, transporte, almacén, venta y documentos por vehículo. Exporta CMR y PDFs profesionales con tu logo.', en:'Manage purchase, transport, storage, sale and documents per vehicle. Export CMR and professional PDFs with your logo.' },
+  f3t: { it:'Alert automatici su stock fermo', el:'Αυτόματα alerts για σταματημένο stock', de:'Automatische Alerts für stillstehende Fahrzeuge', fr:'Alertes automatiques sur le stock immobile', es:'Alertas automáticas sobre stock parado', en:'Automatic alerts on idle stock' },
+  f3d: { it:'Ogni giorno che un\'auto è ferma ti costa denaro. AutoFleet Pro calcola il costo esatto e ti mostra quali veicoli vendere prima.', el:'Κάθε μέρα που ένα αυτοκίνητο δεν πουλιέται σου κοστίζει χρήμα. Το AutoFleet Pro υπολογίζει το ακριβές κόστος και σου δείχνει ποια οχήματα να πουλήσεις πρώτα.', de:'Jeder Tag, an dem ein Auto stillsteht, kostet dich Geld. AutoFleet Pro berechnet die genauen Kosten und zeigt, welche Fahrzeuge du zuerst verkaufen sollst.', fr:'Chaque jour qu\'une voiture est immobile vous coûte de l\'argent. AutoFleet Pro calcule le coût exact et vous montre quels véhicules vendre en premier.', es:'Cada día que un coche está parado te cuesta dinero. AutoFleet Pro calcula el coste exacto y te muestra qué vehículos vender primero.', en:'Every day a vehicle sits idle costs you money. AutoFleet Pro calculates the exact cost and shows which vehicles to sell first.' },
+  // Social proof numbers
+  spTitle: { it:'Numeri reali dal nostro ambiente demo', el:'Πραγματικοί αριθμοί από το demo περιβάλλον', de:'Echte Zahlen aus unserer Demo-Umgebung', fr:'Chiffres réels de notre environnement démo', es:'Números reales de nuestro entorno demo', en:'Real numbers from our demo environment' },
+  // Pricing
+  pTitle: { it:'Founder Plan — Solo per i primi 10 autosaloni', el:'Founder Plan — Μόνο για τα πρώτα 10 αυτοκτηματαγορεία', de:'Founder Plan — Nur für die ersten 10 Händler', fr:'Plan Fondateur — Seulement pour les 10 premiers concessionnaires', es:'Plan Fundador — Solo para los 10 primeros concesionarios', en:'Founder Plan — Only for the first 10 dealers' },
+  pSub: { it:'Prezzo bloccato per sempre. Non aumenterà mai.', el:'Τιμή κλειδωμένη για πάντα. Δεν θα αυξηθεί ποτέ.', de:'Preis für immer gesperrt. Er wird nie steigen.', fr:'Prix bloqué pour toujours. Il n\'augmentera jamais.', es:'Precio bloqueado para siempre. Nunca subirá.', en:'Price locked forever. It will never increase.' },
+  pFeatures: {
+    it: ['Tutti i veicoli illimitati','Dashboard con alert stock fermo','Margine reale per veicolo','Export PDF, CMR, Excel','Branding con il tuo logo','6 lingue','Supporto diretto dal fondatore'],
+    el: ['Απεριόριστα οχήματα','Dashboard με alerts stock','Πραγματικό κέρδος ανά όχημα','Εξαγωγή PDF, CMR, Excel','Branding με το λογότυπό σου','6 γλώσσες','Άμεση υποστήριξη από τον ιδρυτή'],
+    de: ['Unbegrenzte Fahrzeuge','Dashboard mit Stock-Alerts','Echte Marge pro Fahrzeug','Export PDF, CMR, Excel','Branding mit deinem Logo','6 Sprachen','Direkter Support vom Gründer'],
+    fr: ['Véhicules illimités','Dashboard avec alertes stock','Marge réelle par véhicule','Export PDF, CMR, Excel','Branding avec votre logo','6 langues','Support direct du fondateur'],
+    es: ['Vehículos ilimitados','Dashboard con alertas de stock','Margen real por vehículo','Exportación PDF, CMR, Excel','Branding con tu logo','6 idiomas','Soporte directo del fundador'],
+    en: ['Unlimited vehicles','Dashboard with stock alerts','Real margin per vehicle','Export PDF, CMR, Excel','Branding with your logo','6 languages','Direct founder support'],
   },
-  features: {
-    en: 'Everything you need', it: 'Tutto ciò che ti serve', de: 'Alles was Sie brauchen',
-    el: 'Όλα όσα χρειάζεσαι', fr: 'Tout ce dont vous avez besoin', es: 'Todo lo que necesitas',
-  },
-  pricing_link: {
-    en: 'See Pricing', it: 'Vedi Prezzi', de: 'Preise ansehen',
-    el: 'Δείτε Τιμές', fr: 'Voir les Prix', es: 'Ver Precios',
-  },
+  trialBtn: { it:'Inizia la prova gratuita', el:'Ξεκίνα τη δωρεάν δοκιμή', de:'Kostenlose Testversion starten', fr:'Démarrer l\'essai gratuit', es:'Iniciar prueba gratuita', en:'Start free trial' },
+  // Nav
+  navFeatures: { it:'Funzionalità', el:'Λειτουργίες', de:'Funktionen', fr:'Fonctionnalités', es:'Características', en:'Features' },
+  navPricing: { it:'Prezzi', el:'Τιμές', de:'Preise', fr:'Tarifs', es:'Precios', en:'Pricing' },
+  navLogin: { it:'Accedi', el:'Σύνδεση', de:'Anmelden', fr:'Connexion', es:'Acceder', en:'Login' },
+  // FAQ
+  faqTitle: { it:'Domande frequenti', el:'Συχνές Ερωτήσεις', de:'Häufige Fragen', fr:'Questions fréquentes', es:'Preguntas frecuentes', en:'FAQ' },
 }
 
-const FEATURES = [
-  { icon: '🚗', en: 'Complete vehicle file', it: 'Scheda veicolo completa', de: 'Vollständige Fahrzeugakte', el: 'Πλήρης καρτέλα οχήματος', fr: 'Fiche véhicule complète', es: 'Ficha de vehículo completa' },
-  { icon: '📋', en: 'CMR generation in 1 click', it: 'CMR in 1 click', de: 'CMR in 1 Klick', el: 'CMR σε 1 κλικ', fr: 'CMR en 1 clic', es: 'CMR en 1 clic' },
-  { icon: '💶', en: 'Automatic P&L per vehicle', it: 'P&L automatico per veicolo', de: 'Automatisches P&L pro Fahrzeug', el: 'Αυτόματο P&L ανά όχημα', fr: 'P&L automatique par véhicule', es: 'P&L automático por vehículo' },
-  { icon: '📱', en: 'Works on phone & PC', it: 'Funziona su telefono e PC', de: 'Funktioniert auf Handy & PC', el: 'Δουλεύει σε κινητό & PC', fr: 'Fonctionne sur téléphone & PC', es: 'Funciona en teléfono y PC' },
-  { icon: '🌍', en: '6 languages', it: '6 lingue', de: '6 Sprachen', el: '6 γλώσσες', fr: '6 langues', es: '6 idiomas' },
-  { icon: '☁️', en: 'Real-time cloud sync', it: 'Sincronizzazione cloud in tempo reale', de: 'Echtzeit-Cloud-Synchronisation', el: 'Real-time συγχρονισμός', fr: 'Synchronisation cloud en temps réel', es: 'Sincronización en la nube en tiempo real' },
-  { icon: '📄', en: 'Document upload + AI extraction', it: 'Upload documenti + estrazione AI', de: 'Dokumenten-Upload + KI-Extraktion', el: 'Upload εγγράφων + AI εξαγωγή', fr: 'Upload documents + extraction IA', es: 'Subida documentos + extracción IA' },
-  { icon: '🔗', en: 'Public vehicle link + QR code', it: 'Link pubblico veicolo + QR code', de: 'Öffentlicher Fahrzeug-Link + QR-Code', el: 'Δημόσιος σύνδεσμος + QR code', fr: 'Lien public véhicule + QR code', es: 'Enlace público vehículo + código QR' },
-  { icon: '📊', en: 'Fleet manifest & analytics', it: 'Manifesto flotta e analisi', de: 'Flottenmanifest & Analysen', el: 'Μανιφέστο στόλου & αναλυτικά', fr: 'Manifeste de flotte & analyses', es: 'Manifiesto de flota y análisis' },
-]
+function t(key: keyof typeof T, lang: Lang): string {
+  const val = T[key] as Record<string, string | string[]>
+  return (val[lang] || val['en']) as string
+}
 
-const LANGS: { code: Lang; flag: string; label: string }[] = [
-  { code: 'en', flag: '🇬🇧', label: 'EN' },
-  { code: 'it', flag: '🇮🇹', label: 'IT' },
-  { code: 'de', flag: '🇩🇪', label: 'DE' },
-  { code: 'el', flag: '🇬🇷', label: 'EL' },
-  { code: 'fr', flag: '🇫🇷', label: 'FR' },
-  { code: 'es', flag: '🇪🇸', label: 'ES' },
-]
+function tArr(key: keyof typeof T, lang: Lang): string[] {
+  const val = T[key] as Record<string, string[]>
+  return val[lang] || val['en']
+}
 
 export default function LandingPage() {
-  const [lang, setLang] = useState<Lang>('en')
+  const [lang, setLang] = useState<Lang>('it')
 
   useEffect(() => {
-    const bl = navigator.language.slice(0, 2) as Lang
-    if (['en','it','de','el','fr','es'].includes(bl)) setLang(bl)
+    const nav = navigator.language.toLowerCase()
+    if (nav.startsWith('el')) setLang('el')
+    else if (nav.startsWith('de')) setLang('de')
+    else if (nav.startsWith('fr')) setLang('fr')
+    else if (nav.startsWith('es')) setLang('es')
+    else if (nav.startsWith('it')) setLang('it')
+    else setLang('en')
   }, [])
 
-  const tr = (key: string) => T[key]?.[lang] || T[key]?.en || key
+  const flags: Record<Lang, string> = { it:'🇮🇹', el:'🇬🇷', de:'🇩🇪', fr:'🇫🇷', es:'🇪🇸', en:'🇬🇧' }
 
   return (
-    <div style={{ background: '#0f172a', color: '#f1f5f9', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-      {/* Nav */}
-      <nav style={{ display: 'flex', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #1e293b', gap: 12 }}>
-        <span style={{ fontSize: 24 }}>🚗</span>
-        <span style={{ fontWeight: 700, fontSize: 18, flex: 1 }}>AutoFleet Pro</span>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {LANGS.map(l => (
-            <button key={l.code} onClick={() => setLang(l.code)}
-              style={{ background: lang === l.code ? '#3b82f6' : 'transparent', border: 'none', borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 13, color: '#f1f5f9' }}>
-              {l.flag}
-            </button>
-          ))}
+    <div style={{ fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', background:'#F8FAFC', color:'#111827', minHeight:'100vh' }}>
+
+      {/* ── NAV ── */}
+      <nav style={{ background:'white', borderBottom:'1px solid #E5E7EB', position:'sticky', top:0, zIndex:50, padding:'0 24px' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', alignItems:'center', height:60, gap:24 }}>
+          <div style={{ fontWeight:800, fontSize:17, color:'#111827' }}>🚗 AutoFleet Pro</div>
+          <div style={{ flex:1 }} />
+          <a href="#features" style={{ fontSize:14, color:'#6B7280', textDecoration:'none' }}>{t('navFeatures', lang)}</a>
+          <a href="#pricing" style={{ fontSize:14, color:'#6B7280', textDecoration:'none' }}>{t('navPricing', lang)}</a>
+          {/* Lang switcher */}
+          <div style={{ display:'flex', gap:4 }}>
+            {LANGS.map(l => (
+              <button key={l} onClick={() => setLang(l)}
+                title={l.toUpperCase()}
+                style={{
+                  background: lang===l ? '#2563EB' : 'transparent',
+                  border: lang===l ? 'none' : '1px solid #E5E7EB',
+                  borderRadius:5, padding:'3px 6px', cursor:'pointer', fontSize:14,
+                  opacity: lang===l ? 1 : 0.6,
+                }}>
+                {flags[l]}
+              </button>
+            ))}
+          </div>
+          <Link href="/login"
+            style={{ fontSize:14, color:'#2563EB', textDecoration:'none', fontWeight:500 }}>
+            {t('navLogin', lang)}
+          </Link>
+          <Link href="/login"
+            style={{ background:'#2563EB', color:'white', padding:'8px 16px', borderRadius:7, fontSize:14, fontWeight:600, textDecoration:'none' }}>
+            {t('cta', lang)}
+          </Link>
         </div>
-        <Link href="/login" style={{ background: '#3b82f6', color: 'white', padding: '8px 16px', borderRadius: 8, textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
-          Login
-        </Link>
       </nav>
 
-      {/* Hero */}
-      <div style={{ textAlign: 'center', padding: '80px 24px 60px' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🚗🚛🚐</div>
-        <h1 style={{ fontSize: 'clamp(24px, 4vw, 44px)', fontWeight: 800, maxWidth: 700, margin: '0 auto 16px', lineHeight: 1.2 }}>
-          {tr('hero')}
-        </h1>
-        <p style={{ fontSize: 18, color: '#94a3b8', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>
-          {tr('sub')}
-        </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/contact" style={{ background: '#3b82f6', color: 'white', padding: '14px 28px', borderRadius: 10, textDecoration: 'none', fontSize: 16, fontWeight: 700 }}>
-            {tr('trial')} →
-          </Link>
-          <Link href="/pricing" style={{ background: 'transparent', color: '#94a3b8', padding: '14px 28px', borderRadius: 10, textDecoration: 'none', fontSize: 16, border: '1px solid #334155' }}>
-            {tr('pricing_link')}
-          </Link>
-        </div>
-        <p style={{ marginTop: 16, fontSize: 13, color: '#475569' }}>14 days free · No credit card required</p>
-      </div>
+      {/* ── HERO ── */}
+      <section style={{ background:'white', padding:'72px 24px 60px' }}>
+        <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' }}>
+          {/* Badge */}
+          <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'#EFF6FF', color:'#2563EB', borderRadius:20, padding:'6px 14px', fontSize:13, fontWeight:600, marginBottom:24 }}>
+            🚀 Founder Plan — 10 {lang==='el'?'θέσεις':lang==='de'?'Plätze':lang==='fr'?'places':lang==='es'?'plazas':lang==='it'?'posti':'spots'} · €29/{lang==='el'?'μήνα':lang==='de'?'Monat':lang==='fr'?'mois':lang==='es'?'mes':lang==='it'?'mese':'month'}
+          </div>
 
-      {/* Features */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px 80px' }}>
-        <h2 style={{ textAlign: 'center', fontSize: 28, fontWeight: 700, marginBottom: 40 }}>{tr('features')}</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
-          {FEATURES.map((f, i) => (
-            <div key={i} style={{ background: '#1e293b', borderRadius: 12, padding: '20px', border: '1px solid #334155' }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>{f.icon}</div>
-              <div style={{ fontWeight: 600, fontSize: 15 }}>{(f as Record<string, string>)[lang] || f.en}</div>
+          <h1 style={{ fontSize:'clamp(28px,4vw,48px)', fontWeight:800, lineHeight:1.1, marginBottom:20, color:'#111827' }}>
+            {t('h1', lang)}
+          </h1>
+          <p style={{ fontSize:'clamp(16px,2vw,20px)', color:'#6B7280', maxWidth:700, margin:'0 auto 36px', lineHeight:1.6 }}>
+            {t('h2', lang)}
+          </p>
+
+          <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap', marginBottom:12 }}>
+            <Link href="/login"
+              style={{ background:'#2563EB', color:'white', padding:'14px 28px', borderRadius:8, fontSize:16, fontWeight:700, textDecoration:'none', boxShadow:'0 4px 14px rgba(37,99,235,0.3)' }}>
+              {t('cta', lang)}
+            </Link>
+            <a href="#demo"
+              style={{ background:'white', color:'#2563EB', padding:'14px 24px', borderRadius:8, fontSize:16, fontWeight:600, textDecoration:'none', border:'2px solid #2563EB' }}>
+              {t('cta2', lang)}
+            </a>
+          </div>
+          <div style={{ fontSize:13, color:'#9CA3AF' }}>{t('nocc', lang)}</div>
+        </div>
+      </section>
+
+      {/* ── DASHBOARD SCREENSHOT MOCK ── */}
+      <section id="demo" style={{ background:'#1E293B', padding:'48px 24px' }}>
+        <div style={{ maxWidth:1000, margin:'0 auto' }}>
+          <div style={{ textAlign:'center', marginBottom:24 }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.1)', borderRadius:20, padding:'6px 14px', fontSize:13, color:'#94A3B8', marginBottom:12 }}>
+              📊 {t('dashLabel', lang)}
             </div>
-          ))}
+          </div>
+
+          {/* Dashboard mock */}
+          <div style={{ background:'#F5F7FA', borderRadius:12, overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,0.4)', border:'1px solid rgba(255,255,255,0.1)' }}>
+            {/* Top bar mock */}
+            <div style={{ background:'white', padding:'10px 16px', borderBottom:'1px solid #E5E7EB', display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:12, height:12, borderRadius:'50%', background:'#FF5F57' }} />
+              <div style={{ width:12, height:12, borderRadius:'50%', background:'#FFBD2E' }} />
+              <div style={{ width:12, height:12, borderRadius:'50%', background:'#28C840' }} />
+              <div style={{ fontSize:12, color:'#9CA3AF', marginLeft:8 }}>autofleet-pro.vercel.app/dashboard</div>
+            </div>
+            {/* Dashboard content */}
+            <div style={{ display:'grid', gridTemplateColumns:'180px 1fr', minHeight:320 }}>
+              {/* Sidebar */}
+              <div style={{ background:'#1E293B', padding:'16px 12px', display:'flex', flexDirection:'column', gap:4 }}>
+                {['⊞ Dashboard','🚗 Vehicles 56','☰ Manifest','📈 Analytics'].map((item,i) => (
+                  <div key={i} style={{
+                    padding:'8px 10px', borderRadius:6, fontSize:12, color: i===0 ? 'white' : '#94A3B8',
+                    background: i===0 ? 'rgba(37,99,235,0.6)' : 'transparent', fontWeight: i===0 ? 600 : 400,
+                  }}>{item}</div>
+                ))}
+              </div>
+              {/* Main content */}
+              <div style={{ padding:16, display:'flex', flexDirection:'column', gap:10 }}>
+                {/* Morning brief */}
+                <div style={{ background:'linear-gradient(135deg,#1E293B,#1E3A5F)', borderRadius:8, padding:'12px 16px', color:'white' }}>
+                  <div style={{ fontSize:11, color:'#94A3B8', marginBottom:4 }}>
+                    {lang==='el'?'Καλημέρα 👋':lang==='de'?'Guten Morgen 👋':lang==='fr'?'Bonjour 👋':lang==='es'?'Buenos días 👋':'Buongiorno 👋'}
+                  </div>
+                  <div style={{ display:'flex', gap:16, fontSize:12 }}>
+                    <span style={{ color:'#FCA5A5' }}>⚠️ <strong>27</strong> {lang==='el'?'οχήματα >90 ημέρες':'veicoli >90 giorni'}</span>
+                    <span style={{ color:'#86EFAC' }}>💰 <strong>5</strong> {lang==='el'?'περιθώριο >€4k':'margine >€4k'}</span>
+                    <span style={{ color:'#FDE68A', marginLeft:'auto', fontWeight:700 }}>P&L +62.828€</span>
+                  </div>
+                </div>
+                {/* KPI row */}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
+                  {[
+                    { label: lang==='el'?'Σύνολο':lang==='de'?'Gesamt':lang==='fr'?'Total':lang==='es'?'Total':'Totale', value:'56', color:'#2563EB', icon:'🚗' },
+                    { label: lang==='el'?'Αξία Stock':lang==='de'?'Lagerwert':lang==='fr'?'Valeur Stock':lang==='es'?'Valor Stock':'Valore Stock', value:'€1.58M', color:'#059669', icon:'💶' },
+                    { label: lang==='el'?'Κέρδος Μήνα':lang==='de'?'Gewinn Monat':lang==='fr'?'Profit Mois':lang==='es'?'Ganancia Mes':'Profitto Mese', value:'+€6.2k', color:'#059669', icon:'📅' },
+                    { label: lang==='el'?'Πωλήθηκαν':lang==='de'?'Verkauft':lang==='fr'?'Vendus':lang==='es'?'Vendidos':'Venduti', value:'10', color:'#16A34A', icon:'✅' },
+                  ].map(k => (
+                    <div key={k.label} style={{ background:'white', borderRadius:8, padding:'10px 12px', border:'1px solid #E5E7EB' }}>
+                      <div style={{ fontSize:10, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.04em' }}>{k.icon} {k.label}</div>
+                      <div style={{ fontSize:18, fontWeight:700, color:k.color }}>{k.value}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Dead stock + opportunities */}
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'10px 12px', fontSize:12 }}>
+                    <div style={{ fontWeight:700, color:'#991B1B', marginBottom:6 }}>💀 Dead Stock · 3 {lang==='el'?'οχήματα':'veicoli'}</div>
+                    {['CAT 320 · 109d · €2.725','Hitachi ZX210 · 99d · €2.178','Komatsu PC210 · 79d · €1.738'].map(v=>(
+                      <div key={v} style={{ color:'#B91C1C', padding:'2px 0', borderBottom:'1px solid #FEE2E2', fontSize:11 }}>🔴 {v}</div>
+                    ))}
+                  </div>
+                  <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:8, padding:'10px 12px', fontSize:12 }}>
+                    <div style={{ fontWeight:700, color:'#166534', marginBottom:6 }}>🏆 {lang==='el'?'Top Ευκαιρίες':lang==='de'?'Top Chancen':lang==='fr'?'Top Opportunités':lang==='es'?'Top Oportunidades':'Top Opportunità'}</div>
+                    {['Hyundai HX220 · +€21.430','Doosan DX225 · +€16.650','JCB 3CX · +€12.430'].map(v=>(
+                      <div key={v} style={{ color:'#16a34a', padding:'2px 0', borderBottom:'1px solid #BBF7D0', fontSize:11 }}>💰 {v}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* CTA */}
-      <div style={{ background: '#1e293b', padding: '60px 24px', textAlign: 'center', borderTop: '1px solid #334155' }}>
-        <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>€49/month</h2>
-        <p style={{ color: '#94a3b8', marginBottom: 24 }}>Unlimited vehicles · All features · 6 languages</p>
-        <Link href="/contact" style={{ background: '#22c55e', color: 'white', padding: '14px 32px', borderRadius: 10, textDecoration: 'none', fontSize: 16, fontWeight: 700 }}>
-          {tr('trial')} →
-        </Link>
-      </div>
+      {/* ── PAIN vs GAIN ── */}
+      <section id="features" style={{ padding:'64px 24px', background:'white' }}>
+        <div style={{ maxWidth:900, margin:'0 auto' }}>
+          <h2 style={{ textAlign:'center', fontSize:'clamp(22px,3vw,36px)', fontWeight:800, marginBottom:48 }}>
+            {t('painTitle', lang)}
+          </h2>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24 }}>
+            {/* Before */}
+            <div style={{ background:'#FEF2F2', borderRadius:12, padding:28, border:'1px solid #FECACA' }}>
+              <div style={{ fontWeight:700, fontSize:16, marginBottom:16, color:'#991B1B' }}>
+                ❌ Excel + WhatsApp
+              </div>
+              {[
+                lang==='el'?'Ξεχνάς οχήματα στο stock':lang==='de'?'Vergessene Fahrzeuge im Lager':lang==='fr'?'Véhicules oubliés en stock':lang==='es'?'Vehículos olvidados en stock':'Veicoli dimenticati in magazzino',
+                lang==='el'?'Έγγραφα παντού χαμένα':lang==='de'?'Überall verstreute Dokumente':lang==='fr'?'Documents éparpillés partout':lang==='es'?'Documentos dispersos por doquier':'Documenti sparsi ovunque',
+                lang==='el'?'Δεν ξέρεις το κέρδος ανά αυτοκίνητο':lang==='de'?'Keine Kenntnis der Marge pro Fahrzeug':lang==='fr'?'Aucun contrôle de la marge par véhicule':lang==='es'?'Sin control de margen por vehículo':'Nessun controllo margini per veicolo',
+                lang==='el'?'Χαμένος χρόνος σε αναφορές':lang==='de'?'Zeitverlust durch Berichte':lang==='fr'?'Temps perdu en rapports':lang==='es'?'Tiempo perdido en informes':'Ore perse a fare report',
+                lang==='el'?'Δεν ξέρεις τι αγοράζεις':lang==='de'?'Du weißt nicht, was du kaufst':lang==='fr'?'Vous ne savez pas ce que vous achetez':lang==='es'?'No sabes qué compras':'Non sai cosa stai comprando',
+              ].map((item,i) => (
+                <div key={i} style={{ display:'flex', gap:8, marginBottom:10, fontSize:14, color:'#7F1D1D' }}>
+                  <span>✗</span><span>{item}</span>
+                </div>
+              ))}
+            </div>
+            {/* After */}
+            <div style={{ background:'#F0FDF4', borderRadius:12, padding:28, border:'1px solid #BBF7D0' }}>
+              <div style={{ fontWeight:700, fontSize:16, marginBottom:16, color:'#166534' }}>
+                ✅ AutoFleet Pro
+              </div>
+              {[
+                lang==='el'?'Alert: αυτοκίνητο 90+ ημέρες σε stock':lang==='de'?'Alert: Auto 90+ Tage auf Lager':lang==='fr'?'Alerte: voiture 90+ jours en stock':lang==='es'?'Alerta: coche 90+ días en stock':'Alert: auto ferma da 90+ giorni',
+                lang==='el'?'Όλα τα έγγραφα ανά όχημα':lang==='de'?'Alle Dokumente pro Fahrzeug':lang==='fr'?'Tous les documents par véhicule':lang==='es'?'Todos los documentos por vehículo':'Tutti i documenti per ogni veicolo',
+                lang==='el'?'Κέρδος + κόστος ανά αυτοκίνητο':lang==='de'?'Marge + Kosten pro Fahrzeug':lang==='fr'?'Marge + coûts par véhicule':lang==='es'?'Margen + costes por vehículo':'Margine + costi per ogni veicolo',
+                lang==='el'?'PDF, CMR, Excel με ένα κλικ':lang==='de'?'PDF, CMR, Excel mit einem Klick':lang==='fr'?'PDF, CMR, Excel en un clic':lang==='es'?'PDF, CMR, Excel en un clic':'PDF, CMR, Excel con un click',
+                lang==='el'?'Dashboard: αξία stock, κέρδος, alerts':lang==='de'?'Dashboard: Lagerwert, Marge, Alerts':lang==='fr'?'Dashboard: valeur stock, marge, alertes':lang==='es'?'Dashboard: valor stock, margen, alertas':'Dashboard: valore stock, margini, alert',
+              ].map((item,i) => (
+                <div key={i} style={{ display:'flex', gap:8, marginBottom:10, fontSize:14, color:'#14532D' }}>
+                  <span style={{ color:'#16a34a', fontWeight:700 }}>✓</span><span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div style={{ textAlign: 'center', padding: 24, color: '#475569', fontSize: 13 }}>
-        © 2025 AutoFleet Pro · autofleetpro1@gmail.com
-      </div>
+      {/* ── 3 FEATURES ── */}
+      <section style={{ padding:'64px 24px', background:'#F8FAFC' }}>
+        <div style={{ maxWidth:900, margin:'0 auto' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))', gap:24 }}>
+            {[
+              { icon:'💶', title:t('f1t',lang), desc:t('f1d',lang) },
+              { icon:'📋', title:t('f2t',lang), desc:t('f2d',lang) },
+              { icon:'⚠️', title:t('f3t',lang), desc:t('f3d',lang) },
+            ].map((f,i) => (
+              <div key={i} style={{ background:'white', borderRadius:12, padding:28, border:'1px solid #E5E7EB', boxShadow:'0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div style={{ fontSize:32, marginBottom:12 }}>{f.icon}</div>
+                <h3 style={{ fontSize:17, fontWeight:700, marginBottom:10, color:'#111827' }}>{f.title}</h3>
+                <p style={{ fontSize:14, color:'#6B7280', lineHeight:1.6 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SOCIAL PROOF NUMBERS ── */}
+      <section style={{ padding:'48px 24px', background:'#1E293B' }}>
+        <div style={{ maxWidth:800, margin:'0 auto', textAlign:'center' }}>
+          <div style={{ fontSize:14, color:'#64748B', marginBottom:24 }}>{t('spTitle', lang)}</div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24 }}>
+            {[
+              { value:'56', label: lang==='el'?'οχήματα διαχειρισμένα':lang==='de'?'verwaltete Fahrzeuge':lang==='fr'?'véhicules gérés':lang==='es'?'vehículos gestionados':'veicoli gestiti' },
+              { value:'€367.600', label: lang==='el'?'πωλήσεις στο demo':lang==='de'?'Umsatz im Demo':lang==='fr'?'ventes en démo':lang==='es'?'ventas en demo':'vendite simulate' },
+              { value:'€62.828', label: lang==='el'?'συνολικό κέρδος tracked':lang==='de'?'verfolgte Marge':lang==='fr'?'profit suivi':lang==='es'?'beneficio rastreado':'profitto tracciato' },
+            ].map(s => (
+              <div key={s.value}>
+                <div style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, color:'white' }}>{s.value}</div>
+                <div style={{ fontSize:13, color:'#64748B', marginTop:4 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ── */}
+      <section id="pricing" style={{ padding:'64px 24px', background:'white' }}>
+        <div style={{ maxWidth:500, margin:'0 auto', textAlign:'center' }}>
+          <h2 style={{ fontSize:'clamp(22px,3vw,32px)', fontWeight:800, marginBottom:8 }}>
+            {t('pTitle', lang)}
+          </h2>
+          <p style={{ color:'#6B7280', marginBottom:32, fontSize:15 }}>{t('pSub', lang)}</p>
+
+          <div style={{ background:'white', border:'2px solid #2563EB', borderRadius:16, padding:36, boxShadow:'0 8px 30px rgba(37,99,235,0.15)' }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'#EFF6FF', color:'#2563EB', borderRadius:20, padding:'4px 12px', fontSize:12, fontWeight:600, marginBottom:20 }}>
+              Founder Beta
+            </div>
+            <div style={{ fontSize:52, fontWeight:800, color:'#111827', lineHeight:1 }}>€29</div>
+            <div style={{ color:'#6B7280', fontSize:14, marginBottom:28 }}>/{lang==='el'?'μήνα':lang==='de'?'Monat':lang==='fr'?'mois':lang==='es'?'mes':'mese'} · {lang==='el'?'κλειδωμένη τιμή για πάντα':lang==='de'?'Preis für immer gesperrt':lang==='fr'?'prix bloqué pour toujours':lang==='es'?'precio bloqueado para siempre':'prezzo bloccato per sempre'}</div>
+
+            {tArr('pFeatures', lang).map((f,i) => (
+              <div key={i} style={{ display:'flex', gap:10, marginBottom:10, fontSize:14, color:'#374151', textAlign:'left' }}>
+                <span style={{ color:'#2563EB', fontWeight:700, flexShrink:0 }}>✓</span>
+                <span>{f}</span>
+              </div>
+            ))}
+
+            <Link href="/login"
+              style={{ display:'block', background:'#2563EB', color:'white', padding:'14px 24px', borderRadius:8, fontSize:16, fontWeight:700, textDecoration:'none', marginTop:28, boxShadow:'0 4px 14px rgba(37,99,235,0.3)' }}>
+              {t('trialBtn', lang)}
+            </Link>
+            <div style={{ fontSize:12, color:'#9CA3AF', marginTop:12 }}>{t('nocc', lang)}</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer style={{ background:'#111827', padding:'32px 24px', textAlign:'center' }}>
+        <div style={{ color:'#4B5563', fontSize:13 }}>
+          © 2025 AutoFleet Pro · autofleetpro1@gmail.com ·{' '}
+          <a href="https://paypal.me/Autofleetpro" style={{ color:'#6B7280' }}>PayPal</a>
+        </div>
+      </footer>
     </div>
   )
 }
