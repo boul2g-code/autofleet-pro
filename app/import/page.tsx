@@ -24,14 +24,7 @@ export default function ImportPage() {
     importing: { el:'⏳ Εισαγωγή', en:'⏳ Importing', de:'⏳ Importieren', fr:'⏳ Importation', it:'⏳ Importazione', es:'⏳ Importando' },
     of: { el:'από', en:'of', de:'von', fr:'sur', it:'di', es:'de' },
     successTitle: { el:'✅ Εισαγωγή ολοκληρώθηκε!', en:'✅ Import complete!', de:'✅ Import abgeschlossen!', fr:'✅ Importation terminée !', it:'✅ Importazione completata!', es:'✅ ¡Importación completada!' },
-    successMsg: (n: number) => ({
-      el: `${n} οχήματα προστέθηκαν στο σύστημα.`,
-      en: `${n} vehicles added to the system.`,
-      de: `${n} Fahrzeuge wurden hinzugefügt.`,
-      fr: `${n} véhicules ajoutés au système.`,
-      it: `${n} veicoli aggiunti al sistema.`,
-      es: `${n} vehículos añadidos al sistema.`,
-    }),
+    successMsg: { el:'οχήματα προστέθηκαν', en:'vehicles added', de:'Fahrzeuge hinzugefügt', fr:'véhicules ajoutés', it:'veicoli aggiunti', es:'vehículos añadidos' },
     template: { el:'📥 Κατέβασε πρότυπο Excel', en:'📥 Download Excel template', de:'📥 Excel-Vorlage herunterladen', fr:'📥 Télécharger le modèle Excel', it:'📥 Scarica modello Excel', es:'📥 Descargar plantilla Excel' },
     noFile: { el:'⚠️ Μη έγκυρο αρχείο. Χρησιμοποίησε .xlsx ή .csv', en:'⚠️ Invalid file. Use .xlsx or .csv', de:'⚠️ Ungültige Datei. Verwende .xlsx oder .csv', fr:'⚠️ Fichier invalide. Utilisez .xlsx ou .csv', it:'⚠️ File non valido. Usa .xlsx o .csv', es:'⚠️ Archivo inválido. Usa .xlsx o .csv' },
     hint: { el:'Τα δεδομένα σου δεν αποστέλλονται πουθενά — η επεξεργασία γίνεται τοπικά στον browser.', en:'Your data is not sent anywhere — processing happens locally in the browser.', de:'Deine Daten werden nirgendwo gesendet — Verarbeitung erfolgt lokal im Browser.', fr:'Vos données ne sont envoyées nulle part — le traitement se fait localement.', it:'I tuoi dati non vengono inviati da nessuna parte — elaborazione locale nel browser.', es:'Tus datos no se envían a ningún lugar — el procesamiento es local en el navegador.' },
@@ -50,7 +43,7 @@ export default function ImportPage() {
     vin:'vin', telaio:'vin',
     mileage:'mileage', km:'mileage', chilometri:'mileage', kilomètre:'mileage', kilometer:'mileage', kilometraje:'mileage', χιλιόμετρα:'mileage',
     price:'purchase.price', prezzo:'purchase.price', prix:'purchase.price', preis:'purchase.price', precio:'purchase.price', τιμή:'purchase.price', αγορά:'purchase.price',
-    color:'color', colore:'color', couleur:'color', farbe:'color', color:'color', χρώμα:'color',
+    color:'color', colore:'color', couleur:'color', farbe:'color', χρώμα:'color',
     fuel:'fuelType', carburante:'fuelType', combustible:'fuelType', kraftstoff:'fuelType', καύσιμο:'fuelType',
     category:'category', categoria:'category', catégorie:'category', kategorie:'category', categoría:'category', κατηγορία:'category',
     notes:'notes', note:'notes', beschreibung:'notes', σημειώσεις:'notes',
@@ -104,7 +97,7 @@ export default function ImportPage() {
     setImporting(false)
     setPreview([])
     setFileName('')
-    alert((T.successMsg(count) as Record<string, string>)[lang] || T.successMsg(count)['en'])
+    const msg = (T.successMsg as Record<string,string>)[lang] || (T.successMsg as Record<string,string>)['en']; alert(`${count} ${msg}`)
   }
 
   const downloadTemplate = () => {
