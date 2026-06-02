@@ -39,7 +39,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 34, height: 34, borderRadius: 8,
-              background: '#2563EB', display: 'flex', alignItems: 'center',
+              background: '#6366F1', display: 'flex', alignItems: 'center',
               justifyContent: 'center', fontSize: 18, flexShrink: 0,
             }}>🚗</div>
             <div>
@@ -60,7 +60,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
                   padding: '9px 12px', fontSize: 13.5, textDecoration: 'none',
                   borderRadius: 7, marginBottom: 2,
                   color: active ? '#FFFFFF' : '#94A3B8',
-                  background: active ? 'rgba(37,99,235,0.6)' : 'transparent',
+                  background: active ? 'rgba(99,102,241,0.6)' : 'transparent',
                   fontWeight: active ? 600 : 400,
                   transition: 'all 0.12s',
                 }}
@@ -93,7 +93,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
               <button key={l.code} onClick={() => setLang(l.code)}
                 title={l.label}
                 style={{
-                  background: lang === l.code ? '#2563EB' : 'rgba(255,255,255,0.06)',
+                  background: lang === l.code ? '#6366F1' : 'rgba(255,255,255,0.06)',
                   border: lang === l.code ? '1px solid rgba(37,99,235,0.5)' : '1px solid transparent',
                   borderRadius: 5, padding: '3px 7px',
                   cursor: 'pointer', fontSize: 14,
