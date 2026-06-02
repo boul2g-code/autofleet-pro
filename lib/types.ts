@@ -125,14 +125,39 @@ export interface Vehicle {
 
 export interface Organization {
   id: string
-  name: string
+  name?: string
+  // Company
+  vat?: string
+  taxOffice?: string
   country?: string
+  address?: string
+  city?: string
+  zip?: string
+  phone?: string
+  email?: string
+  website?: string
+  // Legacy
   address_de?: string
   address_gr?: string
   vat_number?: string
-  phone?: string
-  email?: string
+  // Branding
+  logo?: string
   logo_url?: string
+  primaryColor?: string
+  secondaryColor?: string
+  // Documents
+  responsible?: string
+  stamp?: string
+  // Marketplace
+  autoscout?: string
+  mobilede?: string
+  cargr?: string
+  facebook?: string
+  // Financials
+  defaultStoreCost?: number
+  defaultTransportCostPerKm?: number
+  marginTarget?: number
+  // Plan
   plan?: string
   status?: string
   trial_ends_at?: string
