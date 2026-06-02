@@ -316,7 +316,7 @@ export default function LandingPage() {
 
       {/* ── PRICING ── */}
       <section id="pricing" style={{ padding:'64px 24px', background:'white' }}>
-        <div style={{ maxWidth:500, margin:'0 auto', textAlign:'center' }}>
+        <div style={{ maxWidth:800, margin:'0 auto', textAlign:'center' }}>
           <h2 style={{ fontSize:'clamp(22px,3vw,32px)', fontWeight:800, marginBottom:8 }}>
             {lang==='el'?'Επιλέξτε πλάνο':lang==='de'?'Plan wählen':lang==='fr'?'Choisissez votre plan':lang==='es'?'Elige tu plan':'Scegli il tuo piano'}
           </h2>
