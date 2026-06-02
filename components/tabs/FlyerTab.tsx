@@ -6,6 +6,8 @@ import { COLORS } from '@/lib/vehicleData'
 export default function FlyerTab({ id }: { id: string }) {
   const { vehicles, settings } = useFleetStore()
   const lang = settings.lang
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const org = settings.org as any
   const v = vehicles.find(x => x.id === id)
   if (!v) return null
 
@@ -49,8 +51,8 @@ export default function FlyerTab({ id }: { id: string }) {
 <div class="flyer">
   <div class="header">
     <div>
-      <div class="logo">🚗 ${settings.org?.name || 'AutoFleet Pro'}</div>
-      <div class="tagline">${settings.org?.address_de || settings.org?.address_gr || 'Used Vehicle Dealer'}</div>
+      <div class="logo">${org?.logo ? '<img src="' + org.logo + '" style="height:38px;max-width:150px;object-fit:contain;display:block;margin-bottom:2px" />' : '🚗 ' + (org?.name || 'AutoFleet Pro')}</div>
+      <div class="tagline">${org?.address || settings.org?.address_de || settings.org?.address_gr || (org?.city ? org.city + (org?.country ? ', ' + org.country : '') : 'Used Vehicle Dealer')}</div>
     </div>
     <div class="badge">FOR SALE</div>
   </div>
@@ -96,7 +98,7 @@ export default function FlyerTab({ id }: { id: string }) {
 
   <div class="footer">
     <div>
-      <div class="footer-contact">${settings.org?.email || 'autofleetpro1@gmail.com'} · ${settings.org?.phone || ''}</div>
+      <div class="footer-contact">${org?.email || settings.org?.email || 'autofleetpro1@gmail.com'} · ${org?.phone || settings.org?.phone || ''}</div>
       <div style="margin-top:4px">${settings.org?.address_de ? '🇩🇪 ' + settings.org.address_de + ' · ' : ''}${settings.org?.address_gr ? '🇬🇷 ' + settings.org.address_gr : ''}</div>
     </div>
     <div style="text-align:center">
