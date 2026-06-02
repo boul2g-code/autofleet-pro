@@ -1,13 +1,26 @@
 import { createClient } from './client'
 import type { Vehicle, AppSettings, Organization } from '../types'
 
+// ── Auth helper ──────────────────────────────────────────────
+// Always call this before any DB operation.
+// Returns the authenticated user or throws — never proceeds unauthenticated.
+async function getAuthUser() {
+  const sb = createClient()
+  const { data: { user }, error } = await sb.auth.getUser()
+  if (error || !user) throw new Error('Not authenticated')
+  return { sb, user }
+}
+
 // ── Vehicles ────────────────────────────────────────────────
+// Defense in depth: RLS (Layer 1) + application filter (Layer 2)
+// Even if someone drops the RLS policy, the .eq('user_id') still protects.
 
 export async function dbGetVehicles(): Promise<Vehicle[]> {
-  const sb = createClient()
+  const { sb, user } = await getAuthUser()
   const { data, error } = await sb
     .from('vehicles')
     .select('*')
+    .eq('user_id', user.id)           // Layer 2: application-level filter
     .order('created_at', { ascending: false })
   if (error) {
     console.error('dbGetVehicles error:', error)
@@ -17,23 +30,19 @@ export async function dbGetVehicles(): Promise<Vehicle[]> {
 }
 
 export async function dbGetVehicle(id: string): Promise<Vehicle | null> {
-  const sb = createClient()
+  const { sb, user } = await getAuthUser()
   const { data, error } = await sb
     .from('vehicles')
     .select('*')
     .eq('id', id)
+    .eq('user_id', user.id)           // Layer 2: cannot fetch another dealer's vehicle by id
     .single()
   if (error || !data) return null
   return rowToVehicle(data)
 }
 
 export async function dbCreateVehicle(v: Partial<Vehicle>): Promise<Vehicle | null> {
-  const sb = createClient()
-  const { data: { user }, error: authErr } = await sb.auth.getUser()
-  if (authErr || !user) {
-    console.error('dbCreateVehicle: not authenticated', authErr)
-    return null
-  }
+  const { sb, user } = await getAuthUser()
 
   // Get org_id from settings
   const { data: settingsRow } = await sb
@@ -43,7 +52,7 @@ export async function dbCreateVehicle(v: Partial<Vehicle>): Promise<Vehicle | nu
     .single()
 
   const row = vehicleToRow(v)
-  row.user_id = user.id
+  row.user_id = user.id               // Always stamp with authenticated user
   if (settingsRow?.org_id) row.org_id = settingsRow.org_id
 
   const { data, error } = await sb
@@ -60,10 +69,14 @@ export async function dbCreateVehicle(v: Partial<Vehicle>): Promise<Vehicle | nu
 }
 
 export async function dbUpdateVehicle(id: string, v: Partial<Vehicle>): Promise<boolean> {
-  const sb = createClient()
+  const { sb, user } = await getAuthUser()
   const row = vehicleToRow(v)
   row.updated_at = new Date().toISOString()
-  const { error } = await sb.from('vehicles').update(row).eq('id', id)
+  const { error } = await sb
+    .from('vehicles')
+    .update(row)
+    .eq('id', id)
+    .eq('user_id', user.id)           // Layer 2: cannot update another dealer's vehicle
   if (error) {
     console.error('dbUpdateVehicle error:', error)
     return false
@@ -72,8 +85,12 @@ export async function dbUpdateVehicle(id: string, v: Partial<Vehicle>): Promise<
 }
 
 export async function dbDeleteVehicle(id: string): Promise<boolean> {
-  const sb = createClient()
-  const { error } = await sb.from('vehicles').delete().eq('id', id)
+  const { sb, user } = await getAuthUser()
+  const { error } = await sb
+    .from('vehicles')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)           // Layer 2: cannot delete another dealer's vehicle
   if (error) {
     console.error('dbDeleteVehicle error:', error)
     return false
@@ -84,8 +101,7 @@ export async function dbDeleteVehicle(id: string): Promise<boolean> {
 // ── Settings ────────────────────────────────────────────────
 
 export async function dbGetSettings(): Promise<AppSettings | null> {
-  const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
+  const { sb, user } = await getAuthUser().catch(() => ({ sb: createClient(), user: null }))
   if (!user) return null
   const { data } = await sb.from('settings').select('*').eq('user_id', user.id).single()
   if (!data) return null
@@ -97,9 +113,7 @@ export async function dbGetSettings(): Promise<AppSettings | null> {
 }
 
 export async function dbSaveSettings(s: Partial<AppSettings>): Promise<boolean> {
-  const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
-  if (!user) return false
+  const { sb, user } = await getAuthUser()
   const { error } = await sb.from('settings').upsert({
     user_id: user.id,
     lang: s.lang,
@@ -114,17 +128,14 @@ export async function dbSaveSettings(s: Partial<AppSettings>): Promise<boolean> 
 // ── Org ─────────────────────────────────────────────────────
 
 export async function dbGetOrg(): Promise<Organization | null> {
-  const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
+  const { sb, user } = await getAuthUser().catch(() => ({ sb: createClient(), user: null }))
   if (!user) return null
   const { data } = await sb.from('settings').select('org_data').eq('user_id', user.id).single()
   return data?.org_data || null
 }
 
 export async function dbSaveOrg(org: Organization): Promise<boolean> {
-  const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
-  if (!user) return false
+  const { sb, user } = await getAuthUser()
   const { error } = await sb.from('settings').upsert({
     user_id: user.id,
     org_data: org,
