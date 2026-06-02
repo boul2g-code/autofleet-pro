@@ -1,295 +1,367 @@
-/* eslint-disable react/no-unescaped-entities */
 'use client'
+import { useMemo } from 'react'
+import Link from 'next/link'
 import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import { calcFinancials, fmtCur } from '@/lib/financials'
-import { scoreVehicle } from '@/lib/vehicleScore'
-import Link from 'next/link'
-import type { Lang } from '@/lib/types'
+import BackupReminder from '@/components/BackupReminder'
 
-const T: Record<string, Record<Lang, string>> = {
-  topOpp:    { el:'🔥 Καλύτερη Ευκαιρία', en:'🔥 Top Opportunity', de:'🔥 Beste Chance', fr:'🔥 Meilleure opportunité', it:'🔥 Top Opportunity', es:'🔥 Mejor oportunidad' },
-  topOppSub: { el:'Υψηλότερο score + κέρδος', en:'Highest score + profit', de:'Höchste Bewertung + Gewinn', fr:'Score + profit le plus élevé', it:'Score più alto + profitto', es:'Mayor puntuación + beneficio' },
-  attention: { el:'⚠️ Απαιτεί Προσοχή', en:'⚠️ Needs Attention', de:'⚠️ Achtung erforderlich', fr:'⚠️ Attention requise', it:'⚠️ Attenzione richiesta', es:'⚠️ Requiere atención' },
-  agingCost: { el:'Εκτιμ. Κόστος Αναμονής', en:'Est. Holding Cost', de:'Gesch. Haltekosten', fr:'Coût de détention est.', it:'Costo stimato immobilizzo', es:'Costo estimado inmovilización' },
-  expProfit: { el:'Εκτιμ. Κέρδος', en:'Est. Profit', de:'Gesch. Gewinn', fr:'Bénéfice estimé', it:'Profitto stimato', es:'Beneficio estimado' },
-  daysStock: { el:'ημ. σε απόθεμα', en:'days in stock', de:'Tage Lager', fr:'jours en stock', it:'giorni in stock', es:'días en stock' },
-  noVeh:     { el:'Δεν υπάρχουν οχήματα ακόμα', en:'No vehicles yet', de:'Noch keine Fahrzeuge', fr:'Aucun véhicule', it:'Nessun veicolo ancora', es:'Sin vehículos aún' },
-  addFirst:  { el:'Προσθέστε το πρώτο σας', en:'Add your first vehicle', de:'Erstes Fahrzeug hinzufügen', fr:'Ajoutez votre premier', it:'Aggiungi il primo veicolo', es:'Añade tu primer vehículo' },
-  fleetSt:   { el:'Κατάσταση Στόλου', en:'Fleet Status', de:'Flottenstatus', fr:'Statut flotte', it:'Stato flotta', es:'Estado flota' },
-  quickL:    { el:'Γρήγορες Συνδέσεις', en:'Quick Links', de:'Schnellzugriff', fr:'Accès rapide', it:'Accesso rapido', es:'Acceso rápido' },
-  recentV:   { el:'Πρόσφατα Οχήματα', en:'Recent Vehicles', de:'Neueste Fahrzeuge', fr:'Véhicules récents', it:'Veicoli recenti', es:'Vehículos recientes' },
-  stockVal:  { el:'Αξία Αποθέματος', en:'Stock Value', de:'Lagerwert', fr:'Valeur stock', it:'Valore stock', es:'Valor stock' },
-  monProfit: { el:'Κέρδος Μήνα', en:'Month Profit', de:'Monatsgewinn', fr:'Bénéfice mois', it:'Profitto mese', es:'Beneficio mes' },
-  avgDays:   { el:'Μέσος Χρόνος', en:'Avg Days to Sell', de:'Ø Verkaufstage', fr:'Délai moyen', it:'Giorni medi vendita', es:'Días medios' },
-  totProfit: { el:'Σύνολο Κέρδους', en:'Total Profit', de:'Gesamtgewinn', fr:'Bénéfice total', it:'Profitto totale', es:'Beneficio total' },
-  inStock:   { el:'Σε Απόθεμα', en:'In Stock', de:'Auf Lager', fr:'En stock', it:'In stock', es:'En stock' },
-  sold:      { el:'Πωλήθηκαν', en:'Sold', de:'Verkauft', fr:'Vendus', it:'Venduti', es:'Vendidos' },
-  inTransit: { el:'Σε Μεταφορά', en:'In Transit', de:'Im Transport', fr:'En transit', it:'In transito', es:'En tránsito' },
-  viewAll:   { el:'Δείτε όλα →', en:'View all →', de:'Alle anzeigen →', fr:'Voir tout →', it:'Vedi tutto →', es:'Ver todo →' },
+function daysSince(date?: string) {
+  if (!date) return 0
+  return Math.floor((Date.now() - new Date(date).getTime()) / 86400000)
 }
-const LL = (lang: Lang, k: string) => T[k]?.[lang] || T[k]?.en || k
+
+const catIcon: Record<string, string> = {
+  car: '🚗', truck: '🚛', van: '🚐', bus: '🚌', moto: '🏍️', construction: '🏗️'
+}
 
 export default function DashboardPage() {
   const { vehicles, settings } = useFleetStore()
-  const lang = settings.lang
-
-  const inStock  = vehicles.filter(v => ['purchased','transit_in','stored','for_sale'].includes(v.status || ''))
-  const sold     = vehicles.filter(v => ['sold','transit_out','delivered'].includes(v.status || ''))
-  const inTransit = vehicles.filter(v => ['transit_in','transit_out'].includes(v.status || ''))
-  const stockValue = inStock.reduce((s, v) => s + (v.purchase?.price || 0), 0)
-  const totalProfit = sold.reduce((s, v) => s + calcFinancials(v).grossProfit, 0)
+  const lang = settings?.lang ?? 'el'
 
   const now = new Date()
-  const monthProfit = sold
-    .filter(v => { const d = new Date(v.sale?.date || v.updated_at || 0); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() })
-    .reduce((s, v) => s + calcFinancials(v).grossProfit, 0)
+  const hour = now.getHours()
+  const greeting = hour < 12
+    ? { el: 'Καλημέρα', en: 'Good morning', de: 'Guten Morgen', fr: 'Bonjour', it: 'Buongiorno', es: 'Buenos días' }[lang]
+    : hour < 18
+    ? { el: 'Καλό απόγευμα', en: 'Good afternoon', de: 'Guten Tag', fr: 'Bon après-midi', it: 'Buon pomeriggio', es: 'Buenas tardes' }[lang]
+    : { el: 'Καλησπέρα', en: 'Good evening', de: 'Guten Abend', fr: 'Bonsoir', it: 'Buonasera', es: 'Buenas noches' }[lang]
 
-  const avgDays = (() => {
-    const withDates = sold.filter(v => v.purchase?.date && v.sale?.date)
-    if (!withDates.length) return 0
-    return Math.round(withDates.reduce((s, v) => s + (new Date(v.sale!.date!).getTime() - new Date(v.purchase!.date!).getTime()) / 86400000, 0) / withDates.length)
-  })()
+  const orgName = settings?.org?.name || ''
 
-  // Stock aging
-  const agingVehicles = inStock.map(v => {
-    const startDate = v.storage?.arrivalDate || v.purchase?.date || v.created_at || ''
-    const days = Math.floor((Date.now() - new Date(startDate).getTime()) / 86400000)
-    const holdingCost = days * (v.storage?.costPerDay || 5)
-    return { ...v, days, holdingCost }
-  }).filter(v => v.days > 30).sort((a, b) => b.holdingCost - a.holdingCost)
+  const stats = useMemo(() => {
+    const inStock = vehicles.filter(v =>
+      ['purchased','transit_in','stored','for_sale'].includes(v.status || '')
+    )
+    const sold = vehicles.filter(v => ['sold','transit_out','delivered'].includes(v.status || ''))
+    const stockValue = inStock.reduce((s, v) => s + (v.purchase?.price || 0), 0)
 
-  const totalHoldingCost = agingVehicles.reduce((s, v) => s + v.holdingCost, 0)
+    const thisMonth = new Date(); thisMonth.setDate(1)
+    const monthSold = sold.filter(v => v.sale?.date && new Date(v.sale.date) >= thisMonth)
+    const monthProfit = monthSold.reduce((s, v) => s + calcFinancials(v).grossProfit, 0)
+    const totalProfit = sold.reduce((s, v) => s + calcFinancials(v).grossProfit, 0)
 
-  // Top opportunity: in-stock vehicle with best score + profit potential
-  const topOpportunity = inStock.map(v => {
-    const sc = scoreVehicle(v)
-    const fin = calcFinancials(v)
-    return { ...v, score: sc.total, profit: fin.grossProfit }
-  }).filter(v => v.score > 0).sort((a, b) => (b.score * 0.6 + b.profit * 0.0001) - (a.score * 0.6 + a.profit * 0.0001))[0]
+    const soldWithDays = sold.filter(v => v.purchase?.date && v.sale?.date)
+    const avgDays = soldWithDays.length > 0
+      ? Math.round(soldWithDays.reduce((s, v) => {
+          const d = (new Date(v.sale!.date!).getTime() - new Date(v.purchase!.date!).getTime()) / 86400000
+          return s + d
+        }, 0) / soldWithDays.length)
+      : 0
 
-  // Worst attention: highest holding cost
-  const worstAttention = agingVehicles[0]
+    const over90 = inStock.filter(v => daysSince(v.purchase?.date || v.created_at) > 90)
+    const over45 = inStock.filter(v => {
+      const d = daysSince(v.purchase?.date || v.created_at)
+      return d > 45 && d <= 90
+    })
+    const agingCost = [...over90, ...over45].reduce((s, v) => {
+      const d = daysSince(v.purchase?.date || v.created_at)
+      return s + (d * (v.storage?.costPerDay || 8))
+    }, 0)
 
-  const recent = [...vehicles].sort((a,b) =>
-    new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime()
-  ).slice(0, 7)
+    const inTransit = vehicles.filter(v => ['transit_in','transit_out'].includes(v.status || ''))
 
-  const KPIs = [
-    { label: t(lang, 'dash.total'),  value: vehicles.length,           icon: '🚗', color: '#3b82f6' },
-    { label: LL(lang, 'inStock'),    value: inStock.length,             icon: '📦', color: '#f59e0b' },
-    { label: LL(lang, 'stockVal'),   value: fmtCur(stockValue),         icon: '💰', color: '#8b5cf6' },
-    { label: LL(lang, 'sold'),       value: sold.length,                icon: '✅', color: '#22c55e' },
-    { label: LL(lang, 'monProfit'),  value: fmtCur(monthProfit),        icon: '📅', color: monthProfit >= 0 ? '#22c55e' : '#ef4444' },
-    { label: LL(lang, 'totProfit'),  value: fmtCur(totalProfit),        icon: '📈', color: totalProfit >= 0 ? '#22c55e' : '#ef4444' },
-    { label: LL(lang, 'inTransit'),  value: inTransit.length,           icon: '🚚', color: '#06b6d4' },
-    { label: LL(lang, 'avgDays'),    value: avgDays > 0 ? `${avgDays}d` : '—', icon: '⏱️', color: avgDays > 60 ? '#ef4444' : avgDays > 30 ? '#f59e0b' : '#22c55e' },
-  ]
+    // Top opportunity: highest score/profit vehicle for_sale or stored
+    const opportunities = inStock
+      .filter(v => ['for_sale','stored'].includes(v.status || ''))
+      .map(v => ({ v, fin: calcFinancials(v) }))
+      .filter(x => x.fin.saleRevenue > 0 || x.v.sale?.price)
+      .sort((a, b) => (b.v.sale?.price || 0) - (a.v.sale?.price || 0))
+    const topOpp = opportunities[0]?.v || null
+
+    // Needs attention: longest in stock
+    const needsAttn = [...inStock]
+      .sort((a, b) => daysSince(b.purchase?.date || b.created_at) - daysSince(a.purchase?.date || a.created_at))[0] || null
+
+    // Pending deliveries
+    const pendingDelivery = vehicles.filter(v => v.status === 'transit_out').length
+
+    // Missing documents (for_sale with 0 docs)
+    const missingDocs = vehicles.filter(v =>
+      v.status === 'for_sale' && (!v.documents || v.documents.length === 0)
+    ).length
+
+    // High margin vehicles (profit > 4000, not sold)
+    const highMargin = inStock.filter(v => {
+      const sale = v.sale?.price || 0
+      const cost = (v.purchase?.price || 0) + (v.transportIn?.cost || 0) + (v.storage?.workCost || 0)
+      return sale > 0 && (sale - cost) > 4000
+    })
+
+    return {
+      total: vehicles.length,
+      inStock: inStock.length,
+      stockValue,
+      sold: sold.length,
+      monthProfit,
+      totalProfit,
+      avgDays,
+      over90: over90.length,
+      over45: over45.length,
+      agingCost,
+      inTransit: inTransit.length,
+      topOpp,
+      needsAttn,
+      pendingDelivery,
+      missingDocs,
+      highMargin: highMargin.length,
+      recent: [...vehicles].sort((a, b) =>
+        new Date(b.updated_at || b.created_at || 0).getTime() -
+        new Date(a.updated_at || a.created_at || 0).getTime()
+      ).slice(0, 6),
+    }
+  }, [vehicles])
+
+  const statusColor: Record<string, string> = {
+    purchased: '#3B82F6', transit_in: '#10B981', stored: '#F59E0B',
+    for_sale: '#8B5CF6', sold: '#22C55E', transit_out: '#EF4444', delivered: '#6EE7B7'
+  }
 
   return (
     <AppShell>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10 }}>
-        <h1 style={{ fontSize:22, fontWeight:700, margin:0 }}>{t(lang, 'nav.dashboard')}</h1>
-        <Link href="/vehicles"><button className="btn btn-primary">+ {t(lang, 'veh.new')}</button></Link>
+      {/* ── MORNING BRIEF ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1E293B 0%, #1E3A5F 100%)',
+        borderRadius: 12, padding: '18px 24px', marginBottom: 20,
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 12,
+      }}>
+        <div>
+          <div style={{ color: '#94A3B8', fontSize: 12, marginBottom: 4 }}>
+            {now.toLocaleDateString(lang === 'el' ? 'el-GR' : lang === 'de' ? 'de-DE' : lang === 'it' ? 'it-IT' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </div>
+          <div style={{ color: '#F1F5F9', fontSize: 18, fontWeight: 700, marginBottom: 12 }}>
+            {greeting}{orgName ? `, ${orgName}` : ''} 👋
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+            {stats.over90 > 0 && (
+              <div style={{ color: '#FCA5A5', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>⚠️</span>
+                <span>
+                  <strong>{stats.over90}</strong>{' '}
+                  {lang === 'el' ? 'οχήματα πάνω από 90 ημέρες' :
+                   lang === 'it' ? 'veicoli oltre 90 giorni' :
+                   lang === 'de' ? 'Fahrzeuge über 90 Tage' :
+                   'vehicles over 90 days'}
+                </span>
+              </div>
+            )}
+            {stats.highMargin > 0 && (
+              <div style={{ color: '#86EFAC', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>💰</span>
+                <span>
+                  <strong>{stats.highMargin}</strong>{' '}
+                  {lang === 'el' ? 'με περιθώριο >€4.000' :
+                   lang === 'it' ? 'con margine >€4.000' :
+                   'with margin >€4,000'}
+                </span>
+              </div>
+            )}
+            {stats.pendingDelivery > 0 && (
+              <div style={{ color: '#93C5FD', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>🚚</span>
+                <span>
+                  <strong>{stats.pendingDelivery}</strong>{' '}
+                  {lang === 'el' ? 'παραδόσεις σε εκκρεμότητα' :
+                   lang === 'it' ? 'consegne in sospeso' :
+                   'pending deliveries'}
+                </span>
+              </div>
+            )}
+            {stats.missingDocs > 0 && (
+              <div style={{ color: '#FDE68A', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📄</span>
+                <span>
+                  <strong>{stats.missingDocs}</strong>{' '}
+                  {lang === 'el' ? 'έγγραφα λείπουν' :
+                   lang === 'it' ? 'documenti mancanti' :
+                   'missing documents'}
+                </span>
+              </div>
+            )}
+            {stats.over90 === 0 && stats.highMargin === 0 && stats.pendingDelivery === 0 && stats.missingDocs === 0 && (
+              <div style={{ color: '#86EFAC', fontSize: 13 }}>
+                ✅ {lang === 'el' ? 'Όλα εντάξει σήμερα!' : lang === 'it' ? 'Tutto ok oggi!' : 'All good today!'}
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ color: '#64748B', fontSize: 11 }}>P&L</div>
+          <div style={{ color: stats.totalProfit >= 0 ? '#86EFAC' : '#FCA5A5', fontSize: 22, fontWeight: 700 }}>
+            {stats.totalProfit >= 0 ? '+' : ''}{fmtCur(stats.totalProfit)}
+          </div>
+          <div style={{ color: '#64748B', fontSize: 11 }}>
+            {stats.sold} {lang === 'el' ? 'πωλήσεις' : lang === 'it' ? 'vendite' : 'sold'}{stats.avgDays > 0 ? ` · ø ${stats.avgDays}d` : ''}
+          </div>
+        </div>
       </div>
 
-      {/* ═══ TOP OPPORTUNITY + ATTENTION widgets ═══ */}
-      {vehicles.length > 0 && (topOpportunity || worstAttention) && (
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:20 }}>
-          {/* Top opportunity */}
-          {topOpportunity && (
-            <Link href="/vehicles" style={{ textDecoration:'none' }}>
-              <div style={{ background:'rgba(34,197,94,0.06)', border:'2px solid #22c55e', borderRadius:12, padding:16, cursor:'pointer', height:'100%' }}
-                onMouseEnter={e=>(e.currentTarget.style.background='rgba(34,197,94,0.12)')}
-                onMouseLeave={e=>(e.currentTarget.style.background='rgba(34,197,94,0.06)')}>
-                <div style={{ fontSize:13, fontWeight:700, color:'#22c55e', marginBottom:8 }}>{LL(lang,'topOpp')}</div>
-                <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:8 }}>
-                  {topOpportunity.photo
-                    ? <img src={topOpportunity.photo} alt="" style={{ width:48, height:36, objectFit:'cover', borderRadius:6 }}/>
-                    : <div style={{ width:48, height:36, background:'var(--surface2)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>🚗</div>
-                  }
-                  <div>
-                    <div style={{ fontWeight:700, fontSize:15, color:'var(--text)' }}>{topOpportunity.make} {topOpportunity.model}</div>
-                    <div style={{ fontSize:12, color:'var(--text2)' }}>{topOpportunity.year} · {topOpportunity.plate || '—'}</div>
-                  </div>
-                </div>
-                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                  <span style={{ background:'rgba(34,197,94,0.15)', color:'#22c55e', padding:'3px 10px', borderRadius:999, fontSize:12, fontWeight:700 }}>
-                    Score: {topOpportunity.score}/100
-                  </span>
-                  {topOpportunity.profit > 0 && (
-                    <span style={{ background:'rgba(34,197,94,0.15)', color:'#22c55e', padding:'3px 10px', borderRadius:999, fontSize:12, fontWeight:700 }}>
-                      {LL(lang,'expProfit')}: {fmtCur(topOpportunity.profit)}
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize:11, color:'var(--text2)', marginTop:6 }}>{LL(lang,'topOppSub')}</div>
-              </div>
-            </Link>
-          )}
-
-          {/* Worst attention */}
-          {worstAttention && (
-            <Link href="/vehicles" style={{ textDecoration:'none' }}>
-              <div style={{ background:'rgba(239,68,68,0.06)', border:'2px solid #ef4444', borderRadius:12, padding:16, cursor:'pointer', height:'100%' }}
-                onMouseEnter={e=>(e.currentTarget.style.background='rgba(239,68,68,0.12)')}
-                onMouseLeave={e=>(e.currentTarget.style.background='rgba(239,68,68,0.06)')}>
-                <div style={{ fontSize:13, fontWeight:700, color:'#ef4444', marginBottom:8 }}>{LL(lang,'attention')}</div>
-                <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:8 }}>
-                  {worstAttention.photo
-                    ? <img src={worstAttention.photo} alt="" style={{ width:48, height:36, objectFit:'cover', borderRadius:6 }}/>
-                    : <div style={{ width:48, height:36, background:'var(--surface2)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>🚗</div>
-                  }
-                  <div>
-                    <div style={{ fontWeight:700, fontSize:15, color:'var(--text)' }}>{worstAttention.make} {worstAttention.model}</div>
-                    <div style={{ fontSize:12, color:'var(--text2)' }}>{worstAttention.year} · {worstAttention.plate || '—'}</div>
-                  </div>
-                </div>
-                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                  <span style={{ background:'rgba(239,68,68,0.15)', color:'#ef4444', padding:'3px 10px', borderRadius:999, fontSize:12, fontWeight:700 }}>
-                    ⏱ {worstAttention.days} {LL(lang,'daysStock')}
-                  </span>
-                  <span style={{ background:'rgba(239,68,68,0.15)', color:'#ef4444', padding:'3px 10px', borderRadius:999, fontSize:12, fontWeight:700 }}>
-                    {LL(lang,'agingCost')}: {fmtCur(worstAttention.holdingCost)}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          )}
-        </div>
-      )}
-
-      {/* ═══ AGING ALERT ═══ */}
-      {agingVehicles.length > 0 && (
-        <div style={{ background:'rgba(239,68,68,0.06)', border:'2px solid var(--danger)', borderRadius:12, padding:'14px 18px', marginBottom:20 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, flexWrap:'wrap', gap:8 }}>
+      {/* ── KPI CARDS — compact ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 20 }}>
+        {[
+          { label: lang === 'el' ? 'Σύνολο' : lang === 'it' ? 'Totale' : 'Total', value: stats.total, icon: '🚗', color: '#2563EB' },
+          { label: lang === 'el' ? 'Σε Απόθεμα' : lang === 'it' ? 'In Stock' : 'In Stock', value: stats.inStock, icon: '📦', color: '#8B5CF6' },
+          { label: lang === 'el' ? 'Αξία Αποθέματος' : lang === 'it' ? 'Valore Stock' : 'Stock Value', value: fmtCur(stats.stockValue), icon: '💶', color: '#059669' },
+          { label: lang === 'el' ? 'Κέρδος Μήνα' : lang === 'it' ? 'Profitto Mese' : 'Month Profit', value: fmtCur(stats.monthProfit), icon: '📅', color: stats.monthProfit >= 0 ? '#059669' : '#DC2626' },
+          { label: lang === 'el' ? 'Σε Μεταφορά' : lang === 'it' ? 'In Transito' : 'In Transit', value: stats.inTransit, icon: '🚚', color: '#0284C7' },
+          { label: lang === 'el' ? 'Πωλήθηκαν' : lang === 'it' ? 'Venduti' : 'Sold', value: stats.sold, icon: '✅', color: '#16A34A' },
+        ].map(k => (
+          <div key={k.label} className="card" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontSize: 22 }}>{k.icon}</div>
             <div>
-              <div style={{ fontWeight:700, fontSize:15, color:'var(--danger)' }}>
-                🔥 {agingVehicles.length} {t(lang, 'dash.agingAlert') || 'vehicles sitting too long'}
-              </div>
-              <div style={{ color:'var(--text2)', fontSize:13, marginTop:2 }}>
-                {LL(lang,'agingCost')}: <strong style={{ color:'var(--danger)' }}>{fmtCur(totalHoldingCost)}</strong>
-              </div>
+              <div style={{ fontSize: 11, color: 'var(--text2)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{k.label}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: k.color, lineHeight: 1.2 }}>{k.value}</div>
             </div>
-            <Link href="/manifest"><button className="btn btn-danger" style={{ fontSize:12, padding:'5px 12px' }}>Top 10 →</button></Link>
-          </div>
-          {agingVehicles.slice(0,4).map(v => (
-            <Link key={v.id} href="/vehicles" style={{ textDecoration:'none' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 10px', marginBottom:4, background:'rgba(239,68,68,0.04)', borderRadius:8, cursor:'pointer' }}
-                onMouseEnter={e=>(e.currentTarget.style.background='rgba(239,68,68,0.1)')}
-                onMouseLeave={e=>(e.currentTarget.style.background='rgba(239,68,68,0.04)')}>
-                {v.photo ? <img src={v.photo} alt="" style={{ width:34, height:24, objectFit:'cover', borderRadius:4, flexShrink:0 }}/> : <span style={{ fontSize:16 }}>{{'car':'🚗','truck':'🚛','van':'🚐','bus':'🚌','moto':'🏍️','construction':'🏗️'}[v.category||'car']||'🚗'}</span>}
-                <div style={{ flex:1, fontSize:13, fontWeight:500, color:'var(--text)' }}>{v.make} {v.model} {v.plate ? `· ${v.plate}` : ''}</div>
-                <div style={{ textAlign:'right', flexShrink:0 }}>
-                  <span style={{ color:'var(--danger)', fontWeight:700, fontSize:13 }}>⚠️ {v.days}d</span>
-                  <span style={{ color:'var(--text2)', fontSize:12, marginLeft:8 }}>{fmtCur(v.holdingCost)}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {/* ═══ KPIs ═══ */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(155px,1fr))', gap:10, marginBottom:20 }}>
-        {KPIs.map(k => (
-          <div key={k.label} className="card" style={{ borderLeft:`3px solid ${k.color}`, padding:'12px 14px' }}>
-            <div style={{ fontSize:20 }}>{k.icon}</div>
-            <div style={{ fontSize:19, fontWeight:700, marginTop:4, color:k.color }}>{k.value}</div>
-            <div style={{ fontSize:11, color:'var(--text2)', marginTop:2, lineHeight:1.3 }}>{k.label}</div>
           </div>
         ))}
       </div>
 
-      {/* ═══ Status bar ═══ */}
-      {vehicles.length > 0 && (
-        <div className="card" style={{ marginBottom:16, padding:'12px 16px' }}>
-          <div style={{ fontSize:13, fontWeight:600, marginBottom:8 }}>{LL(lang,'fleetSt')}</div>
-          <div style={{ display:'flex', gap:2, height:16, borderRadius:4, overflow:'hidden', marginBottom:8 }}>
-            {(['purchased','transit_in','stored','for_sale','sold','transit_out','delivered'] as const).map(s => {
-              const c = vehicles.filter(v => v.status === s).length
-              if (!c) return null
-              const colors: Record<string,string> = { purchased:'#3b82f6', transit_in:'#22c55e', stored:'#f59e0b', for_sale:'#8b5cf6', sold:'#16a34a', transit_out:'#ef4444', delivered:'#06b6d4' }
-              return <div key={s} style={{ background:colors[s], flex:c, minWidth:4 }} title={`${t(lang,`status.${s}`)}: ${c}`}/>
-            })}
-          </div>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-            {(['purchased','transit_in','stored','for_sale','sold','transit_out','delivered'] as const).map(s => {
-              const c = vehicles.filter(v => v.status === s).length
-              if (!c) return null
-              return <span key={s} className={`badge status-${s}`} style={{ fontSize:11 }}>{t(lang,`status.${s}`)} {c}</span>
-            })}
-          </div>
-        </div>
-      )}
+      {/* ── ROW: Alerts + Top Opportunity ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
 
-      {/* ═══ Bottom grid ═══ */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-        <div className="card">
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-            <h2 style={{ fontSize:14, fontWeight:600, margin:0 }}>{LL(lang,'recentV')}</h2>
-            <Link href="/vehicles" style={{ color:'var(--primary)', fontSize:12, textDecoration:'none' }}>{LL(lang,'viewAll')}</Link>
-          </div>
-          {vehicles.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'20px 0', color:'var(--text2)' }}>
-              <div style={{ fontSize:32 }}>🚗</div>
-              <p style={{ marginTop:8, fontSize:13 }}>{LL(lang,'addFirst')}</p>
-              <Link href="/vehicles"><button className="btn btn-primary" style={{ marginTop:8, fontSize:13 }}>+ {t(lang,'veh.new')}</button></Link>
+        {/* Stock Aging Alert */}
+        {(stats.over90 > 0 || stats.over45 > 0) ? (
+          <div style={{
+            background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '14px 16px',
+          }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: '#991B1B', marginBottom: 10 }}>
+              🔥 {stats.over90 + stats.over45} {lang === 'el' ? 'οχήματα σε απόθεμα >30 ημέρες' : lang === 'it' ? 'veicoli in stock >30 giorni' : 'vehicles in stock >30 days'}
             </div>
-          ) : recent.map(v => {
-            const fin = calcFinancials(v)
-            const sc = scoreVehicle(v)
-            return (
-              <Link key={v.id} href="/vehicles" style={{ textDecoration:'none', color:'var(--text)' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', borderBottom:'1px solid var(--border)' }}>
-                  {v.photo ? <img src={v.photo} alt="" style={{ width:34, height:24, objectFit:'cover', borderRadius:3, flexShrink:0 }}/> : <div style={{ width:34, height:24, background:'var(--surface2)', borderRadius:3, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>{{'car':'🚗','truck':'🚛','van':'🚐','bus':'🚌','moto':'🏍️','construction':'🏗️'}[v.category||'car']||'🚗'}</div>}
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontWeight:500, fontSize:13, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{v.make} {v.model} {v.year ? `'${String(v.year).slice(-2)}` : ''}</div>
-                    <div style={{ fontSize:11, color:'var(--text2)' }}>{v.plate || '—'}</div>
+            <div style={{ fontSize: 12, color: '#B91C1C', marginBottom: 10 }}>
+              {lang === 'el' ? 'Εκτιμ. Κόστος Αναμονής' : lang === 'it' ? 'Costo stimato di giacenza' : 'Est. Holding Cost'}: <strong>{fmtCur(stats.agingCost)}</strong>
+            </div>
+            {/* Top 4 worst */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {vehicles
+                .filter(v => ['purchased','transit_in','stored','for_sale'].includes(v.status || ''))
+                .sort((a, b) => daysSince(b.purchase?.date || b.created_at) - daysSince(a.purchase?.date || a.created_at))
+                .slice(0, 4)
+                .map(v => {
+                  const d = daysSince(v.purchase?.date || v.created_at)
+                  const cost = d * (v.storage?.costPerDay || 8)
+                  return (
+                    <Link key={v.id} href={`/vehicles/${v.id}`}
+                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#991B1B', textDecoration: 'none', padding: '3px 0', borderBottom: '1px solid #FEE2E2' }}>
+                      <span>{catIcon[v.category || 'car']} {v.make} {v.model}</span>
+                      <span style={{ fontWeight: 600 }}>⏱ {d}d · €{cost.toLocaleString()}</span>
+                    </Link>
+                  )
+                })
+              }
+            </div>
+          </div>
+        ) : (
+          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 100, color: 'var(--text2)', fontSize: 13 }}>
+            ✅ {lang === 'el' ? 'Κανένα πρόβλημα αποθέματος!' : lang === 'it' ? 'Nessun problema di stock!' : 'No stock issues!'}
+          </div>
+        )}
+
+        {/* Top Opportunity */}
+        {stats.topOpp ? (
+          <Link href={`/vehicles/${stats.topOpp.id}`} style={{ textDecoration: 'none' }}>
+            <div style={{
+              background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '14px 16px', height: '100%',
+            }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: '#166534', marginBottom: 8 }}>
+                🏆 {lang === 'el' ? 'Καλύτερη Ευκαιρία' : lang === 'it' ? 'Migliore opportunità' : 'Top Opportunity'}
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>
+                {catIcon[stats.topOpp.category || 'car']} {stats.topOpp.make} {stats.topOpp.model}
+              </div>
+              <div style={{ fontSize: 12, color: '#6B7280', margin: '4px 0' }}>
+                {stats.topOpp.year} · {stats.topOpp.plate}
+              </div>
+              {stats.topOpp.sale?.price && (
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#16A34A', marginTop: 4 }}>
+                  {lang === 'el' ? 'Τιμή Πώλησης' : lang === 'it' ? 'Prezzo vendita' : 'Sale Price'}: {fmtCur(stats.topOpp.sale.price)}
+                </div>
+              )}
+              {stats.needsAttn && (
+                <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid #BBF7D0' }}>
+                  <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 2 }}>
+                    ⚠️ {lang === 'el' ? 'Χρειάζεται Προσοχή' : lang === 'it' ? 'Richiede attenzione' : 'Needs Attention'}
                   </div>
-                  <div style={{ textAlign:'right', flexShrink:0 }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                      <span className={`badge status-${v.status}`} style={{ fontSize:10 }}>{t(lang,`status.${v.status}`)}</span>
-                      <span style={{ fontSize:11, color: sc.total >= 70 ? '#22c55e' : sc.total >= 45 ? '#f59e0b' : '#ef4444', fontWeight:700 }}>{sc.total}</span>
-                    </div>
-                    {fin.saleRevenue > 0 && <div style={{ fontSize:11, color:fin.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight:600, marginTop:1 }}>{fin.grossProfit >= 0 ? '+' : ''}{fmtCur(fin.grossProfit)}</div>}
+                  <div style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>
+                    {catIcon[stats.needsAttn.category || 'car']} {stats.needsAttn.make} {stats.needsAttn.model} · {daysSince(stats.needsAttn.purchase?.date || stats.needsAttn.created_at)}d
                   </div>
                 </div>
-              </Link>
-            )
-          })}
-        </div>
-
-        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          <div className="card">
-            <div style={{ fontSize:13, fontWeight:600, marginBottom:8 }}>{LL(lang,'quickL')}</div>
-            {[
-              { href:'/manifest', icon:'📋', label:t(lang,'manifest.title') },
-              { href:'/analytics', icon:'📈', label:t(lang,'nav.analytics') },
-              { href:'/import', icon:'📥', label:t(lang,'nav.import') },
-              { href:'/settings', icon:'⚙️', label:t(lang,'nav.settings') },
-              { href:'/landing', icon:'🌐', label:'Landing Page' },
-            ].map(item => (
-              <Link key={item.href} href={item.href} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', borderBottom:'1px solid var(--border)', textDecoration:'none', color:'var(--text)', fontSize:13 }}>
-                <span>{item.icon}</span><span>{item.label}</span><span style={{ marginLeft:'auto', color:'var(--text2)' }}>→</span>
-              </Link>
-            ))}
-          </div>
-
-          {sold.length > 0 && (
-            <div className="card" style={{ borderLeft:'3px solid var(--success)' }}>
-              <div style={{ fontSize:12, color:'var(--text2)', marginBottom:4 }}>P&L</div>
-              <div style={{ fontSize:26, fontWeight:800, color:totalProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {totalProfit >= 0 ? '+' : ''}{fmtCur(totalProfit)}
-              </div>
-              <div style={{ fontSize:12, color:'var(--text2)', marginTop:4 }}>
-                {sold.length} {LL(lang,'sold')} · {avgDays > 0 ? `ø ${avgDays}d` : ''}
-              </div>
+              )}
             </div>
-          )}
+          </Link>
+        ) : (
+          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 100, color: 'var(--text2)', fontSize: 13 }}>
+            {lang === 'el' ? 'Δεν υπάρχουν οχήματα προς πώληση' : 'No vehicles for sale'}
+          </div>
+        )}
+      </div>
+
+      {/* ── Fleet Status bar ── */}
+      <div className="card" style={{ marginBottom: 16, padding: '12px 16px' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          {lang === 'el' ? 'Κατάσταση Στόλου' : lang === 'it' ? 'Stato Flotta' : 'Fleet Status'}
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {(Object.entries({
+            purchased: vehicles.filter(v => v.status === 'purchased').length,
+            transit_in: vehicles.filter(v => v.status === 'transit_in').length,
+            stored: vehicles.filter(v => v.status === 'stored').length,
+            for_sale: vehicles.filter(v => v.status === 'for_sale').length,
+            sold: vehicles.filter(v => v.status === 'sold').length,
+            transit_out: vehicles.filter(v => v.status === 'transit_out').length,
+            delivered: vehicles.filter(v => v.status === 'delivered').length,
+          }) as [string, number][]).map(([status, count]) => (
+            <div key={status} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: statusColor[status], flexShrink: 0 }} />
+              <span style={{ color: 'var(--text2)' }}>{t(lang, `status.${status}`)}</span>
+              <span style={{ fontWeight: 700, color: 'var(--text)' }}>{count}</span>
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* ── Recent Vehicles ── */}
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontWeight: 600, fontSize: 13 }}>
+            {lang === 'el' ? 'Πρόσφατα Οχήματα' : lang === 'it' ? 'Veicoli Recenti' : lang === 'de' ? 'Letzte Fahrzeuge' : 'Recent Vehicles'}
+          </div>
+          <Link href="/vehicles" style={{ fontSize: 12, color: 'var(--primary)', textDecoration: 'none' }}>
+            {lang === 'el' ? 'Δείτε όλα →' : lang === 'it' ? 'Vedi tutti →' : 'View all →'}
+          </Link>
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <tbody>
+            {stats.recent.map(v => {
+              const fin = calcFinancials(v)
+              return (
+                <tr key={v.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '9px 16px', width: 36 }}>
+                    <span style={{ fontSize: 18 }}>{catIcon[v.category || 'car'] || '🚗'}</span>
+                  </td>
+                  <td style={{ padding: '9px 8px' }}>
+                    <Link href={`/vehicles/${v.id}`} style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: 500 }}>
+                      {v.make || '—'} {v.model || ''}
+                    </Link>
+                    <div style={{ fontSize: 11, color: 'var(--text2)' }}>{v.year}{v.plate ? ` · ${v.plate}` : ''}</div>
+                  </td>
+                  <td style={{ padding: '9px 8px' }}>
+                    <span className={`badge status-${v.status}`} style={{ fontSize: 10 }}>
+                      {t(lang, `status.${v.status}`)}
+                    </span>
+                  </td>
+                  <td style={{ padding: '9px 16px', textAlign: 'right', fontWeight: 600, fontSize: 12,
+                    color: fin.saleRevenue > 0 ? (fin.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)') : 'var(--text2)' }}>
+                    {fin.saleRevenue > 0 ? (fin.grossProfit >= 0 ? '+' : '') + fmtCur(fin.grossProfit) : '—'}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <BackupReminder />
     </AppShell>
   )
 }
