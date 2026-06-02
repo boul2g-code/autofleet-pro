@@ -68,11 +68,11 @@ export default function SettingsPage() {
   }
 
   const SECTIONS: { key: Section; icon: string; label: string }[] = [
-    { key: 'company',     icon: '🏢', label: lang==='el'?'Εταιρεία':lang==='it'?'Azienda':'Company' },
+    { key: 'company',     icon: '🏢', label: lang==='el'?'Εταιρεία':lang==='it'?'Azienda':lang==='de'?'Unternehmen':lang==='fr'?'Société':lang==='es'?'Empresa':'Company' },
     { key: 'branding',    icon: '🎨', label: 'Branding' },
-    { key: 'documents',   icon: '📄', label: lang==='el'?'Έγγραφα':lang==='it'?'Documenti':'Documents' },
+    { key: 'documents',   icon: '📄', label: lang==='el'?'Έγγραφα':lang==='it'?'Documenti':lang==='de'?'Dokumente':lang==='fr'?'Documents':lang==='es'?'Documentos':'Documents' },
     { key: 'marketplace', icon: '🌐', label: 'Marketplace' },
-    { key: 'financials',  icon: '💶', label: lang==='el'?'Οικονομικά':lang==='it'?'Economici':'Financials' },
+    { key: 'financials',  icon: '💶', label: lang==='el'?'Οικονομικά':lang==='it'?'Parametri Economici':lang==='de'?'Finanzen':lang==='fr'?'Finances':lang==='es'?'Finanzas':'Financials' },
     { key: 'backup',      icon: '💾', label: 'Backup' },
   ]
 
@@ -81,10 +81,10 @@ export default function SettingsPage() {
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
           <h1 style={{ fontSize:22, fontWeight:700, margin:0 }}>
-            {lang==='el'?'Ρυθμίσεις':lang==='it'?'Impostazioni':'Settings'}
+            {lang==='el'?'Ρυθμίσεις':lang==='it'?'Impostazioni':lang==='de'?'Einstellungen':lang==='fr'?'Paramètres':lang==='es'?'Ajustes':'Settings'}
           </h1>
           <button className="btn btn-primary" onClick={save}>
-            {saved ? '✅ Saved!' : `💾 ${lang==='el'?'Αποθήκευση':lang==='it'?'Salva':'Save'}`}
+            {saved ? '✅ Saved!' : `💾 ${lang==='el'?'Αποθήκευση':lang==='it'?'Salva':lang==='de'?'Speichern':lang==='fr'?'Enregistrer':lang==='es'?'Guardar':'Save'}`}
           </button>
         </div>
 
@@ -106,15 +106,15 @@ export default function SettingsPage() {
         {/* COMPANY */}
         {section === 'company' && (
           <div className="card">
-            <h2 style={{ fontSize:15, fontWeight:700, marginTop:0, marginBottom:16 }}>🏢 {lang==='el'?'Στοιχεία Εταιρείας':'Company Details'}</h2>
+            <h2 style={{ fontSize:15, fontWeight:700, marginTop:0, marginBottom:16 }}>🏢 {lang==='el'?'Στοιχεία Εταιρείας':lang==='it'?'Dati Aziendali':lang==='de'?'Unternehmensdetails':lang==='fr'?'Détails Société':lang==='es'?'Detalles Empresa':'Company Details'}</h2>
             <div className="field-row">
-              <div className="field-group"><label>{lang==='el'?'Επωνυμία':'Company Name'} *</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="ROSSI AUTO SRL" /></div>
-              <div className="field-group"><label>VAT / {lang==='el'?'ΑΦΜ':'P.IVA'}</label><input value={vat} onChange={e=>setVat(e.target.value)} placeholder="IT12345678901" /></div>
+              <div className="field-group"><label>{lang==='el'?'Επωνυμία':lang==='it'?'Ragione Sociale':lang==='de'?'Firmenname':lang==='fr'?'Raison Sociale':lang==='es'?'Razón Social':'Company Name'} *</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="ROSSI AUTO SRL" /></div>
+              <div className="field-group"><label>VAT / {lang==='el'?'ΑΦΜ / ΦΠΑ':lang==='it'?'Partita IVA':lang==='de'?'USt-IdNr.':lang==='fr'?'N° TVA':lang==='es'?'NIF/CIF':'VAT Number'}</label><input value={vat} onChange={e=>setVat(e.target.value)} placeholder="IT12345678901" /></div>
             </div>
             <div className="field-row">
-              <div className="field-group"><label>{lang==='el'?'ΔΟΥ':'Ufficio Fiscale'}</label><input value={taxOffice} onChange={e=>setTaxOffice(e.target.value)} /></div>
+              <div className="field-group"><label>{lang==='el'?'ΔΟΥ':lang==='it'?'Ufficio Fiscale':lang==='de'?'Finanzamt':lang==='fr'?'Centre des Impôts':lang==='es'?'Agencia Tributaria':'Tax Office'}</label><input value={taxOffice} onChange={e=>setTaxOffice(e.target.value)} /></div>
               <div className="field-group">
-                <label>{lang==='el'?'Χώρα':'Paese'}</label>
+                <label>{lang==='el'?'Χώρα':lang==='it'?'Paese':lang==='de'?'Land':lang==='fr'?'Pays':lang==='es'?'País':'Country'}</label>
                 <select value={country} onChange={e=>setCountry(e.target.value)}>
                   <option value="">—</option>
                   <option value="IT">🇮🇹 Italia</option>
@@ -125,13 +125,13 @@ export default function SettingsPage() {
                 </select>
               </div>
             </div>
-            <div className="field-group"><label>{lang==='el'?'Διεύθυνση':'Indirizzo'}</label><input value={address} onChange={e=>setAddress(e.target.value)} placeholder="Via Roma 1" /></div>
+            <div className="field-group"><label>{lang==='el'?'Διεύθυνση':lang==='it'?'Indirizzo':lang==='de'?'Adresse':lang==='fr'?'Adresse':lang==='es'?'Dirección':'Address'}</label><input value={address} onChange={e=>setAddress(e.target.value)} placeholder="Via Roma 1" /></div>
             <div className="field-row">
-              <div className="field-group"><label>{lang==='el'?'Πόλη':'Città'}</label><input value={city} onChange={e=>setCity(e.target.value)} placeholder="Ancona" /></div>
+              <div className="field-group"><label>{lang==='el'?'Πόλη':lang==='it'?'Città':lang==='de'?'Stadt':lang==='fr'?'Ville':lang==='es'?'Ciudad':'City'}</label><input value={city} onChange={e=>setCity(e.target.value)} placeholder="Ancona" /></div>
               <div className="field-group"><label>ZIP / TK</label><input value={zip} onChange={e=>setZip(e.target.value)} placeholder="60100" /></div>
             </div>
             <div className="field-row">
-              <div className="field-group"><label>{lang==='el'?'Τηλέφωνο':'Telefono'}</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+39 071..." /></div>
+              <div className="field-group"><label>{lang==='el'?'Τηλέφωνο':lang==='it'?'Telefono':lang==='de'?'Telefon':lang==='fr'?'Téléphone':lang==='es'?'Teléfono':'Phone'}</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+39 071..." /></div>
               <div className="field-group"><label>Email</label><input value={email} onChange={e=>setEmail(e.target.value)} placeholder="info@rossiauto.it" /></div>
             </div>
             <div className="field-group"><label>Website</label><input value={website} onChange={e=>setWebsite(e.target.value)} placeholder="https://rossiauto.it" /></div>
@@ -143,12 +143,12 @@ export default function SettingsPage() {
           <div className="card">
             <h2 style={{ fontSize:15, fontWeight:700, marginTop:0, marginBottom:16 }}>🎨 Branding</h2>
             <div className="field-group">
-              <label>{lang==='el'?'Λογότυπο (URL ή upload)':'Logo URL'}</label>
+              <label>{lang==='el'?'Λογότυπο Εταιρείας':lang==='it'?'Logo Azienda':lang==='de'?'Firmenlogo':lang==='fr'?'Logo Société':lang==='es'?'Logo Empresa':'Company Logo'}</label>
               <input value={logo} onChange={e=>setLogo(e.target.value)} placeholder="https://..." />
               <div style={{ marginTop:8 }}>
                 <label style={{ display:'inline-flex', alignItems:'center', gap:6, cursor:'pointer', textTransform:'none', fontSize:13 }}
                   className="btn btn-ghost">
-                  📎 {lang==='el'?'Ανέβασε αρχείο':'Upload file'}
+                  📎 {lang==='el'?'Ανέβασε αρχείο':lang==='it'?'Carica file':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger fichier':lang==='es'?'Subir archivo':'Upload file'}
                   <input type="file" accept=".png,.jpg,.jpeg,.svg,.webp" style={{ display:'none' }}
                     onChange={e => {
                       const file = e.target.files?.[0]
@@ -160,7 +160,7 @@ export default function SettingsPage() {
                 </label>
               </div>
               {logo && <img src={logo} alt="Logo preview" style={{ marginTop:8, height:50, maxWidth:200, objectFit:'contain', border:'1px solid var(--border)', borderRadius:6, padding:4 }} />}
-              <div style={{ fontSize:11, color:'var(--text2)', marginTop:6 }}>{lang==='el'?'Εμφανίζεται σε PDF, Flyers και Public Vehicle Pages':'Shown on PDF, Flyers and Public Vehicle Pages'}</div>
+              <div style={{ fontSize:11, color:'var(--text2)', marginTop:6 }}>{lang==='el'?'Εμφανίζεται σε PDF, Flyers και Public Vehicle Pages':lang==='it'?'Appare su PDF, Flyer e pagine pubbliche':lang==='de'?'Erscheint auf PDF, Flyer und öffentlichen Seiten':lang==='fr'?'Affiché sur PDF, Flyers et pages publiques':lang==='es'?'Aparece en PDF, Flyers y páginas públicas':'Shown on PDF, Flyers and Public Vehicle Pages'}</div>
             </div>
             <div className="field-row">
               <div className="field-group">
@@ -192,14 +192,14 @@ export default function SettingsPage() {
         {/* DOCUMENTS */}
         {section === 'documents' && (
           <div className="card">
-            <h2 style={{ fontSize:15, fontWeight:700, marginTop:0, marginBottom:8 }}>📄 {lang==='el'?'Στοιχεία Εγγράφων':'Document Settings'}</h2>
-            <p style={{ fontSize:13, color:'var(--text2)', marginBottom:14 }}>{lang==='el'?'Εμφανίζονται αυτόματα σε PDF, CMR και Flyers.':'Automatically appear on PDF exports and CMR documents.'}</p>
+            <h2 style={{ fontSize:15, fontWeight:700, marginTop:0, marginBottom:8 }}>📄 {lang==='el'?'Στοιχεία Εγγράφων':lang==='it'?'Dati Documenti':lang==='de'?'Dokumenteneinstellungen':lang==='fr'?'Paramètres Documents':lang==='es'?'Config. Documentos':'Document Settings'}</h2>
+            <p style={{ fontSize:13, color:'var(--text2)', marginBottom:14 }}>{lang==='el'?'Εμφανίζονται αυτόματα σε PDF, CMR και Flyers.':lang==='it'?'Appaiono automaticamente su PDF, CMR e Flyer.':lang==='de'?'Erscheinen automatisch auf PDF, CMR und Flyern.':lang==='fr'?'Apparaissent automatiquement sur PDF, CMR et Flyers.':lang==='es'?'Aparecen automáticamente en PDF, CMR y Flyers.':'Automatically appear on PDF exports and CMR documents.'}</p>
             <div className="field-group">
-              <label>{lang==='el'?'Υπεύθυνος':'Responsabile'}</label>
+              <label>{lang==='el'?'Υπεύθυνος':lang==='it'?'Responsabile':lang==='de'?'Verantwortlicher':lang==='fr'?'Responsable':lang==='es'?'Responsable':'Responsible'}</label>
               <input value={responsible} onChange={e=>setResp(e.target.value)} placeholder="Marco Rossi" />
             </div>
             <div className="field-group" style={{ marginTop:12 }}>
-              <label>{lang==='el'?'Σφραγίδα Εταιρείας (image)':'Timbro Aziendale'}</label>
+              <label>{lang==='el'?'Σφραγίδα Εταιρείας':lang==='it'?'Timbro Aziendale':lang==='de'?'Firmenstempel':lang==='fr'?'Cachet Entreprise':lang==='es'?'Sello Empresa':'Company Stamp'}</label>
               <div style={{ display:'flex', gap:12, alignItems:'center', marginTop:6 }}>
                 {stamp ? <img src={stamp} alt="Stamp" style={{ height:70, maxWidth:130, objectFit:'contain', border:'1px solid var(--border)', borderRadius:6, padding:4 }} />
                   : <div style={{ width:110, height:70, border:'2px dashed var(--border)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text3)', fontSize:12 }}>No stamp</div>}
@@ -218,7 +218,7 @@ export default function SettingsPage() {
         {section === 'marketplace' && (
           <div className="card">
             <h2 style={{ fontSize:15, fontWeight:700, marginTop:0, marginBottom:8 }}>🌐 Marketplace Links</h2>
-            <p style={{ fontSize:13, color:'var(--text2)', marginBottom:14 }}>{lang==='el'?'Χρησιμοποιούνται στο tab Listings.':'Used in the Listings tab.'}</p>
+            <p style={{ fontSize:13, color:'var(--text2)', marginBottom:14 }}>{lang==='el'?'Χρησιμοποιούνται στο tab Listings.':lang==='it'?'Usati nel tab Annunci.':lang==='de'?'Im Listings-Tab verwendet.':lang==='fr'?'Utilisés dans l\'onglet Annonces.':lang==='es'?'Usados en la pestaña Anuncios.':'Used in the Listings tab.'}</p>
             {[
               { label:'AutoScout24 URL', val:autoscout, set:setAutoscout },
               { label:'Mobile.de URL',   val:mobilede,  set:setMobilede },
@@ -236,27 +236,27 @@ export default function SettingsPage() {
         {/* FINANCIALS */}
         {section === 'financials' && (
           <div className="card">
-            <h2 style={{ fontSize:15, fontWeight:700, marginTop:0, marginBottom:8 }}>💶 {lang==='el'?'Οικονομικές Παράμετροι':'Financial Defaults'}</h2>
-            <p style={{ fontSize:13, color:'var(--text2)', marginBottom:14 }}>{lang==='el'?'Χρησιμοποιούνται για υπολογισμούς κόστους και alerts.':'Used for cost calculations and stock aging alerts.'}</p>
+            <h2 style={{ fontSize:15, fontWeight:700, marginTop:0, marginBottom:8 }}>💶 {lang==='el'?'Οικονομικές Παράμετροι':lang==='it'?'Parametri Economici':lang==='de'?'Finanzparameter':lang==='fr'?'Paramètres Financiers':lang==='es'?'Parámetros Financieros':'Financial Defaults'}</h2>
+            <p style={{ fontSize:13, color:'var(--text2)', marginBottom:14 }}>{lang==='el'?'Χρησιμοποιούνται για υπολογισμούς κόστους και alerts.':lang==='it'?'Usati per calcoli di costo e alert di giacenza.':lang==='de'?'Für Kostenberechnungen und Lageralerts verwendet.':lang==='fr'?'Utilisés pour les calculs de coût et alertes de stock.':lang==='es'?'Usados para cálculos de coste y alertas de stock.':'Used for cost calculations and stock aging alerts.'}</p>
             <div className="field-row">
               <div className="field-group">
-                <label>{lang==='el'?'Κόστος Αποθήκευσης €/μέρα':'Storage Cost €/day'}</label>
+                <label>{lang==='el'?'Κόστος Αποθήκευσης €/μέρα':lang==='it'?'Costo Stoccaggio €/giorno':lang==='de'?'Lagerkosten €/Tag':lang==='fr'?'Coût Stockage €/jour':lang==='es'?'Coste Almacén €/día':'Storage Cost €/day'}</label>
                 <input type="number" value={storeCost} onChange={e=>setStoreCost(e.target.value)} min="0" step="0.5" />
               </div>
               <div className="field-group">
-                <label>{lang==='el'?'Κόστος Μεταφοράς €/km':'Transport Cost €/km'}</label>
+                <label>{lang==='el'?'Κόστος Μεταφοράς €/km':lang==='it'?'Costo Trasporto €/km':lang==='de'?'Transportkosten €/km':lang==='fr'?'Coût Transport €/km':lang==='es'?'Coste Transporte €/km':'Transport Cost €/km'}</label>
                 <input type="number" value={transport} onChange={e=>setTransport(e.target.value)} min="0" step="0.1" />
               </div>
             </div>
             <div className="field-group">
-              <label>{lang==='el'?'Στόχος Περιθωρίου %':'Margin Target %'}</label>
+              <label>{lang==='el'?'Στόχος Περιθωρίου %':lang==='it'?'Target Margine %':lang==='de'?'Margenziel %':lang==='fr'?'Objectif Marge %':lang==='es'?'Objetivo Margen %':'Margin Target %'}</label>
               <input type="number" value={margin} onChange={e=>setMargin(e.target.value)} min="0" max="100" />
             </div>
             <div style={{ marginTop:12, padding:12, background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, fontSize:13 }}>
-              <strong style={{ color:'#92400E' }}>{lang==='el'?'Παράδειγμα':'Example'}:</strong>
+              <strong style={{ color:'#92400E' }}>{lang==='el'?'Παράδειγμα':lang==='it'?'Esempio':lang==='de'?'Beispiel':lang==='fr'?'Exemple':lang==='es'?'Ejemplo':'Example'}:</strong>
               <div style={{ color:'#78350F', marginTop:4 }}>
-                ⚠️ BMW X3 2021 — 97 {lang==='el'?'ημέρες στο stock':'days in stock'}<br/>
-                {lang==='el'?'Κόστος':'Cost'}: <strong>€{(97 * (parseFloat(storeCost)||8)).toLocaleString()}</strong>
+                ⚠️ BMW X3 2021 — 97 {lang==='el'?'ημέρες στο stock':lang==='it'?'giorni in stock':lang==='de'?'Tage auf Lager':lang==='fr'?'jours en stock':lang==='es'?'días en stock':'days in stock'}<br/>
+                {lang==='el'?'Κόστος':lang==='it'?'Costo':lang==='de'?'Kosten':lang==='fr'?'Coût':lang==='es'?'Coste':'Cost'}: <strong>€{(97 * (parseFloat(storeCost)||8)).toLocaleString()}</strong>
               </div>
             </div>
           </div>
@@ -266,7 +266,7 @@ export default function SettingsPage() {
         {section === 'backup' && (
           <div className="card">
             <h2 style={{ fontSize:15, fontWeight:700, marginTop:0, marginBottom:12 }}>💾 Backup & Export</h2>
-            <p style={{ fontSize:13, color:'var(--text2)', marginBottom:14 }}>{vehicles.length} {lang==='el'?'οχήματα στη βάση':'vehicles in database'}</p>
+            <p style={{ fontSize:13, color:'var(--text2)', marginBottom:14 }}>{vehicles.length} {lang==='el'?'οχήματα στη βάση':lang==='it'?'veicoli nel database':lang==='de'?'Fahrzeuge in der DB':lang==='fr'?'véhicules dans la base':lang==='es'?'vehículos en la BD':'vehicles in database'}</p>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               <button className="btn btn-ghost" onClick={exportJSON} style={{ justifyContent:'flex-start' }}>📥 Export all (JSON)</button>
               <button className="btn btn-ghost" style={{ justifyContent:'flex-start' }}
