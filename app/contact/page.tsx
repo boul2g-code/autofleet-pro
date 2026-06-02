@@ -96,8 +96,8 @@ export default function ContactPage() {
             {LANGS.map(l => (
               <button key={l} onClick={() => setLang(l)} title={l.toUpperCase()}
                 style={{
-                  background: lang===l ? '#2563EB' : '#F8FAFC',
-                  border: lang===l ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                  background: lang===l ? '#6366F1' : '#F8FAFC',
+                  border: lang===l ? '2px solid #6366F1' : '1px solid #E5E7EB',
                   borderRadius:6, padding:'4px 8px', cursor:'pointer', fontSize:16,
                   opacity: lang===l ? 1 : 0.6, transition:'all 0.15s',
                 }}>
@@ -112,7 +112,7 @@ export default function ContactPage() {
       <div style={{ maxWidth:540, margin:'0 auto', padding:'48px 24px' }}>
 
         {/* Founder badge */}
-        <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'10px 16px', marginBottom:24, fontSize:13, color:'#1D4ED8', fontWeight:500, textAlign:'center' }}>
+        <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'10px 16px', marginBottom:24, fontSize:13, color:'#4F46E5', fontWeight:500, textAlign:'center' }}>
           {t('founderBadge', lang)}
         </div>
 
@@ -143,9 +143,9 @@ export default function ContactPage() {
                   <button key={p} onClick={() => setPlan(p)}
                     style={{
                       flex:1, padding:'10px 12px', borderRadius:8, cursor:'pointer', fontSize:13, fontWeight:500,
-                      border: plan===p ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                      border: plan===p ? '2px solid #6366F1' : '1px solid #E5E7EB',
                       background: plan===p ? '#EFF6FF' : 'white',
-                      color: plan===p ? '#2563EB' : '#6B7280',
+                      color: plan===p ? '#6366F1' : '#6B7280',
                     }}>
                     {p}
                   </button>
@@ -183,10 +183,10 @@ export default function ContactPage() {
 
             <button onClick={submit} disabled={loading}
               style={{
-                width:'100%', padding:'13px', background:'#2563EB', color:'white', border:'none',
+                width:'100%', padding:'13px', background:'#6366F1', color:'white', border:'none',
                 borderRadius:8, fontSize:16, fontWeight:700, cursor:loading?'not-allowed':'pointer',
                 opacity:loading?0.7:1, marginTop:8,
-                boxShadow:'0 4px 14px rgba(37,99,235,0.3)',
+                boxShadow:'0 4px 14px rgba(99,102,241,0.3)',
               }}>
               {loading ? t('sending', lang) : t('submit', lang)}
             </button>
@@ -205,7 +205,7 @@ export default function ContactPage() {
         {/* Direct email fallback */}
         <div style={{ textAlign:'center', marginTop:24, fontSize:13, color:'#9CA3AF' }}>
           {lang==='el'?'Ή στείλε email απευθείας:':lang==='it'?'O scrivi direttamente a:':lang==='de'?'Oder schreib direkt an:':lang==='fr'?'Ou écrivez directement à :':lang==='es'?'O escribe directamente a:':'Or email directly:'}{' '}
-          <a href="mailto:autofleetpro1@gmail.com" style={{ color:'#2563EB', textDecoration:'none', fontWeight:500 }}>
+          <a href="mailto:autofleetpro1@gmail.com" style={{ color:'#6366F1', textDecoration:'none', fontWeight:500 }}>
             autofleetpro1@gmail.com
           </a>
         </div>
