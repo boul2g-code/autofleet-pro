@@ -147,7 +147,7 @@ export default function DashboardPage() {
     <AppShell>
       {/* ── MORNING BRIEF ── */}
       <div style={{
-        background:'linear-gradient(135deg,#1E293B 0%,#1E3A5F 100%)',
+        background:'linear-gradient(135deg,#1E293B 0%,#312E81 100%)',
         borderRadius:12,padding:'16px 22px',marginBottom:16,
         display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:12,
       }}>
@@ -180,7 +180,7 @@ export default function DashboardPage() {
       {/* ── KPI CARDS ── */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10,marginBottom:16}}>
         {[
-          {label:L(lang,'Σύνολο','Totale','Gesamt','Total','Total','Total'),value:stats.total,icon:'🚗',color:'#2563EB'},
+          {label:L(lang,'Σύνολο','Totale','Gesamt','Total','Total','Total'),value:stats.total,icon:'🚗',color:'#6366F1'},
           {label:L(lang,'Σε Απόθεμα','In Stock','In Lager','En Stock','En Stock','In Stock'),value:stats.inStock,icon:'📦',color:'#8B5CF6'},
           {label:L(lang,'Αξία Αποθέματος','Valore Stock','Lagerwert','Valeur Stock','Valor Stock','Stock Value'),value:fmtCur(stats.stockValue),icon:'💶',color:'#059669'},
           {label:L(lang,'Κέρδος Μήνα','Profitto Mese','Monatsgewinn','Profit Mois','Ganancia Mes','Month Profit'),value:fmtCur(stats.monthProfit),icon:'📅',color:stats.monthProfit>=0?'#059669':'#DC2626'},
@@ -352,13 +352,13 @@ export default function DashboardPage() {
 
         {stats.topOpp?(
           <Link href={`/vehicles/${stats.topOpp.id}`} style={{textDecoration:'none'}}>
-            <div style={{background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:10,padding:'14px 16px',height:'100%'}}>
-              <div style={{fontWeight:700,fontSize:12,color:'#1D4ED8',marginBottom:6}}>
+            <div style={{background:'#EEF2FF',border:'1px solid #C7D2FE',borderRadius:10,padding:'14px 16px',height:'100%'}}>
+              <div style={{fontWeight:700,fontSize:12,color:'#4F46E5',marginBottom:6}}>
                 🚀 {L(lang,'Επόμενη Πώληση','Prossima Vendita','Nächster Verkauf','Prochaine Vente','Próxima Venta','Next Best Sale')}
               </div>
               <div style={{fontSize:15,fontWeight:700}}>{catIcon[stats.topOpp.category||'car']} {stats.topOpp.make} {stats.topOpp.model}</div>
               <div style={{fontSize:11,color:'var(--text2)',margin:'3px 0'}}>{stats.topOpp.year} · {stats.topOpp.plate}</div>
-              {stats.topOpp.sale?.price&&<div style={{fontSize:14,fontWeight:700,color:'#2563EB'}}>{fmtCur(stats.topOpp.sale.price)}</div>}
+              {stats.topOpp.sale?.price&&<div style={{fontSize:14,fontWeight:700,color:'#6366F1'}}>{fmtCur(stats.topOpp.sale.price)}</div>}
             </div>
           </Link>
         ):(
