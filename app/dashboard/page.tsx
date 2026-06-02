@@ -57,7 +57,7 @@ export default function DashboardPage() {
     })
     const agingCost = [...over90, ...over45].reduce((s, v) => {
       const d = daysSince(v.purchase?.date || v.created_at)
-      return s + (d * (v.storage?.costPerDay || 8))
+      return s + (d * (v.storage?.costPerDay || (settings?.org as any)?.defaultStoreCost || 8))
     }, 0)
 
     const inTransit = vehicles.filter(v => ['transit_in','transit_out'].includes(v.status || ''))
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                 .slice(0, 4)
                 .map(v => {
                   const d = daysSince(v.purchase?.date || v.created_at)
-                  const cost = d * (v.storage?.costPerDay || 8)
+                  const cost = d * (v.storage?.costPerDay || (settings?.org as any)?.defaultStoreCost || 8)
                   return (
                     <Link key={v.id} href={`/vehicles/${v.id}`}
                       style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#991B1B', textDecoration: 'none', padding: '3px 0', borderBottom: '1px solid #FEE2E2' }}>
