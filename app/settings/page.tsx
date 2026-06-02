@@ -33,7 +33,7 @@ export default function SettingsPage() {
   const [email, setEmail]           = useState(org.email || '')
   const [website, setWebsite]       = useState(org.website || '')
   const [logo, setLogo]             = useState(org.logo || '')
-  const [primary, setPrimary]       = useState(org.primaryColor || '#2563EB')
+  const [primary, setPrimary]       = useState(org.primaryColor || '#6366F1')
   const [secondary, setSecondary]   = useState(org.secondaryColor || '#1E293B')
   const [responsible, setResp]      = useState(org.responsible || '')
   const [stamp, setStamp]           = useState(org.stamp || '')
@@ -94,7 +94,7 @@ export default function SettingsPage() {
               style={{
                 padding:'7px 12px', borderRadius:7, fontSize:13, cursor:'pointer',
                 border: section===s.key ? '2px solid var(--primary)' : '2px solid var(--border)',
-                background: section===s.key ? '#EFF6FF' : 'var(--surface)',
+                background: section===s.key ? '#EEF2FF' : 'var(--surface)',
                 color: section===s.key ? 'var(--primary)' : 'var(--text2)',
                 fontWeight: section===s.key ? 600 : 400,
               }}>
