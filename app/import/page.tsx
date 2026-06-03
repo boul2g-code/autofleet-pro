@@ -128,7 +128,12 @@ export default function ImportPage() {
         <div className="card" style={{ marginBottom:16 }}>
           <div style={{ fontSize:13, color:'var(--text2)', marginBottom:12 }}>
             <strong>{t('columns')}</strong>
-            {' '}Make, Model, Year, Plate, VIN, Mileage/km, Price/Prezzo/Τιμή, Color, Fuel, Category
+            {' '}{lang==='el'?'Μάρκα, Μοντέλο, Έτος, Πινακίδα, VIN, Χιλιόμετρα, Τιμή, Χρώμα, Καύσιμο, Κατηγορία':
+               lang==='it'?'Marca, Modello, Anno, Targa, VIN, Chilometri, Prezzo, Colore, Carburante, Categoria':
+               lang==='de'?'Marke, Modell, Jahr, Kennzeichen, VIN, Kilometer, Preis, Farbe, Kraftstoff, Kategorie':
+               lang==='fr'?'Marque, Modèle, Année, Immatriculation, VIN, Kilométrage, Prix, Couleur, Carburant, Catégorie':
+               lang==='es'?'Marca, Modelo, Año, Matrícula, VIN, Kilometraje, Precio, Color, Combustible, Categoría':
+               'Make, Model, Year, Plate, VIN, Mileage, Price, Color, Fuel, Category'}
           </div>
 
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
