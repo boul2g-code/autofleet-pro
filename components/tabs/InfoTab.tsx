@@ -33,6 +33,61 @@ export default function InfoTab({ id }: { id: string }) {
     if (Object.keys(patch).length > 0) updateVehicle(id, patch)
   }
 
+  // Market Value Estimate via Claude AI
+  const [marketVal, setMarketVal] = React.useState<{
+    low: number; high: number; suggested: number; margin: number; currency: string; source: string
+  } | null>(null)
+  const [marketLoading, setMarketLoading] = React.useState(false)
+
+  const fetchMarketValue = async (make: string, model: string, year: number | undefined, fuel: string, mileage: number | undefined, purchasePrice: number | undefined) => {
+    if (!make || !model || !year) return
+    const apiKey = settings?.anthropicKey
+    if (!apiKey) return
+    setMarketLoading(true)
+    setMarketVal(null)
+    try {
+      const km = mileage || 0
+      const prompt = `You are a used vehicle pricing expert for the European market (Italy, Greece, Germany, France).
+
+Estimate the current market value for:
+- Vehicle: ${year} ${make} ${model}
+- Fuel: ${fuel || 'diesel'}
+- Mileage: ${km.toLocaleString()} km
+- Purchase price: ${purchasePrice ? '€' + purchasePrice.toLocaleString() : 'unknown'}
+
+Reply ONLY with a JSON object, no markdown, no explanation:
+{"low": <min market price>, "high": <max market price>, "suggested": <optimal sale price>, "margin": <profit if purchased at stated price or 0>, "currency": "EUR", "source": "AutoScout24/Mobile.de estimate"}`
+
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'x-api-key': apiKey, 'anthropic-version':'2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 200,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      })
+      const data = await resp.json()
+      const txt = (data?.content?.[0]?.text || '').trim()
+      const clean = txt.replace(/```json|```/g, '').trim()
+      const parsed = JSON.parse(clean)
+      if (parsed.low && parsed.high && parsed.suggested) {
+        setMarketVal(parsed)
+      }
+    } catch { /* silent fail */ }
+    setMarketLoading(false)
+  }
+
+  // Trigger market value when key fields change
+  React.useEffect(() => {
+    if (v?.make && v?.model && v?.year && v.year > 1990) {
+      const timer = setTimeout(() => {
+        fetchMarketValue(v.make||'', v.model||'', v.year, v.fuelType||'diesel', v.mileage, v.purchase?.price)
+      }, 1500) // debounce
+      return () => clearTimeout(timer)
+    }
+  }, [v?.make, v?.model, v?.year, v?.fuelType, v?.mileage])
+
   // VIN decode via NHTSA (free, no API key)
   const [vinLoading, setVinLoading] = React.useState(false)
   const [vinResult, setVinResult] = React.useState<string>('')
@@ -142,6 +197,63 @@ export default function InfoTab({ id }: { id: string }) {
       </div>
 
       <div className="field-row">
+        {/* Market Value Card */}
+        {(marketVal || marketLoading) && (
+          <div style={{
+            background: marketLoading ? 'var(--surface2)' : '#F0FDF4',
+            border: marketLoading ? '1px solid var(--border)' : '1px solid #BBF7D0',
+            borderRadius: 10, padding: '14px 16px', marginBottom: 8
+          }}>
+            {marketLoading ? (
+              <div style={{ fontSize:13, color:'var(--text2)', display:'flex', alignItems:'center', gap:8 }}>
+                <span>⏳</span>
+                {lang==='el'?'Αναζήτηση τιμών αγοράς...':lang==='it'?'Ricerca prezzi di mercato...':lang==='de'?'Marktpreise werden gesucht...':lang==='fr'?'Recherche prix marché...':'Searching market prices...'}
+              </div>
+            ) : marketVal && (
+              <>
+                <div style={{ fontWeight:700, fontSize:13, color:'#166534', marginBottom:10 }}>
+                  📊 {lang==='el'?'Εκτίμηση Αξίας Αγοράς':lang==='it'?'Stima Valore di Mercato':lang==='de'?'Marktwert-Schätzung':lang==='fr'?'Estimation Valeur Marché':'Market Value Estimate'}
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+                  <div style={{ background:'white', borderRadius:8, padding:'10px 12px', border:'1px solid #BBF7D0' }}>
+                    <div style={{ fontSize:11, color:'#6B7280', marginBottom:3, textTransform:'uppercase', letterSpacing:'0.04em' }}>
+                      {marketVal.source}
+                    </div>
+                    <div style={{ fontSize:15, fontWeight:700, color:'#166534' }}>
+                      €{marketVal.low.toLocaleString()} – €{marketVal.high.toLocaleString()}
+                    </div>
+                  </div>
+                  <div style={{ background:'#2563EB', borderRadius:8, padding:'10px 12px' }}>
+                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginBottom:3, textTransform:'uppercase', letterSpacing:'0.04em' }}>
+                      {lang==='el'?'Προτεινόμενη Τιμή':lang==='it'?'Prezzo Consigliato':lang==='de'?'Empf. Preis':lang==='fr'?'Prix Conseillé':'Suggested Price'}
+                    </div>
+                    <div style={{ fontSize:16, fontWeight:800, color:'white' }}>
+                      €{marketVal.suggested.toLocaleString()}
+                    </div>
+                    <button
+                      className="btn"
+                      style={{ marginTop:6, padding:'3px 8px', fontSize:11, background:'rgba(255,255,255,0.2)', color:'white', border:'none' }}
+                      onClick={() => up({ sale: { ...(v?.sale||{}), price: marketVal.suggested } })}
+                    >
+                      {lang==='el'?'↑ Εφαρμογή':lang==='it'?'↑ Applica':lang==='de'?'↑ Übernehmen':'↑ Apply'}
+                    </button>
+                  </div>
+                  <div style={{ background: marketVal.margin > 0 ? '#F0FDF4' : '#FEF2F2', borderRadius:8, padding:'10px 12px', border:`1px solid ${marketVal.margin > 0 ? '#BBF7D0' : '#FECACA'}` }}>
+                    <div style={{ fontSize:11, color:'#6B7280', marginBottom:3, textTransform:'uppercase', letterSpacing:'0.04em' }}>
+                      {lang==='el'?'Αναμ. Κέρδος':lang==='it'?'Margine Atteso':lang==='de'?'Erw. Marge':lang==='fr'?'Marge Attendue':'Expected Margin'}
+                    </div>
+                    <div style={{ fontSize:15, fontWeight:700, color: marketVal.margin > 0 ? '#16A34A' : '#DC2626' }}>
+                      {marketVal.margin > 0 ? '+' : ''}€{marketVal.margin.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize:10, color:'#9CA3AF', marginTop:8 }}>
+                  ⚡ {lang==='el'?'AI εκτίμηση βάσει δεδομένων αγοράς — πάντα επαλήθευε πριν την πώληση':lang==='it'?'Stima AI basata su dati di mercato — verifica sempre prima della vendita':lang==='de'?'KI-Schätzung basierend auf Marktdaten — immer vor dem Verkauf prüfen':lang==='fr'?'Estimation IA basée sur données marché — toujours vérifier avant la vente':'AI estimate based on market data — always verify before sale'}
+                </div>
+              </>
+            )}
+          </div>
+        )}
         <div className="field-group">
           <label>{t(lang, 'field.vin')}</label>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
