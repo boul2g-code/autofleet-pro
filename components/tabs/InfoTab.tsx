@@ -2,6 +2,7 @@
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import { VEHICLE_MAKES, VEHICLE_MODELS, COLORS } from '@/lib/vehicleData'
+import { getVehicleSpecs } from '@/lib/vehicleSpecs'
 import type { VehicleCategory, VehicleStatus, FuelType, GearType } from '@/lib/types'
 
 const CATEGORIES: VehicleCategory[] = ['car','truck','van','bus','moto','construction']
@@ -16,6 +17,20 @@ export default function InfoTab({ id }: { id: string }) {
   if (!v) return null
 
   const up = (patch: Parameters<typeof updateVehicle>[1]) => updateVehicle(id, patch)
+
+  // Auto-fill specs when make+model+fuel are set
+  const autoFill = (make: string, model: string, fuel: string) => {
+    if (!make || !model || !fuel) return
+    const specs = getVehicleSpecs(make, model, fuel)
+    if (!specs) return
+    const patch: Parameters<typeof updateVehicle>[1] = {}
+    if (specs.engine_cc && !v?.engine_cc) patch.engine_cc = specs.engine_cc
+    if (specs.power_kw && !v?.power_kw) patch.power_kw = specs.power_kw
+    if (specs.doors && !v?.doors) patch.doors = specs.doors
+    if (specs.seats && !v?.seats) patch.seats = specs.seats
+    if (specs.gear_type && !v?.gear_type) patch.gear_type = specs.gear_type as typeof v.gear_type
+    if (Object.keys(patch).length > 0) updateVehicle(id, patch)
+  }
   const makes = VEHICLE_MAKES[v.category || 'car'] || []
   const models = v.make ? (VEHICLE_MODELS[v.make] || []) : []
 
@@ -47,12 +62,12 @@ export default function InfoTab({ id }: { id: string }) {
         <div className="field-group">
           <label>{t(lang, 'field.model')}</label>
           {models.length > 0 ? (
-            <select value={v.model || ''} onChange={e => up({ model: e.target.value })}>
+            <select value={v.model || ''} onChange={e => { up({ model: e.target.value }); autoFill(v?.make||'', e.target.value, v?.fuelType||'') }}>
               <option value="">—</option>
               {models.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           ) : (
-            <input value={v.model || ''} onChange={e => up({ model: e.target.value })} placeholder="Model" />
+            <input value={v.model || ''} onChange={e => { up({ model: e.target.value }); autoFill(v?.make||'', e.target.value, v?.fuelType||'') }} placeholder="Model" />
           )}
         </div>
       </div>
@@ -82,7 +97,7 @@ export default function InfoTab({ id }: { id: string }) {
       <div className="field-row">
         <div className="field-group">
           <label>{t(lang, 'field.fuel')}</label>
-          <select value={v.fuelType || ''} onChange={e => up({ fuelType: e.target.value as FuelType })}>
+          <select value={v.fuelType || ''} onChange={e => { up({ fuelType: e.target.value as FuelType }); autoFill(v?.make||'', v?.model||'', e.target.value) }}>
             <option value="">—</option>
             {FUELS.map(f => <option key={f} value={f}>{t(lang, `fuel.${f}`)}</option>)}
           </select>
