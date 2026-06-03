@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import { VEHICLE_MAKES, VEHICLE_MODELS, COLORS } from '@/lib/vehicleData'
@@ -30,6 +31,61 @@ export default function InfoTab({ id }: { id: string }) {
     if (specs.seats && !v?.seats) patch.seats = specs.seats
     if (specs.gearType && !v?.gearType) patch.gearType = specs.gearType as typeof v.gearType
     if (Object.keys(patch).length > 0) updateVehicle(id, patch)
+  }
+
+  // VIN decode via NHTSA (free, no API key)
+  const [vinLoading, setVinLoading] = React.useState(false)
+  const [vinResult, setVinResult] = React.useState<string>('')
+
+  const decodeVin = async (vin: string) => {
+    if (!vin || vin.length < 11) return
+    setVinLoading(true)
+    setVinResult('')
+    try {
+      const res = await fetch(
+        `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVin/${vin.trim()}?format=json`
+      )
+      const data = await res.json()
+      const get = (var_name: string) =>
+        data.Results?.find((r: {Variable: string; Value: string}) =>
+          r.Variable === var_name
+        )?.Value || ''
+
+      const make  = get('Make')
+      const model = get('Model')
+      const year  = parseInt(get('Model Year')) || undefined
+      const fuel  = get('Fuel Type - Primary')
+      const engine = parseFloat(get('Displacement (L)')) || undefined
+      const doors = parseInt(get('Doors')) || undefined
+      const seats = parseInt(get('Seat Rows')) || undefined
+
+      const patch: Parameters<typeof updateVehicle>[1] = {}
+      if (make  && !v?.make)  patch.make  = make.charAt(0)+make.slice(1).toLowerCase()
+      if (model && !v?.model) patch.model = model
+      if (year  && !v?.year)  patch.year  = year
+      if (engine && !v?.engineCC) patch.engineCC = Math.round(engine * 1000)
+      if (doors && !v?.doors) patch.doors = doors
+      if (fuel) {
+        const fuelLower = fuel.toLowerCase()
+        if (!v?.fuelType) {
+          if (fuelLower.includes('diesel')) patch.fuelType = 'diesel'
+          else if (fuelLower.includes('electric')) patch.fuelType = 'electric'
+          else if (fuelLower.includes('hybrid')) patch.fuelType = 'hybrid'
+          else if (fuelLower.includes('gas') || fuelLower.includes('petrol')) patch.fuelType = 'petrol'
+        }
+      }
+
+      if (Object.keys(patch).length > 0) {
+        updateVehicle(id, patch)
+        const filled = Object.keys(patch).join(', ')
+        setVinResult(`✅ ${lang==='el'?'Βρέθηκε':lang==='it'?'Trovato':lang==='de'?'Gefunden':lang==='fr'?'Trouvé':'Found'}: ${make} ${model} ${year||''} — ${lang==='el'?'συμπληρώθηκαν':lang==='it'?'compilati':lang==='de'?'ausgefüllt':lang==='fr'?'remplis':'filled'}: ${filled}`)
+      } else {
+        setVinResult(`⚠️ ${lang==='el'?'Δεν βρέθηκαν νέα στοιχεία':lang==='it'?'Nessun dato nuovo trovato':lang==='de'?'Keine neuen Daten gefunden':lang==='fr'?'Aucune nouvelle donnée':'No new data found'}`)
+      }
+    } catch {
+      setVinResult(`❌ ${lang==='el'?'Σφάλμα σύνδεσης':lang==='it'?'Errore di connessione':lang==='de'?'Verbindungsfehler':lang==='fr'?'Erreur de connexion':'Connection error'}`)
+    }
+    setVinLoading(false)
   }
   const makes = VEHICLE_MAKES[v.category || 'car'] || []
   const models = v.make ? (VEHICLE_MODELS[v.make] || []) : []
@@ -86,7 +142,28 @@ export default function InfoTab({ id }: { id: string }) {
       <div className="field-row">
         <div className="field-group">
           <label>{t(lang, 'field.vin')}</label>
-          <input value={v.vin || ''} onChange={e => up({ vin: e.target.value.toUpperCase() })} placeholder="WBA..." maxLength={17} />
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <input 
+              value={v.vin || ''} 
+              onChange={e => { up({ vin: e.target.value.toUpperCase() }); setVinResult('') }} 
+              placeholder="WBA3B9C50FK123456" 
+              maxLength={17}
+              style={{ flex:1, fontFamily:'monospace', letterSpacing:'0.05em' }}
+            />
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize:12, whiteSpace:'nowrap', flexShrink:0 }}
+              onClick={() => decodeVin(v?.vin || '')}
+              disabled={vinLoading || !v?.vin || v.vin.length < 11}
+            >
+              {vinLoading ? '⏳' : '🔍'} VIN
+            </button>
+          </div>
+          {vinResult && (
+            <div style={{ fontSize:12, marginTop:4, color: vinResult.startsWith('✅') ? 'var(--success)' : vinResult.startsWith('⚠️') ? 'var(--warning)' : 'var(--danger)' }}>
+              {vinResult}
+            </div>
+          )}
         </div>
         <div className="field-group">
           <label>{t(lang, 'field.plate')}</label>
