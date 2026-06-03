@@ -20,17 +20,57 @@ export default function InfoTab({ id }: { id: string }) {
   const up = (patch: Parameters<typeof updateVehicle>[1]) => updateVehicle(id, patch)
 
   // Auto-fill specs when make+model+fuel are set
-  const autoFill = (make: string, model: string, fuel: string) => {
-    if (!make || !model || !fuel) return
-    const specs = getVehicleSpecs(make, model, fuel)
-    if (!specs) return
-    const patch: Parameters<typeof updateVehicle>[1] = {}
-    if (specs.engineCC && !v?.engineCC) patch.engineCC = specs.engineCC
-    if (specs.powerKW && !v?.powerKW) patch.powerKW = specs.powerKW
-    if (specs.doors && !v?.doors) patch.doors = specs.doors
-    if (specs.seats && !v?.seats) patch.seats = specs.seats
-    if (specs.gearType && !v?.gearType) patch.gearType = specs.gearType as typeof v.gearType
-    if (Object.keys(patch).length > 0) updateVehicle(id, patch)
+  const [specsLoading, setSpecsLoading] = React.useState(false)
+
+  const autoFill = async (make: string, model: string, fuel: string) => {
+    if (!make || !model) return
+
+    // 1. Try static lookup first (instant, no API)
+    if (fuel) {
+      const specs = getVehicleSpecs(make, model, fuel)
+      if (specs) {
+        const patch: Parameters<typeof updateVehicle>[1] = {}
+        if (specs.engineCC && !v?.engineCC) patch.engineCC = specs.engineCC
+        if (specs.powerKW && !v?.powerKW) patch.powerKW = specs.powerKW
+        if (specs.doors && !v?.doors) patch.doors = specs.doors
+        if (specs.seats && !v?.seats) patch.seats = specs.seats
+        if (specs.gearType && !v?.gearType) patch.gearType = specs.gearType as typeof v.gearType
+        if (Object.keys(patch).length > 0) { updateVehicle(id, patch); return }
+      }
+    }
+
+    // 2. Claude AI fallback - knows ALL models
+    const apiKey = settings?.anthropicKey
+    if (!apiKey) return
+    setSpecsLoading(true)
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'x-api-key': apiKey, 'anthropic-version':'2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 150,
+          messages: [{ role:'user', content:
+            `Vehicle technical specs for: ${make} ${model}${fuel ? ' ' + fuel : ''}
+Reply ONLY with JSON, no markdown:
+{"engineCC":<displacement in cc>,"powerKW":<power in kw>,"doors":<number>,"seats":<number>,"gearType":"manual" or "automatic","fuelType":"diesel" or "petrol" or "hybrid" or "electric"}
+Example for Audi A3 1.6 TDI: {"engineCC":1598,"powerKW":85,"doors":5,"seats":5,"gearType":"manual","fuelType":"diesel"}`
+          }]
+        })
+      })
+      const data = await resp.json()
+      const txt = (data?.content?.[0]?.text || '').trim().replace(/```json|```/g,'')
+      const specs = JSON.parse(txt)
+      const patch: Parameters<typeof updateVehicle>[1] = {}
+      if (specs.engineCC && !v?.engineCC) patch.engineCC = Number(specs.engineCC)
+      if (specs.powerKW && !v?.powerKW) patch.powerKW = Number(specs.powerKW)
+      if (specs.doors && !v?.doors) patch.doors = Number(specs.doors)
+      if (specs.seats && !v?.seats) patch.seats = Number(specs.seats)
+      if (specs.gearType && !v?.gearType) patch.gearType = specs.gearType
+      if (specs.fuelType && !v?.fuelType) patch.fuelType = specs.fuelType
+      if (Object.keys(patch).length > 0) updateVehicle(id, patch)
+    } catch { /* silent */ }
+    setSpecsLoading(false)
   }
 
   // Market Value Estimate via Claude AI
@@ -176,7 +216,10 @@ Reply ONLY with valid JSON, no markdown:
 
       <div className="field-row">
         <div className="field-group">
-          <label>{t(lang, 'field.make')}</label>
+          <label style={{ display:'flex', justifyContent:'space-between' }}>
+            <span>{t(lang, 'field.make')}</span>
+            {specsLoading && <span style={{ fontSize:10, color:'var(--primary)', fontWeight:600 }}>⚙️ {lang==='el'?'φόρτωση...':lang==='it'?'caricamento...':lang==='de'?'laden...':lang==='fr'?'chargement...':'loading...'}</span>}
+          </label>
           <select value={v.make || ''} onChange={e => up({ make: e.target.value, model: '' })}>
             <option value="">—</option>
             {makes.map(m => <option key={m} value={m}>{m}</option>)}
