@@ -87,6 +87,83 @@ export default function InfoTab({ id }: { id: string }) {
     }
     setVinLoading(false)
   }
+
+  // VIN photo scan: Claude Vision first, Tesseract fallback
+  const [scanLoading, setScanLoading] = React.useState(false)
+  const [scanResult, setScanResult] = React.useState<string>('')
+  const cameraRef = React.useRef<HTMLInputElement>(null)
+
+  const extractVinFromText = (text: string): string | null => {
+    // VIN is 17 chars, only A-H,J-N,P,R-Z,0-9 (no I,O,Q)
+    const match = text.match(/\b([A-HJ-NPR-Z0-9]{17})\b/i)
+    return match ? match[1].toUpperCase() : null
+  }
+
+  const scanVinPhoto = async (file: File) => {
+    setScanLoading(true)
+    setScanResult('')
+    let vinFound: string | null = null
+
+    // --- Step 1: Claude Vision ---
+    try {
+      const apiKey = settings?.anthropicKey
+      if (apiKey) {
+        const b64 = await new Promise<string>((res, rej) => {
+          const r = new FileReader()
+          r.onload = ev => res((ev.target?.result as string).split(',')[1])
+          r.onerror = rej
+          r.readAsDataURL(file)
+        })
+        const mediaType = file.type as 'image/jpeg' | 'image/png' | 'image/webp'
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', 'x-api-key': apiKey, 'anthropic-version':'2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 100,
+            messages: [{
+              role: 'user',
+              content: [
+                { type:'image', source:{ type:'base64', media_type: mediaType, data: b64 } },
+                { type:'text', text:'Extract ONLY the VIN number from this image. Reply with just the 17-character VIN, nothing else. If no VIN visible, reply: NOT_FOUND' }
+              ]
+            }]
+          })
+        })
+        const data = await resp.json()
+        const text = data?.content?.[0]?.text?.trim() || ''
+        if (text && text !== 'NOT_FOUND') {
+          vinFound = extractVinFromText(text) || (text.length === 17 ? text.toUpperCase() : null)
+        }
+      }
+    } catch { /* fallthrough to Tesseract */ }
+
+    // --- Step 2: Tesseract fallback ---
+    if (!vinFound) {
+      try {
+        setScanResult(lang==='el'?'🔄 Tesseract OCR...':lang==='it'?'🔄 OCR in corso...':lang==='de'?'🔄 OCR läuft...':lang==='fr'?'🔄 OCR en cours...':'🔄 OCR running...')
+        const Tesseract = (await import('tesseract.js')).default
+        const { data: { text } } = await Tesseract.recognize(file, 'eng', {
+          logger: undefined,
+        })
+        vinFound = extractVinFromText(text)
+      } catch { /* both failed */ }
+    }
+
+    if (vinFound) {
+      up({ vin: vinFound })
+      setScanResult(`✅ VIN: ${vinFound}`)
+      // Auto-trigger NHTSA decode
+      setTimeout(() => decodeVin(vinFound!), 300)
+    } else {
+      setScanResult(lang==='el'?'⚠️ Δεν βρέθηκε VIN — δοκίμασε πιο κοντά':
+                   lang==='it'?'⚠️ VIN non trovato — riprova più vicino':
+                   lang==='de'?'⚠️ VIN nicht gefunden — näher versuchen':
+                   lang==='fr'?'⚠️ VIN non trouvé — essayez plus près':
+                   '⚠️ VIN not found — try closer')
+    }
+    setScanLoading(false)
+  }
   const makes = VEHICLE_MAKES[v.category || 'car'] || []
   const models = v.make ? (VEHICLE_MODELS[v.make] || []) : []
 
@@ -158,8 +235,24 @@ export default function InfoTab({ id }: { id: string }) {
             >
               {vinLoading ? '⏳' : '🔍'} VIN
             </button>
+          {/* Camera / Upload button */}
+          <label
+            className="btn btn-ghost"
+            style={{ fontSize:12, whiteSpace:'nowrap', flexShrink:0, cursor:'pointer', display:'inline-flex', alignItems:'center', gap:4 }}
+            title={lang==='el'?'Φωτογράφισε το VIN':lang==='it'?'Fotografa il VIN':lang==='de'?'VIN fotografieren':lang==='fr'?'Photographier le VIN':'Scan VIN photo'}
+          >
+            {scanLoading ? '⏳' : '📷'}
+            <input
+              ref={cameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display:'none' }}
+              onChange={e => { const f=e.target.files?.[0]; if(f) scanVinPhoto(f) }}
+            />
+          </label>
           </div>
-          {vinResult && (
+          {(vinResult||scanResult) && (
             <div style={{ fontSize:12, marginTop:4, color: vinResult.startsWith('✅') ? 'var(--success)' : vinResult.startsWith('⚠️') ? 'var(--warning)' : 'var(--danger)' }}>
               {vinResult}
             </div>
