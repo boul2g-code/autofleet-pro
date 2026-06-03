@@ -24,11 +24,11 @@ export default function InfoTab({ id }: { id: string }) {
     const specs = getVehicleSpecs(make, model, fuel)
     if (!specs) return
     const patch: Parameters<typeof updateVehicle>[1] = {}
-    if (specs.engine_cc && !v?.engine_cc) patch.engine_cc = specs.engine_cc
-    if (specs.power_kw && !v?.power_kw) patch.power_kw = specs.power_kw
+    if (specs.engineCC && !v?.engineCC) patch.engineCC = specs.engineCC
+    if (specs.powerKW && !v?.powerKW) patch.powerKW = specs.powerKW
     if (specs.doors && !v?.doors) patch.doors = specs.doors
     if (specs.seats && !v?.seats) patch.seats = specs.seats
-    if (specs.gear_type && !v?.gear_type) patch.gear_type = specs.gear_type as typeof v.gear_type
+    if (specs.gearType && !v?.gearType) patch.gearType = specs.gearType as typeof v.gearType
     if (Object.keys(patch).length > 0) updateVehicle(id, patch)
   }
   const makes = VEHICLE_MAKES[v.category || 'car'] || []
