@@ -143,9 +143,7 @@ export default function InfoTab({ id }: { id: string }) {
       try {
         setScanResult(lang==='el'?'🔄 Tesseract OCR...':lang==='it'?'🔄 OCR in corso...':lang==='de'?'🔄 OCR läuft...':lang==='fr'?'🔄 OCR en cours...':'🔄 OCR running...')
         const Tesseract = (await import('tesseract.js')).default
-        const { data: { text } } = await Tesseract.recognize(file, 'eng', {
-          logger: undefined,
-        })
+        const { data: { text } } = await Tesseract.recognize(file, 'eng')
         vinFound = extractVinFromText(text)
       } catch { /* both failed */ }
     }
@@ -252,11 +250,11 @@ export default function InfoTab({ id }: { id: string }) {
             />
           </label>
           </div>
-          {(vinResult||scanResult) && (
-            <div style={{ fontSize:12, marginTop:4, color: vinResult.startsWith('✅') ? 'var(--success)' : vinResult.startsWith('⚠️') ? 'var(--warning)' : 'var(--danger)' }}>
-              {vinResult}
-            </div>
-          )}
+          {(vinResult||scanResult) && (() => {
+            const msg = vinResult || scanResult
+            const col = msg.startsWith('✅') ? 'var(--success)' : msg.startsWith('⚠️') ? 'var(--warning)' : 'var(--danger)'
+            return <div style={{ fontSize:12, marginTop:4, color: col }}>{msg}</div>
+          })()}
         </div>
         <div className="field-group">
           <label>{t(lang, 'field.plate')}</label>
