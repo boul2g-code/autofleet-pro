@@ -11,6 +11,13 @@ const STATUSES: VehicleStatus[] = ['purchased','transit_in','stored','for_sale',
 const FUELS: FuelType[] = ['diesel','petrol','hybrid','electric','lpg','cng','other']
 const GEARS: GearType[] = ['manual','automatic','semi']
 
+
+function VinMessage({ msg }: { msg: string }) {
+  if (!msg) return null
+  const col = msg.startsWith('✅') ? 'var(--success)' : msg.startsWith('⚠️') ? 'var(--warning)' : 'var(--danger)'
+  return <div style={{ fontSize:12, marginTop:4, color: col }}>{msg}</div>
+}
+
 export default function InfoTab({ id }: { id: string }) {
   const { vehicles, updateVehicle, settings } = useFleetStore()
   const lang = settings.lang
@@ -250,11 +257,7 @@ export default function InfoTab({ id }: { id: string }) {
             />
           </label>
           </div>
-          {(vinResult||scanResult) && (() => {
-            const msg = vinResult || scanResult
-            const col = msg.startsWith('✅') ? 'var(--success)' : msg.startsWith('⚠️') ? 'var(--warning)' : 'var(--danger)'
-            return <div style={{ fontSize:12, marginTop:4, color: col }}>{msg}</div>
-          })()}
+          <VinMessage msg={vinResult || scanResult} />
         </div>
         <div className="field-group">
           <label>{t(lang, 'field.plate')}</label>
