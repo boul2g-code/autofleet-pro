@@ -49,7 +49,7 @@ export async function dbCreateVehicle(v: Partial<Vehicle>): Promise<Vehicle | nu
     .from('settings')
     .select('org_id')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   const row = vehicleToRow(v)
   row.user_id = user.id               // Always stamp with authenticated user
