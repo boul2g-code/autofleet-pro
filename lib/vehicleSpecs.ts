@@ -103,17 +103,16 @@ export function getVehicleSpecs(
   model: string,
   fuel: string
 ): VehicleSpecSuggestion | null {
-  // Try exact match
+  // Try exact match first (make + model + fuel)
   const key = `${make}|${model}|${fuel}`
   if (SPECS[key]) return SPECS[key]
 
-  // Try partial model match (e.g. "320d" matches "BMW|320d|diesel")
+  // Try exact match ignoring fuel
   for (const [k, v] of Object.entries(SPECS)) {
     const [km, kmod] = k.split('|')
-    if (km === make && model.toLowerCase().includes(kmod.toLowerCase().replace(/\s+/g,''))) {
-      return v
-    }
+    if (km === make && kmod.toLowerCase() === model.toLowerCase()) return v
   }
 
+  // NO fuzzy/partial match — too many false positives (220d ≠ 320d)
   return null
 }
