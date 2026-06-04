@@ -77,7 +77,7 @@ export default function ManifestPage() {
   const printPDF = () => {
     const sortLabel = COLS.find(c => c.key === sortKey)?.label || sortKey
     const filterLabel = selectedStatuses.size === STATUSES.length
-      ? 'All statuses'
+      ? (lang==='el'?'Όλες οι καταστάσεις':lang==='it'?'Tutti gli stati':lang==='de'?'Alle Status':lang==='fr'?'Tous les statuts':'All statuses')
       : Array.from(selectedStatuses).join(', ')
 
     const rows = filtered.map(v => {
@@ -100,7 +100,25 @@ export default function ManifestPage() {
     const totalPurchase = filtered.reduce((s, v) => s + (v.purchase?.price || 0), 0)
     const totalProfit = filtered.filter(v => calcFinancials(v).saleRevenue > 0).reduce((s, v) => s + calcFinancials(v).grossProfit, 0)
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Fleet Manifest</title>
+    // Translations for PDF
+    const tr = {
+      title:     lang==='el'?'Κατάλογος Στόλου':lang==='it'?'Manifesto Flotta':lang==='de'?'Flottenmanifest':lang==='fr'?'Manifeste Flotte':lang==='es'?'Manifiesto Flota':'Fleet Manifest',
+      vehicles:  lang==='el'?'οχήματα':lang==='it'?'veicoli':lang==='de'?'Fahrzeuge':lang==='fr'?'véhicules':lang==='es'?'vehículos':'vehicles',
+      filter:    lang==='el'?'Φίλτρο':lang==='it'?'Filtro':lang==='de'?'Filter':lang==='fr'?'Filtre':lang==='es'?'Filtro':'Filter',
+      sortedBy:  lang==='el'?'Ταξινόμηση':lang==='it'?'Ordinato per':lang==='de'?'Sortiert nach':lang==='fr'?'Trié par':lang==='es'?'Ordenado por':'Sorted by',
+      colVehicle:lang==='el'?'Όχημα':lang==='it'?'Veicolo':lang==='de'?'Fahrzeug':lang==='fr'?'Véhicule':lang==='es'?'Vehículo':'Vehicle',
+      colPlate:  lang==='el'?'Πινακίδα':lang==='it'?'Targa':lang==='de'?'Kennzeichen':lang==='fr'?'Plaque':lang==='es'?'Matrícula':'Plate',
+      colYear:   lang==='el'?'Έτος':lang==='it'?'Anno':lang==='de'?'Jahr':lang==='fr'?'Année':lang==='es'?'Año':'Year',
+      colStatus: lang==='el'?'Κατάσταση':lang==='it'?'Stato':lang==='de'?'Status':lang==='fr'?'Statut':lang==='es'?'Estado':'Status',
+      colDays:   lang==='el'?'Ημέρες':lang==='it'?'Giorni':lang==='de'?'Tage':lang==='fr'?'Jours':lang==='es'?'Días':'Days',
+      colPurch:  lang==='el'?'Αγορά €':lang==='it'?'Acquisto €':lang==='de'?'Kauf €':lang==='fr'?'Achat €':lang==='es'?'Compra €':'Purchase €',
+      colProfit: lang==='el'?'Κέρδος €':lang==='it'?'Profitto €':lang==='de'?'Gewinn €':lang==='fr'?'Profit €':lang==='es'?'Beneficio €':'Profit €',
+      total:     lang==='el'?'ΣΥΝΟΛΟ':lang==='it'?'TOTALE':lang==='de'?'GESAMT':lang==='fr'?'TOTAL':lang==='es'?'TOTAL':'TOTAL',
+      footer:    lang==='el'?'AutoFleet Pro — Διαχείριση Στόλου':lang==='it'?'AutoFleet Pro — Gestione Flotta':lang==='de'?'AutoFleet Pro — Flottenmanagement':lang==='fr'?'AutoFleet Pro — Gestion de Flotte':'AutoFleet Pro — Fleet Management',
+      allStatuses: lang==='el'?'Όλες οι καταστάσεις':lang==='it'?'Tutti gli stati':lang==='de'?'Alle Status':lang==='fr'?'Tous les statuts':lang==='es'?'Todos los estados':'All statuses',
+    }
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${tr.title}</title>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:Arial,sans-serif; font-size:11px; padding:16px; color:#1f2937; }
@@ -113,34 +131,34 @@ th { padding:6px 8px; text-align:left; font-size:10px; }
 tbody tr:nth-child(even) { background:#f8fafc; }
 td { padding:5px 8px; border-bottom:1px solid #e5e7eb; }
 tfoot tr { background:#f1f5f9; font-weight:700; }
-.footer { margin-top:12px; color:#9ca3af; font-size:9px; display:flex; justify-content:space-between; border-top:1px solid #e5e7eb; padding-top:6px; }
+.footer { margin-top:12px; color:#9ca3af; font-size:9px; display:flex; justify-content:space-between; border-top:1px solid #e5e7eb; padding-top:8px; }
 @media print { body { padding:8px } }
 </style></head><body>
 <div class="header">
   <div>
-    <h1>Fleet Manifest</h1>
+    <h1>${tr.title}</h1>
     <div class="meta">
-      ${new Date().toLocaleDateString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
-      &nbsp;·&nbsp; ${filtered.length} vehicles
-      &nbsp;·&nbsp; Filter: ${filterLabel}
-      &nbsp;·&nbsp; Sorted by: ${sortLabel} ${sortDir==='asc'?'↑':'↓'}
+      ${new Date().toLocaleDateString(lang==='el'?'el-GR':lang==='it'?'it-IT':lang==='de'?'de-DE':lang==='fr'?'fr-FR':'en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+      &nbsp;·&nbsp; ${filtered.length} ${tr.vehicles}
+      &nbsp;·&nbsp; ${tr.filter}: ${filterLabel}
+      &nbsp;·&nbsp; ${tr.sortedBy}: ${sortLabel} ${sortDir==='asc'?'↑':'↓'}
     </div>
   </div>
   <div style="text-align:right;font-weight:700;font-size:13px">AutoFleet Pro</div>
 </div>
 <table>
   <thead><tr>
-    <th>Vehicle</th><th>Plate</th><th>Year</th><th>km</th><th>Status</th><th>Days</th><th>Purchase €</th><th>Profit €</th>
+    <th>${tr.colVehicle}</th><th>${tr.colPlate}</th><th>${tr.colYear}</th><th>km</th><th>${tr.colStatus}</th><th>${tr.colDays}</th><th>${tr.colPurch}</th><th>${tr.colProfit}</th>
   </tr></thead>
   <tbody>${rows}</tbody>
   <tfoot><tr>
-    <td colspan="6">TOTAL (${filtered.length} vehicles)</td>
+    <td colspan="6">${tr.total} (${filtered.length} ${tr.vehicles})</td>
     <td>€${totalPurchase.toLocaleString()}</td>
     <td style="color:${totalProfit>=0?'#16a34a':'#dc2626'}">${totalProfit>=0?'+':''}€${Math.abs(totalProfit).toLocaleString()}</td>
   </tr></tfoot>
 </table>
 <div class="footer">
-  <span>AutoFleet Pro — Fleet Management System</span>
+  <span>${tr.footer}</span>
   <span>Page 1</span>
 </div>
 <script>window.onload=function(){window.focus();window.print()}</script>
