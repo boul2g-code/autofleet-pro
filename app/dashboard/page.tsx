@@ -127,12 +127,44 @@ export default function DashboardPage() {
       return p > 4000
     }).length
 
+    // ── Health Score ────────────────────────────────────────
+    const totalInStock = inStock.length
+    const deadStockCount = over90.length
+    const missingDocsCount = (missingDocs as typeof vehicles).length
+    const belowTargetMargin = inStock.filter(v => {
+      if (!v.sale?.price || !v.purchase?.price) return false
+      const margin = v.sale.price - v.purchase.price - (v.transportIn?.cost || 0)
+      const targetMargin = (settings?.org as Record<string,unknown> & {targetMargin?:number})?.targetMargin || 2000
+      return margin < targetMargin && margin > 0
+    }).length
+    const noSalePrice = inStock.filter(v => v.status === 'for_sale' && !v.sale?.price).length
+    const lockedCapital = over90.reduce((s, v) => s + (v.purchase?.price || 0), 0)
+
+    // Score: start at 100, deduct for problems
+    let healthScore = 100
+    if (totalInStock > 0) {
+      healthScore -= Math.min(30, Math.round((deadStockCount / totalInStock) * 30))
+      healthScore -= Math.min(20, Math.round((missingDocsCount / Math.max(inStock.length, 1)) * 20))
+      healthScore -= Math.min(20, Math.round((belowTargetMargin / Math.max(inStock.length, 1)) * 20))
+      healthScore -= Math.min(15, Math.round((noSalePrice / Math.max(inStock.length, 1)) * 15))
+    }
+    healthScore = Math.max(0, healthScore)
+
+    const healthIssues: string[] = []
+    if (deadStockCount > 0) healthIssues.push(`dead_stock:${deadStockCount}`)
+    if (lockedCapital > 0) healthIssues.push(`capital:${lockedCapital}`)
+    if (missingDocsCount > 0) healthIssues.push(`docs:${missingDocsCount}`)
+    if (belowTargetMargin > 0) healthIssues.push(`margin:${belowTargetMargin}`)
+    if (noSalePrice > 0) healthIssues.push(`no_price:${noSalePrice}`)
+
     return {
       total: vehicles.length, inStock: inStock.length, stockValue,
       sold: sold.length, monthProfit, totalProfit, avgDays, avgDaysDelta,
       over90: over90.length, over45: over45.length, over120: over120.length,
       agingCost, inTransit: inTransit.length, pendingDelivery, missingDocs,
       highMargin, topOpp, needsAttn, opportunities, deadStock, fleetTrend, recent,
+      healthScore, healthIssues, deadStockCount, missingDocsCount,
+      belowTargetMargin, noSalePrice, lockedCapital,
     }
   }, [vehicles, defaultStoreCost, lang])
 
@@ -145,6 +177,103 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
+      {/* ── DEALER HEALTH PANEL ── */}
+      {(() => {
+        const score = stats.healthScore
+        const scoreColor = score >= 80 ? '#16A34A' : score >= 60 ? '#D97706' : '#DC2626'
+        const scoreBg = score >= 80 ? '#F0FDF4' : score >= 60 ? '#FFFBEB' : '#FEF2F2'
+        const scoreBorder = score >= 80 ? '#BBF7D0' : score >= 60 ? '#FDE68A' : '#FECACA'
+        const hasIssues = stats.healthIssues.length > 0
+        return (
+          <div style={{
+            background: scoreBg,
+            border: `1.5px solid ${scoreBorder}`,
+            borderRadius: 12,
+            padding: '14px 20px',
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 20,
+            flexWrap: 'wrap',
+          }}>
+            {/* Score circle */}
+            <div style={{ textAlign: 'center', flexShrink: 0 }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: '50%',
+                background: 'white',
+                border: `3px solid ${scoreColor}`,
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                boxShadow: `0 0 0 4px ${scoreBg}`,
+              }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{score}</div>
+                <div style={{ fontSize: 9, color: scoreColor, fontWeight: 600 }}>/100</div>
+              </div>
+              <div style={{ fontSize: 10, color: '#6B7280', marginTop: 4, fontWeight: 600 }}>
+                {L(lang,'Υγεία Στόλου','Salute Flotta','Flotten-Status','Santé Flotte','Salud Flota','Fleet Health')}
+              </div>
+            </div>
+
+            {/* Issues */}
+            <div style={{ flex: 1, minWidth: 200 }}>
+              {!hasIssues ? (
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#16A34A' }}>
+                  ✅ {L(lang,'Όλα καλά! Δεν υπάρχουν προβλήματα.','Tutto ok! Nessun problema.','Alles gut! Keine Probleme.','Tout va bien! Aucun problème.','¡Todo bien! Sin problemas.','All good! No issues.')}
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px 16px' }}>
+                  {stats.deadStockCount > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                      <span style={{ fontSize: 16 }}>🚨</span>
+                      <span style={{ fontWeight: 700, color: '#DC2626' }}>{stats.deadStockCount}</span>
+                      <span style={{ color: '#374151' }}>
+                        {L(lang,'οχήματα >90 ημέρες','veicoli >90 giorni','Fahrzeuge >90 Tage','véhicules >90 jours','vehículos >90 días','vehicles >90 days')}
+                      </span>
+                    </div>
+                  )}
+                  {stats.lockedCapital > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                      <span style={{ fontSize: 16 }}>💰</span>
+                      <span style={{ fontWeight: 700, color: '#D97706' }}>{fmtCur(stats.lockedCapital, lang)}</span>
+                      <span style={{ color: '#374151' }}>
+                        {L(lang,'δεσμευμένο','bloccato','gebunden','bloqué','bloqueado','locked')}
+                      </span>
+                    </div>
+                  )}
+                  {stats.missingDocsCount > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                      <span style={{ fontSize: 16 }}>📄</span>
+                      <span style={{ fontWeight: 700, color: '#D97706' }}>{stats.missingDocsCount}</span>
+                      <span style={{ color: '#374151' }}>
+                        {L(lang,'ελλιπείς φάκελοι','fascicoli incompleti','unvollständige Akten','dossiers incomplets','expedientes incompletos','incomplete files')}
+                      </span>
+                    </div>
+                  )}
+                  {stats.belowTargetMargin > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                      <span style={{ fontSize: 16 }}>📉</span>
+                      <span style={{ fontWeight: 700, color: '#DC2626' }}>{stats.belowTargetMargin}</span>
+                      <span style={{ color: '#374151' }}>
+                        {L(lang,'χαμηλά περιθώρια','margini bassi','niedrige Margen','marges faibles','márgenes bajos','low margins')}
+                      </span>
+                    </div>
+                  )}
+                  {stats.noSalePrice > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                      <span style={{ fontSize: 16 }}>🏷️</span>
+                      <span style={{ fontWeight: 700, color: '#6B7280' }}>{stats.noSalePrice}</span>
+                      <span style={{ color: '#374151' }}>
+                        {L(lang,'χωρίς τιμή πώλησης','senza prezzo vendita','ohne Verkaufspreis','sans prix de vente','sin precio de venta','no sale price set')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── MORNING BRIEF ── */}
       <div style={{
         background:'linear-gradient(135deg,#1E293B 0%,#312E81 100%)',
