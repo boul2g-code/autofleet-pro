@@ -344,20 +344,60 @@ export function parseVehicleSpecs(make: string, model: string): ParsedSpecs | nu
   // High-confidence overrides (exact make+model)
   const key = `${make.toLowerCase()}|${model.toLowerCase().trim()}`
   const OVERRIDES: Record<string, ParsedSpecs> = {
-    'bmw|220d':  { engineCC:1995, powerKW:140, fuelType:'diesel', confidence:'high' },
-    'bmw|318d':  { engineCC:1995, powerKW:110, fuelType:'diesel', confidence:'high' },
-    'bmw|320d':  { engineCC:1995, powerKW:140, fuelType:'diesel', confidence:'high' },
+    // BMW diesel
     'bmw|116d':  { engineCC:1496, powerKW:85,  fuelType:'diesel', confidence:'high' },
     'bmw|118d':  { engineCC:1995, powerKW:110, fuelType:'diesel', confidence:'high' },
     'bmw|120d':  { engineCC:1995, powerKW:140, fuelType:'diesel', confidence:'high' },
-    'bmw|530d':  { engineCC:2993, powerKW:190, fuelType:'diesel', confidence:'high' },
+    'bmw|220d':  { engineCC:1995, powerKW:140, fuelType:'diesel', confidence:'high' },
+    'bmw|318d':  { engineCC:1995, powerKW:110, fuelType:'diesel', confidence:'high' },
+    'bmw|320d':  { engineCC:1995, powerKW:140, fuelType:'diesel', confidence:'high' },
+    'bmw|330d':  { engineCC:2993, powerKW:190, fuelType:'diesel', confidence:'high' },
     'bmw|520d':  { engineCC:1995, powerKW:140, fuelType:'diesel', confidence:'high' },
+    'bmw|530d':  { engineCC:2993, powerKW:190, fuelType:'diesel', confidence:'high' },
+    'bmw|x1 sdrive18d': { engineCC:1499, powerKW:100, fuelType:'diesel', confidence:'high' },
+    'bmw|x3 xdrive20d': { engineCC:1995, powerKW:140, fuelType:'diesel', confidence:'high' },
+    'bmw|x5 xdrive30d': { engineCC:2993, powerKW:190, fuelType:'diesel', confidence:'high' },
+    // BMW petrol
     'bmw|116i':  { engineCC:1499, powerKW:75,  fuelType:'petrol', confidence:'high' },
     'bmw|118i':  { engineCC:1499, powerKW:103, fuelType:'petrol', confidence:'high' },
     'bmw|120i':  { engineCC:1998, powerKW:135, fuelType:'petrol', confidence:'high' },
     'bmw|320i':  { engineCC:1998, powerKW:135, fuelType:'petrol', confidence:'high' },
-    'audi|a3 1.6 tdi': { engineCC:1598, powerKW:85, fuelType:'diesel', confidence:'high' },
-    'audi|a4 2.0 tdi': { engineCC:1968, powerKW:110, fuelType:'diesel', confidence:'high' },
+    // Audi
+    'audi|a3 1.6 tdi':  { engineCC:1598, powerKW:85,  fuelType:'diesel', confidence:'high' },
+    'audi|a3 2.0 tdi':  { engineCC:1968, powerKW:110, fuelType:'diesel', confidence:'high' },
+    'audi|a4 2.0 tdi':  { engineCC:1968, powerKW:110, fuelType:'diesel', confidence:'high' },
+    'audi|a6 2.0 tdi':  { engineCC:1968, powerKW:110, fuelType:'diesel', confidence:'high' },
+    'audi|q3 2.0 tdi':  { engineCC:1968, powerKW:110, fuelType:'diesel', confidence:'high' },
+    'audi|q5 40 tdi':   { engineCC:1968, powerKW:150, fuelType:'diesel', confidence:'high' },
+    'audi|q5 2.0 tdi':  { engineCC:1968, powerKW:140, fuelType:'diesel', confidence:'high' },
+    // Mercedes
+    'mercedes-benz|c 220 cdi': { engineCC:2143, powerKW:125, fuelType:'diesel', confidence:'high' },
+    'mercedes-benz|c220 cdi':  { engineCC:2143, powerKW:125, fuelType:'diesel', confidence:'high' },
+    'mercedes-benz|c220d':     { engineCC:1950, powerKW:143, fuelType:'diesel', confidence:'high' },
+    'mercedes-benz|e 220 d':   { engineCC:1950, powerKW:143, fuelType:'diesel', confidence:'high' },
+    'mercedes-benz|e220d':     { engineCC:1950, powerKW:143, fuelType:'diesel', confidence:'high' },
+    'mercedes-benz|a 180 d':   { engineCC:1461, powerKW:85,  fuelType:'diesel', confidence:'high' },
+    'mercedes-benz|a180d':     { engineCC:1461, powerKW:85,  fuelType:'diesel', confidence:'high' },
+    // VW
+    'volkswagen|golf 1.6 tdi':  { engineCC:1598, powerKW:85,  fuelType:'diesel', confidence:'high' },
+    'volkswagen|golf 2.0 tdi':  { engineCC:1968, powerKW:110, fuelType:'diesel', confidence:'high' },
+    'volkswagen|tiguan 2.0 tdi':{ engineCC:1968, powerKW:110, fuelType:'diesel', confidence:'high' },
+    'volkswagen|passat 2.0 tdi':{ engineCC:1968, powerKW:110, fuelType:'diesel', confidence:'high' },
+    // Renault
+    'renault|clio 1.5 dci':    { engineCC:1461, powerKW:66, fuelType:'diesel', confidence:'high' },
+    'renault|megane 1.5 dci':  { engineCC:1461, powerKW:81, fuelType:'diesel', confidence:'high' },
+    'renault|scenic 1.5 dci':  { engineCC:1461, powerKW:81, fuelType:'diesel', confidence:'high' },
+    // Toyota Hybrid
+    'toyota|yaris hybrid':    { engineCC:1490, powerKW:92,  fuelType:'hybrid', confidence:'high' },
+    'toyota|corolla hybrid':  { engineCC:1987, powerKW:132, fuelType:'hybrid', confidence:'high' },
+    'toyota|yaris 1.5 hybrid':{ engineCC:1490, powerKW:92,  fuelType:'hybrid', confidence:'high' },
+    // Tesla
+    'tesla|model 3':  { engineCC:0, powerKW:283, fuelType:'electric', confidence:'high' },
+    'tesla|model y':  { engineCC:0, powerKW:220, fuelType:'electric', confidence:'high' },
+    'tesla|model s':  { engineCC:0, powerKW:340, fuelType:'electric', confidence:'high' },
+    // Fiat
+    'fiat|ducato':    { engineCC:2287, powerKW:96,  fuelType:'diesel', confidence:'high' },
+    'fiat|500 1.2':   { engineCC:1242, powerKW:51,  fuelType:'petrol', confidence:'high' },
   }
   if (OVERRIDES[key]) return OVERRIDES[key]
 
