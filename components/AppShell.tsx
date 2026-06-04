@@ -1,10 +1,11 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Sidebar from './Sidebar'
 import GlobalSearch from './GlobalSearch'
 import BackupReminder from './BackupReminder'
 import { useFleetStore } from '@/store/useFleetStore'
+import { createClient } from '@/lib/supabase/client'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -21,7 +22,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const vehicleMatch = pathname?.match(/^\/vehicles\/([^/]+)$/)
   const vehicleId = vehicleMatch?.[1] ?? null
 
-  useEffect(() => { loadAll() }, []) // eslint-disable-line
+  const lastUserId = useRef<string | null>(null)
+  useEffect(() => {
+    const supabase = createClient()
+    // Initial load
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id ?? null
+      lastUserId.current = uid
+      if (uid) loadAll()
+    })
+    // Re-load / reset on user change (logout → login with different account)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const uid = session?.user?.id ?? null
+      if (uid !== lastUserId.current) {
+        lastUserId.current = uid
+        if (uid) {
+          useFleetStore.getState().reset()
+          loadAll()
+        } else {
+          useFleetStore.getState().reset()
+        }
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [loadAll])
 
   // Show ✓ after save
   useEffect(() => {
