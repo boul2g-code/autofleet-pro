@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
 import { getServerAnthropicKey } from '@/lib/server/anthropic'
 
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ patch, vehicleId })
   } catch (e) {
+    Sentry.captureException(e)
     return NextResponse.json({ error: String(e) }, { status: 500 })
   }
 }

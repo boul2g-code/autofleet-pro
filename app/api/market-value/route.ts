@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
 import { getServerAnthropicKey } from '@/lib/server/anthropic'
 
@@ -80,6 +81,7 @@ Reply ONLY with valid JSON, no markdown:
     }
     return NextResponse.json({ marketValue })
   } catch (error) {
+    Sentry.captureException(error)
     console.error('market-value route error:', error)
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }

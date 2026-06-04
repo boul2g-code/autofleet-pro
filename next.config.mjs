@@ -1,24 +1,18 @@
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from '@sentry/nextjs'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   images: { unoptimized: true },
-};
+}
 
-export default withSentryConfig(nextConfig, {
-  org: "autofleet-pro",
-  project: "autofleet-pro",
-
-  // Source map upload auth token
+const sentryBuildOptions = {
+  org: process.env.SENTRY_ORG || 'autofleet-pro',
+  project: process.env.SENTRY_PROJECT || 'autofleet-pro',
   authToken: process.env.SENTRY_AUTH_TOKEN,
-
-  // Upload wider set of client files for better stack traces
   widenClientFileUpload: true,
-
-  // Proxy through /monitoring to bypass ad-blockers
-  tunnelRoute: "/monitoring",
-
-  // Suppress output unless in CI
+  tunnelRoute: '/monitoring',
   silent: !process.env.CI,
-});
+}
+
+export default withSentryConfig(nextConfig, sentryBuildOptions)

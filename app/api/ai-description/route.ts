@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
 import { getServerAnthropicKey } from '@/lib/server/anthropic'
 
@@ -55,6 +56,7 @@ HIGHLIGHTS:
     }
     return NextResponse.json({ description })
   } catch (e) {
+    Sentry.captureException(e)
     console.error('ai-description route error:', e)
     return NextResponse.json({ error: String(e) }, { status: 500 })
   }
