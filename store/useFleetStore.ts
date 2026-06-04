@@ -31,6 +31,7 @@ interface FleetStore {
   getVehicle: (id: string) => Vehicle | undefined
   flushSave: (id: string) => Promise<void>
   flushAll: () => Promise<void>
+  reset: () => void
 }
 
 export const useFleetStore = create<FleetStore>((set, get) => ({
@@ -52,8 +53,9 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
       ])
       set({ vehicles, settings: settings || { lang: 'el' }, loading: false })
     } catch (e) {
-      _loadLock = false
       set({ loading: false, error: String(e) })
+    } finally {
+      _loadLock = false
     }
   },
 
@@ -128,13 +130,28 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
 
   setLang: (lang) => {
     set(s => ({ settings: { ...s.settings, lang } }))
-    dbSaveSettings({ ...get().settings, lang })
+    dbSaveSettings({ ...get().settings, lang }).catch(e => console.error('[store] setLang save failed:', e))
   },
 
-  saveSetting: (patch) => {
+  saveSetting: async (patch) => {
     const updated = { ...get().settings, ...patch }
     set({ settings: updated })
-    dbSaveSettings(updated)
+    const ok = await dbSaveSettings(updated)
+    if (!ok) {
+      console.error('[store] saveSetting failed — rolling back')
+      set(s => ({ settings: s.settings })) // keep current, don't rollback (UI shows error)
+    }
+    return ok
+  },
+
+  reset: () => {
+    // Clear all timers
+    Object.values(saveTimers).forEach(t => clearTimeout(t))
+    Object.keys(saveTimers).forEach(k => delete saveTimers[k])
+    Object.keys(pendingSaves).forEach(k => delete pendingSaves[k])
+    _loadLock = false
+    _addLock = false
+    set({ vehicles: [], settings: { lang: 'el' }, loading: false, saving: false, savedId: null, error: null })
   },
 
   getVehicle: (id) => get().vehicles.find(v => v.id === id),
