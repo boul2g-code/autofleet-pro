@@ -1,33 +1,51 @@
 /* eslint-disable react/no-unescaped-entities */
 import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
+import { isPublicVehicleStatus } from '@/lib/vehiclePublic'
 
-// Public client — uses anon key but bypasses RLS for SELECT on public vehicle data
-// This works because we query by exact UUID and expose only non-sensitive fields
-function createPublicClient() {
+type PublicVehicleRow = {
+  id: string
+  status: string | null
+  make: string | null
+  model: string | null
+  year: number | null
+  fuel_type: string | null
+  gear_type: string | null
+  mileage: number | null
+  sale: { price?: number | null } | null
+  photo: string | null
+  color: string | null
+  power_kw: number | null
+  engine_cc: number | null
+  doors: number | null
+  seats: number | null
+  plate: string | null
+  vin: string | null
+  notes: string | null
+}
+
+function createServiceClient(serviceKey: string) {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    serviceKey,
     { auth: { persistSession: false } }
   )
 }
 
-export default async function PublicVehiclePage({ params }: { params: { id: string } }) {
-  const sb = createPublicClient()
-  
-  // Try with service role first (if available), fallback to anon
+export default async function PublicVehiclePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const sbAdmin = serviceKey
-    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { persistSession: false } })
-    : sb
+  if (!serviceKey) notFound()
 
-  const { data: v, error } = await sbAdmin
+  const sb = createServiceClient(serviceKey)
+  const { data: v, error } = await sb
     .from('vehicles')
-    .select('*')
-    .eq('id', params.id)
-    .single()
+    .select('id,status,make,model,year,fuel_type,gear_type,mileage,sale,photo,color,power_kw,engine_cc,doors,seats,plate,vin,notes')
+    .eq('id', id)
+    .eq('status', 'for_sale')
+    .maybeSingle<PublicVehicleRow>()
 
-  if (!v || error) notFound()
+  if (!v || error || !isPublicVehicleStatus(v.status)) notFound()
 
   const colorMap: Record<string, string> = {
     white:'#fff', black:'#111', silver:'#c0c0c0', grey:'#888',
@@ -35,7 +53,8 @@ export default async function PublicVehiclePage({ params }: { params: { id: stri
     beige:'#d4b483', orange:'#ea580c', yellow:'#ca8a04', gold:'#b45309',
     purple:'#7c3aed', pink:'#db2777', navy:'#1e3a5f',
   }
-  const colorHex = colorMap[v.color] || '#6b7280'
+  const colorHex = (v.color && colorMap[v.color]) || '#6b7280'
+  const price = typeof v.sale?.price === 'number' ? v.sale.price : null
 
   return (
     <html lang="en">
@@ -91,24 +110,24 @@ export default async function PublicVehiclePage({ params }: { params: { id: stri
               <div className="title">{v.make || ''} {v.model || ''}</div>
               <div className="subtitle">
                 {v.year && <span>{v.year}</span>}
-                {v.fuelType && <span> · {v.fuelType}</span>}
-                {v.gearType && <span> · {v.gearType}</span>}
+                {v.fuel_type && <span> · {v.fuel_type}</span>}
+                {v.gear_type && <span> · {v.gear_type}</span>}
                 {v.mileage && <span> · {v.mileage.toLocaleString()} km</span>}
               </div>
 
-              {v.sale?.price && (
+              {price && (
                 <div>
-                  <div className="price">€{v.sale.price.toLocaleString()}</div>
+                  <div className="price">€{price.toLocaleString()}</div>
                 </div>
               )}
 
               <div className="grid">
                 {v.mileage && <div className="field"><div className="field-label">Mileage</div><div className="field-value">{v.mileage.toLocaleString()} km</div></div>}
                 {v.year && <div className="field"><div className="field-label">Year</div><div className="field-value">{v.year}</div></div>}
-                {v.fuelType && <div className="field"><div className="field-label">Fuel</div><div className="field-value">{v.fuelType}</div></div>}
-                {v.gearType && <div className="field"><div className="field-label">Gearbox</div><div className="field-value">{v.gearType}</div></div>}
-                {v.engineCC && <div className="field"><div className="field-label">Engine</div><div className="field-value">{v.engineCC} cc</div></div>}
-                {v.powerKW && <div className="field"><div className="field-label">Power</div><div className="field-value">{v.powerKW} kW / {Math.round(v.powerKW*1.36)} HP</div></div>}
+                {v.fuel_type && <div className="field"><div className="field-label">Fuel</div><div className="field-value">{v.fuel_type}</div></div>}
+                {v.gear_type && <div className="field"><div className="field-label">Gearbox</div><div className="field-value">{v.gear_type}</div></div>}
+                {v.engine_cc && <div className="field"><div className="field-label">Engine</div><div className="field-value">{v.engine_cc} cc</div></div>}
+                {v.power_kw && <div className="field"><div className="field-label">Power</div><div className="field-value">{v.power_kw} kW / {Math.round(v.power_kw*1.36)} HP</div></div>}
                 {v.doors && <div className="field"><div className="field-label">Doors</div><div className="field-value">{v.doors}</div></div>}
                 {v.seats && <div className="field"><div className="field-label">Seats</div><div className="field-value">{v.seats}</div></div>}
                 {v.color && (

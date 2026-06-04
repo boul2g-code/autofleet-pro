@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import type { Lang } from '@/lib/types'
+import { isPublicVehicleStatus } from '@/lib/vehiclePublic'
 
 const MARKETPLACES = [
   { name: 'AutoScout24', url: 'https://www.autoscout24.it/inserzioni', flag: '🇮🇹', connected: true },
@@ -47,25 +48,30 @@ export default function ListingsTab({ id }: { id: string }) {
   const [aiLang, setAiLang] = useState<Lang>(lang)
   const [aiResult, setAiResult] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState('')
 
   useEffect(() => {
     setSiteUrl(window.location.origin)
   }, [])
 
   useEffect(() => {
-    if (!siteUrl || !id) return
+    if (!siteUrl || !id || !v || !isPublicVehicleStatus(v.status)) {
+      setQrUrl(null)
+      return
+    }
     const publicUrl = `${siteUrl}/v/${id}`
     setQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(publicUrl)}`)
-  }, [siteUrl, id])
+  }, [siteUrl, id, v])
 
   if (!v) return null
 
+  const isPublic = isPublicVehicleStatus(v.status)
   const publicUrl = `${siteUrl}/v/${id}`
 
   const generateAI = async () => {
-    if (!settings.anthropicKey) { alert(LL(lang, 'noKey')); return }
     setAiLoading(true)
     setAiResult('')
+    setAiError('')
     try {
       const res = await fetch('/api/ai-description', {
         method: 'POST',
@@ -84,9 +90,20 @@ export default function ListingsTab({ id }: { id: string }) {
         }),
       })
       const data = await res.json()
-      setAiResult(data.description || '')
-    } catch { setAiResult('Error generating description.') }
-    setAiLoading(false)
+      if (!res.ok) {
+        setAiError(typeof data?.error === 'string' && data.error.trim() ? data.error : 'Description generation failed.')
+        return
+      }
+      if (!data.description) {
+        setAiError('Description generation returned no content.')
+        return
+      }
+      setAiResult(data.description)
+    } catch {
+      setAiError('Description generation failed.')
+    } finally {
+      setAiLoading(false)
+    }
   }
 
   const copyText = (text: string, key: string) => {
@@ -159,9 +176,9 @@ export default function ListingsTab({ id }: { id: string }) {
           </div>
         )}
 
-        {!settings.anthropicKey && (
+        {aiError && (
           <p style={{ fontSize: 12, color: 'var(--warning)', marginTop: 8 }}>
-            💡 {LL(lang, 'noKey')}
+            ⚠️ {aiError}
           </p>
         )}
       </div>
@@ -169,23 +186,31 @@ export default function ListingsTab({ id }: { id: string }) {
       {/* ═══ Public Link + QR ═══ */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>🔗 {LL(lang, 'publicLink')}</div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <code style={{ flex: 1, background: 'var(--surface2)', padding: '8px 12px', borderRadius: 6, fontSize: 12, wordBreak: 'break-all' }}>
-            {publicUrl}
-          </code>
-          <button className="btn btn-primary" style={{ fontSize: 13 }} onClick={() => copyText(publicUrl, 'link')}>
-            {copied === 'link' ? '✅' : '📋'} {LL(lang, 'copy')}
-          </button>
-          <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ fontSize: 13 }}>👁️</a>
-        </div>
-        <a href={`https://wa.me/?text=${encodeURIComponent(`🚗 ${v.make} ${v.model} ${v.year}\n${v.mileage?.toLocaleString()} km\n${v.sale?.price ? '€' + v.sale.price.toLocaleString() : ''}\n\n${publicUrl}`)}`}
-          target="_blank" rel="noopener noreferrer" className="btn btn-success" style={{ fontSize: 13 }}>
-          💬 {LL(lang, 'shareWa')}
-        </a>
+        {isPublic ? (
+          <>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <code style={{ flex: 1, background: 'var(--surface2)', padding: '8px 12px', borderRadius: 6, fontSize: 12, wordBreak: 'break-all' }}>
+                {publicUrl}
+              </code>
+              <button className="btn btn-primary" style={{ fontSize: 13 }} onClick={() => copyText(publicUrl, 'link')}>
+                {copied === 'link' ? '✅' : '📋'} {LL(lang, 'copy')}
+              </button>
+              <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ fontSize: 13 }}>👁️</a>
+            </div>
+            <a href={`https://wa.me/?text=${encodeURIComponent(`🚗 ${v.make} ${v.model} ${v.year}\n${v.mileage?.toLocaleString()} km\n${v.sale?.price ? '€' + v.sale.price.toLocaleString() : ''}\n\n${publicUrl}`)}`}
+              target="_blank" rel="noopener noreferrer" className="btn btn-success" style={{ fontSize: 13 }}>
+              💬 {LL(lang, 'shareWa')}
+            </a>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 0 }}>
+            Set vehicle status to <strong>for_sale</strong> to enable the public page and QR sharing.
+          </p>
+        )}
       </div>
 
       {/* QR */}
-      {qrUrl && (
+      {isPublic && qrUrl && (
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>📱 {LL(lang, 'qrCode')}</div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>

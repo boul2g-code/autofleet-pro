@@ -15,6 +15,18 @@ const APP_SETTINGS_KEY = 'app'
 const LANG_SETTINGS_KEY = 'lang'
 const SUPPORTED_LANGS = new Set<AppSettings['lang']>(['el', 'en', 'de', 'fr', 'it', 'es'])
 
+export type SettingsUpsertRow = {
+  user_id: string
+  key: string
+  value: string
+  lang: AppSettings['lang']
+  org_data: Organization | null
+  anthropic_key: string | null
+  org_id: string | null
+  organization_id: string | null
+  updated_at: string
+}
+
 // ── Auth helper ──────────────────────────────────────────────
 // Always call this before any DB operation.
 // Returns the authenticated user or throws — never proceeds unauthenticated.
@@ -44,6 +56,7 @@ export async function dbGetVehicles(): Promise<Vehicle[]> {
 }
 
 export async function dbGetVehicle(id: string): Promise<Vehicle | null> {
+  if (!id) return null
   const { sb, user } = await getAuthUser()
   const { data, error } = await sb
     .from('vehicles')
@@ -295,7 +308,7 @@ function normalizeOrganization(value: unknown): Organization | undefined {
 function buildLegacyAppValue(
   settings: AppSettings,
   existingValue?: Record<string, unknown>,
-): string | null {
+): string {
   const next: Record<string, unknown> = { ...(existingValue || {}) }
   if (settings.org?.name) next.companyName = settings.org.name
   else delete next.companyName
@@ -306,7 +319,7 @@ function buildLegacyAppValue(
   if (settings.anthropicKey) next.apiKey = settings.anthropicKey
   else delete next.apiKey
 
-  return Object.keys(next).length > 0 ? JSON.stringify(next) : null
+  return JSON.stringify(next)
 }
 
 export function parseSettingsRows(rows: SettingsRow[]): AppSettings | null {
@@ -329,7 +342,7 @@ export function buildSettingsRows(
   userId: string,
   patch: Partial<AppSettings>,
   currentRows: SettingsRow[] = [],
-): Record<string, unknown>[] {
+): SettingsUpsertRow[] {
   const current = parseSettingsRows(currentRows) || { lang: 'el' as AppSettings['lang'] }
   const merged: AppSettings = {
     lang: patch.lang ?? current.lang,
@@ -340,6 +353,9 @@ export function buildSettingsRows(
   const appRow = currentRows.find(row => row.key === APP_SETTINGS_KEY)
   const langRow = currentRows.find(row => row.key === LANG_SETTINGS_KEY)
   const legacyApp = parseJsonObject(appRow?.value)
+  const appOrgId = firstString(appRow?.org_id, langRow?.org_id) || null
+  const appOrganizationId = firstString(appRow?.organization_id, langRow?.organization_id) || null
+  const emptyOrgData = null
 
   return [
     {
@@ -349,8 +365,8 @@ export function buildSettingsRows(
       lang: merged.lang,
       org_data: merged.org ?? null,
       anthropic_key: merged.anthropicKey || null,
-      org_id: appRow?.org_id || null,
-      organization_id: appRow?.organization_id || null,
+      org_id: appOrgId,
+      organization_id: appOrganizationId,
       updated_at: updatedAt,
     },
     {
@@ -358,8 +374,10 @@ export function buildSettingsRows(
       key: LANG_SETTINGS_KEY,
       value: merged.lang,
       lang: merged.lang,
-      org_id: langRow?.org_id || null,
-      organization_id: langRow?.organization_id || null,
+      org_data: emptyOrgData,
+      anthropic_key: null,
+      org_id: appOrgId,
+      organization_id: appOrganizationId,
       updated_at: updatedAt,
     },
   ]

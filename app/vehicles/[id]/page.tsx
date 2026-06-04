@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { use, useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
@@ -35,25 +35,35 @@ const TABS = [
 const SL: Record<string,string> = { el:'Αποθήκευση', en:'Save', de:'Speichern', fr:'Enregistrer', it:'Salva', es:'Guardar' }
 const SV: Record<string,string> = { el:'✓ Αποθηκεύτηκε!', en:'✓ Saved!', de:'✓ Gespeichert!', fr:'✓ Enregistré!', it:'✓ Salvato!', es:'✓ Guardado!' }
 
-export default function VehicleDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params
+export default function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
-  const { vehicles, deleteVehicle, flushSave, flushAll, settings, loading, saving, savedId } = useFleetStore()
+  const { vehicles, ensureVehicle, deleteVehicle, flushSave, flushAll, settings, loading, saving, savedId } = useFleetStore()
   const lang = settings.lang
   const [activeTab, setActiveTab] = useState('info')
   const [deleting, setDeleting] = useState(false)
   const [confirmDel, setConfirmDel] = useState(0)
-  const [waited, setWaited] = useState(false)
+  const [lookupDone, setLookupDone] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
 
   const v = vehicles.find(x => x.id === id)
 
   useEffect(() => { setActiveTab('info') }, [id])
   useEffect(() => {
-    if (v) return
-    const t2 = setTimeout(() => setWaited(true), 3000)
-    return () => clearTimeout(t2)
-  }, [v])
+    let active = true
+    setLookupDone(false)
+
+    if (v) {
+      setLookupDone(true)
+      return () => { active = false }
+    }
+
+    void ensureVehicle(id).finally(() => {
+      if (active) setLookupDone(true)
+    })
+
+    return () => { active = false }
+  }, [id, v, ensureVehicle])
   useEffect(() => {
     if (savedId === id) {
       setJustSaved(true)
@@ -74,7 +84,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
     return () => window.removeEventListener('beforeunload', fn)
   }, [saving, flushAll])
 
-  if (!v && (loading || !waited)) return (
+  if (!v && (loading || !lookupDone)) return (
     <AppShell><div style={{textAlign:'center',padding:60,color:'var(--text2)'}}>⏳ Loading...</div></AppShell>
   )
   if (!v) return (

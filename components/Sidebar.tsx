@@ -17,14 +17,15 @@ const NAV = [
 export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { settings, setLang, vehicles } = useFleetStore()
+  const { settings, setLang, vehicles, reset } = useFleetStore()
   const lang = settings.lang
 
   const logout = async () => {
     const sb = createClient()
+    reset()
     await sb.auth.signOut()
     useFleetStore.getState().reset()
-    router.push('/login')
+    router.replace('/login')
   }
 
   return (

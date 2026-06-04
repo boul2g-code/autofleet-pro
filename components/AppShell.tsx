@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { loadAll, saving, loading, flushSave, flushAll, savedId, settings, vehicles } = useFleetStore()
+  const { loadAll, saving, loading, flushSave, flushAll, savedId, settings } = useFleetStore()
   const pathname = usePathname()
   const [justSaved, setJustSaved] = useState(false)
 

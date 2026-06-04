@@ -2,7 +2,7 @@
 import { create } from 'zustand'
 import type { Vehicle, AppSettings, Lang } from '../lib/types'
 import {
-  dbGetVehicles, dbCreateVehicle, dbUpdateVehicle, dbDeleteVehicle,
+  dbGetVehicles, dbGetVehicle, dbCreateVehicle, dbUpdateVehicle, dbDeleteVehicle,
   dbGetSettings, dbSaveSettings,
 } from '../lib/supabase/db'
 
@@ -14,6 +14,14 @@ const pendingSaves: Record<string, Partial<Vehicle>> = {}
 let _addLock = false
 let _loadLock = false
 
+function resetStoreInternals() {
+  for (const timer of Object.values(saveTimers)) clearTimeout(timer)
+  for (const id of Object.keys(saveTimers)) delete saveTimers[id]
+  for (const id of Object.keys(pendingSaves)) delete pendingSaves[id]
+  _addLock = false
+  _loadLock = false
+}
+
 interface FleetStore {
   vehicles: Vehicle[]
   settings: AppSettings
@@ -23,15 +31,16 @@ interface FleetStore {
   error: string | null
   loadAll: () => Promise<void>
   reload: () => Promise<void>
+  reset: () => void
   addVehicle: (v?: Partial<Vehicle>) => Promise<Vehicle | null>
   updateVehicle: (id: string, patch: Partial<Vehicle>) => void
   deleteVehicle: (id: string) => Promise<boolean>
   setLang: (lang: Lang) => void
-  saveSetting: (patch: Partial<AppSettings>) => void
+  saveSetting: (patch: Partial<AppSettings>) => Promise<boolean>
   getVehicle: (id: string) => Vehicle | undefined
+  ensureVehicle: (id: string) => Promise<Vehicle | null>
   flushSave: (id: string) => Promise<void>
   flushAll: () => Promise<void>
-  reset: () => void
 }
 
 export const useFleetStore = create<FleetStore>((set, get) => ({
@@ -62,6 +71,18 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
   reload: async () => {
     _loadLock = false
     await get().loadAll()
+  },
+
+  reset: () => {
+    resetStoreInternals()
+    set({
+      vehicles: [],
+      settings: { lang: 'el' },
+      loading: false,
+      saving: false,
+      savedId: null,
+      error: null,
+    })
   },
 
   addVehicle: async (initial = {}) => {
@@ -138,23 +159,29 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
     set({ settings: updated })
     const ok = await dbSaveSettings(updated)
     if (!ok) {
-      console.error('[store] saveSetting failed — rolling back')
-      set(s => ({ settings: s.settings })) // keep current, don't rollback (UI shows error)
+      set({ error: 'Failed to save settings.' })
+      return false
     }
-    return ok
-  },
-
-  reset: () => {
-    // Clear all timers
-    Object.values(saveTimers).forEach(t => clearTimeout(t))
-    Object.keys(saveTimers).forEach(k => delete saveTimers[k])
-    Object.keys(pendingSaves).forEach(k => delete pendingSaves[k])
-    _loadLock = false
-    _addLock = false
-    set({ vehicles: [], settings: { lang: 'el' }, loading: false, saving: false, savedId: null, error: null })
+    set({ error: null })
+    return true
   },
 
   getVehicle: (id) => get().vehicles.find(v => v.id === id),
+
+  ensureVehicle: async (id) => {
+    if (!id) return null
+    const existing = get().vehicles.find(v => v.id === id)
+    if (existing) return existing
+
+    const fetched = await dbGetVehicle(id)
+    if (!fetched) return null
+
+    set(s => {
+      if (s.vehicles.some(v => v.id === fetched.id)) return s
+      return { vehicles: [fetched, ...s.vehicles] }
+    })
+    return fetched
+  },
 
   // Force immediate save for one vehicle (called on tab change / page leave)
   flushSave: async (id) => {

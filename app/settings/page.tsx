@@ -20,6 +20,8 @@ export default function SettingsPage() {
   const lang = settings.lang
   const org: OrgData = (settings.org as unknown as OrgData) || {}
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [section, setSection] = useState<Section>('company')
 
   const [name, setName]             = useState(org.name || '')
@@ -70,7 +72,7 @@ export default function SettingsPage() {
     setMargin(String(org.marginTarget || 15))
   }, [org])
 
-  const save = () => {
+  const save = async () => {
     const newOrg: OrgData = {
       id: org.id || 'default', name, vat, taxOffice, country, address, city, zip,
       phone, email, website, logo, primaryColor: primary, secondaryColor: secondary,
@@ -79,7 +81,15 @@ export default function SettingsPage() {
       defaultTransportCostPerKm: parseFloat(transport) || 1.2,
       marginTarget: parseFloat(margin) || 15,
     }
-    saveSetting({ org: newOrg as unknown as typeof settings.org })
+    setSaving(true)
+    setSaveError('')
+    const ok = await saveSetting({ org: newOrg as unknown as typeof settings.org })
+    setSaving(false)
+    if (!ok) {
+      setSaved(false)
+      setSaveError(lang === 'el' ? 'Η αποθήκευση απέτυχε. Δοκίμασε ξανά.' : 'Save failed. Please try again.')
+      return
+    }
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
   }
@@ -108,10 +118,20 @@ export default function SettingsPage() {
           <h1 style={{ fontSize:22, fontWeight:700, margin:0 }}>
             {lang==='el'?'Ρυθμίσεις':lang==='it'?'Impostazioni':lang==='de'?'Einstellungen':lang==='fr'?'Paramètres':lang==='es'?'Ajustes':'Settings'}
           </h1>
-          <button className="btn btn-primary" onClick={save}>
-            {saved ? '✅ Saved!' : `💾 ${lang==='el'?'Αποθήκευση':lang==='it'?'Salva':lang==='de'?'Speichern':lang==='fr'?'Enregistrer':lang==='es'?'Guardar':'Save'}`}
+          <button className="btn btn-primary" onClick={() => void save()} disabled={saving}>
+            {saving
+              ? '⏳ Saving...'
+              : saved
+                ? '✅ Saved!'
+                : `💾 ${lang==='el'?'Αποθήκευση':lang==='it'?'Salva':lang==='de'?'Speichern':lang==='fr'?'Enregistrer':lang==='es'?'Guardar':'Save'}`}
           </button>
         </div>
+
+        {saveError && (
+          <div style={{ marginBottom: 12, color: 'var(--danger)', fontSize: 13 }}>
+            {saveError}
+          </div>
+        )}
 
         <div style={{ display:'flex', gap:4, marginBottom:16, flexWrap:'wrap' }}>
           {SECTIONS.map(s => (

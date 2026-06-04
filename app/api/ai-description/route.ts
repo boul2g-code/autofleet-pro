@@ -1,11 +1,25 @@
 import { NextResponse } from 'next/server'
 import { getServerAnthropicKey } from '@/lib/server/anthropic'
 
+function readAnthropicText(data: unknown): string {
+  if (!data || typeof data !== 'object') return ''
+  const content = (data as { content?: Array<{ text?: string }> }).content
+  const text = content?.[0]?.text
+  return typeof text === 'string' ? text.trim() : ''
+}
+
+function readAnthropicError(data: unknown): string {
+  if (!data || typeof data !== 'object') return ''
+  const message = (data as { error?: { message?: string } }).error?.message
+  return typeof message === 'string' ? message.trim() : ''
+}
+
 export async function POST(req: Request) {
   try {
-    const { vehicle, targetLang, marketplace } = await req.json()
+    const body = await req.json().catch(() => null)
+    const { vehicle, targetLang, marketplace } = body || {}
     const key = await getServerAnthropicKey()
-    if (!key) return NextResponse.json({ error: 'No API key' }, { status: 400 })
+    if (!key) return NextResponse.json({ error: 'AI description is not configured.' }, { status: 503 })
 
     const langNames: Record<string, string> = {
       it: 'Italian', de: 'German', en: 'English', el: 'Greek', fr: 'French', es: 'Spanish'
@@ -27,18 +41,17 @@ HIGHLIGHTS:
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 600, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 600, messages: [{ role: 'user', content: prompt }] }),
     })
+    const data = await res.json().catch(() => null)
     if (!res.ok) {
-      const errText = await res.text()
-      console.error('Anthropic ai-description error:', res.status, errText)
-      return NextResponse.json({ error: 'AI service error' }, { status: 502 })
+      const detail = readAnthropicError(data) || 'Anthropic request failed.'
+      return NextResponse.json({ error: detail }, { status: 502 })
     }
-    const data = await res.json()
-    const description = data.content?.[0]?.text?.trim() || ''
+
+    const description = readAnthropicText(data)
     if (!description) {
-      console.error('Empty description from Anthropic')
-      return NextResponse.json({ error: 'Empty AI response' }, { status: 422 })
+      return NextResponse.json({ error: 'Anthropic returned an empty description.' }, { status: 422 })
     }
     return NextResponse.json({ description })
   } catch (e) {

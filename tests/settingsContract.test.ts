@@ -68,11 +68,23 @@ describe('settings contract helpers', () => {
       value: 'it',
       lang: 'it',
     })
+    expect(rows[0].value).toBeTruthy()
+    expect(rows[1].value).toBe('it')
+    expect(Object.keys(rows[0]).sort()).toEqual(Object.keys(rows[1]).sort())
     expect(JSON.parse(String(rows[0].value))).toMatchObject({
       companyName: 'Rossi Auto',
       companyDE: 'Berlin',
       apiKey: 'sk-next',
       defaultCurrency: 'EUR',
     })
+  })
+
+  it('keeps app value non-null even when there is no legacy payload to merge', () => {
+    const rows = buildSettingsRows('user-2', { lang: 'en' }, [])
+
+    expect(rows[0].key).toBe('app')
+    expect(rows[0].value).toBe('{}')
+    expect(rows[1].key).toBe('lang')
+    expect(rows[1].value).toBe('en')
   })
 })

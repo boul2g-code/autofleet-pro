@@ -72,13 +72,13 @@ export default function InfoTab({ id }: { id: string }) {
     low: number; high: number; suggested: number; margin: number; currency: string; source: string
   } | null>(null)
   const [marketLoading, setMarketLoading] = React.useState(false)
+  const [marketError, setMarketError] = React.useState('')
 
   const fetchMarketValue = async (make: string, model: string, year: number | undefined, fuel: string, mileage: number | undefined, purchasePrice: number | undefined) => {
     if (!make || !model || !year) return
-    const apiKey = settings?.anthropicKey
-    if (!apiKey) return
     setMarketLoading(true)
     setMarketVal(null)
+    setMarketError('')
     try {
       const resp = await fetch('/api/market-value', {
         method: 'POST',
@@ -93,12 +93,21 @@ export default function InfoTab({ id }: { id: string }) {
         }),
       })
       const data = await resp.json()
+      if (!resp.ok) {
+        setMarketError(typeof data?.error === 'string' && data.error.trim() ? data.error : 'Market value request failed.')
+        return
+      }
       const parsed = data?.marketValue
       if (parsed.low && parsed.high && parsed.suggested) {
         setMarketVal(parsed)
+        return
       }
-    } catch { /* silent fail */ }
-    setMarketLoading(false)
+      setMarketError('Market value response was empty.')
+    } catch {
+      setMarketError('Market value request failed.')
+    } finally {
+      setMarketLoading(false)
+    }
   }
 
   // Trigger market value when key fields change
@@ -226,7 +235,7 @@ export default function InfoTab({ id }: { id: string }) {
 
       <div className="field-row">
         {/* Market Value Card */}
-        {(marketVal || marketLoading) && (
+        {(marketVal || marketLoading || marketError) && (
           <div style={{
             background: marketLoading ? 'var(--surface2)' : '#F0FDF4',
             border: marketLoading ? '1px solid var(--border)' : '1px solid #BBF7D0',
@@ -237,7 +246,7 @@ export default function InfoTab({ id }: { id: string }) {
                 <span>⏳</span>
                 {lang==='el'?'Αναζήτηση τιμών αγοράς...':lang==='it'?'Ricerca prezzi di mercato...':lang==='de'?'Marktpreise werden gesucht...':lang==='fr'?'Recherche prix marché...':'Searching market prices...'}
               </div>
-            ) : marketVal && (
+            ) : marketVal ? (
               <>
                 <div style={{ fontWeight:700, fontSize:13, color:'#166534', marginBottom:10 }}>
                   📊 {lang==='el'?'Τιμή Αγοράς Βάσει Αγγελιών':lang==='it'?'Prezzo Basato su Annunci':lang==='de'?'Preis basierend auf Inseraten':lang==='fr'?'Prix Basé sur Annonces':'Suggested Price · Market Data'}
@@ -279,6 +288,10 @@ export default function InfoTab({ id }: { id: string }) {
                   📋 {lang==='el'?'Εκτίμηση βάσει ηλικίας, χιλιομέτρων, καυσίμου και μέσων τιμών αγοράς — επαλήθευε πριν την πώληση':lang==='it'?'Stima basata su età, km, carburante e medie di mercato — verifica prima della vendita':lang==='de'?'Schätzung basierend auf Alter, km, Kraftstoff und Marktdurchschnitt — vor Verkauf prüfen':lang==='fr'?'Estimation basée sur âge, km, carburant et moyennes du marché — vérifier avant la vente':'Based on vehicle age, mileage, fuel type and market averages — verify before sale'}
                 </div>
               </>
+            ) : (
+              <div style={{ fontSize: 13, color: '#B45309' }}>
+                ⚠️ {marketError}
+              </div>
             )}
           </div>
         )}

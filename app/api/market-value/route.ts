@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server'
 import { getServerAnthropicKey } from '@/lib/server/anthropic'
 
+function readAnthropicText(data: unknown): string {
+  if (!data || typeof data !== 'object') return ''
+  const content = (data as { content?: Array<{ text?: string }> }).content
+  const text = content?.[0]?.text
+  return typeof text === 'string' ? text.trim() : ''
+}
+
+function readAnthropicError(data: unknown): string {
+  if (!data || typeof data !== 'object') return ''
+  const message = (data as { error?: { message?: string } }).error?.message
+  return typeof message === 'string' ? message.trim() : ''
+}
+
 export async function POST(req: Request) {
   try {
-    const { make, model, year, fuel, mileage, purchasePrice } = await req.json()
+    const body = await req.json().catch(() => null)
+    const { make, model, year, fuel, mileage, purchasePrice } = body || {}
     if (!make || !model || !year) {
       return NextResponse.json({ error: 'Missing vehicle data' }, { status: 400 })
     }
 
     const apiKey = await getServerAnthropicKey()
-    if (!apiKey) return NextResponse.json({ error: 'No API key' }, { status: 400 })
+    if (!apiKey) return NextResponse.json({ error: 'AI market value is not configured.' }, { status: 503 })
 
     const currentYear = new Date().getFullYear()
     const age = currentYear - Number(year || currentYear)
@@ -40,33 +54,29 @@ Reply ONLY with valid JSON, no markdown:
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 200,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
 
+    const data = await resp.json().catch(() => null)
     if (!resp.ok) {
-      const errText = await resp.text()
-      console.error('Anthropic API error:', resp.status, errText)
-      return NextResponse.json({ error: 'AI service error' }, { status: 502 })
+      const detail = readAnthropicError(data) || 'Anthropic request failed.'
+      return NextResponse.json({ error: detail }, { status: 502 })
     }
 
-    const data = await resp.json()
-    const text = (data?.content?.[0]?.text || '').trim()
+    const text = readAnthropicText(data)
     if (!text) {
-      return NextResponse.json({ error: 'Empty AI response' }, { status: 502 })
+      return NextResponse.json({ error: 'Anthropic returned an empty market value response.' }, { status: 502 })
     }
+
     const clean = text.replace(/```json|```/g, '').trim()
-    let marketValue
+    let marketValue: unknown
     try {
       marketValue = JSON.parse(clean)
     } catch {
-      console.error('Could not parse market value JSON:', clean)
-      return NextResponse.json({ error: 'Could not parse market value' }, { status: 422 })
-    }
-    if (!marketValue?.low || !marketValue?.high) {
-      return NextResponse.json({ error: 'Invalid market value response' }, { status: 422 })
+      return NextResponse.json({ error: 'Anthropic returned invalid market value JSON.' }, { status: 502 })
     }
     return NextResponse.json({ marketValue })
   } catch (error) {

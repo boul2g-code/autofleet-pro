@@ -2,6 +2,7 @@
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import { COLORS } from '@/lib/vehicleData'
+import { isPublicVehicleStatus } from '@/lib/vehiclePublic'
 
 export default function FlyerTab({ id }: { id: string }) {
   const { vehicles, settings } = useFleetStore()
@@ -12,6 +13,7 @@ export default function FlyerTab({ id }: { id: string }) {
   if (!v) return null
 
   const colorHex = COLORS.find(c => c.code === v.color)?.hex || '#6b7280'
+  const isPublic = isPublicVehicleStatus(v.status)
 
   const printFlyer = () => {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -177,9 +179,15 @@ export default function FlyerTab({ id }: { id: string }) {
         <button className="btn btn-primary" onClick={printFlyer} style={{ fontSize: 14 }}>
           🖨️ Print / Download Flyer A4
         </button>
-        <a href={`/v/${id}`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ fontSize: 14 }}>
-          🔗 Public Link
-        </a>
+        {isPublic ? (
+          <a href={`/v/${id}`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ fontSize: 14 }}>
+            🔗 Public Link
+          </a>
+        ) : (
+          <span style={{ fontSize: 12, color: 'var(--text2)', alignSelf: 'center' }}>
+            Public link is available only when the vehicle status is <strong>for_sale</strong>.
+          </span>
+        )}
       </div>
     </div>
   )
