@@ -52,15 +52,16 @@ export function matchesVehicleHealthFilter(
   ageInDays?: number,
 ): boolean {
   const heldDays = ageInDays ?? 0
+  const isInStock = isInStockStatus(vehicle.status)
 
   switch (filter) {
     case 'attention':
-      return heldDays > 90
+      return (isInStock && heldDays > 90)
         || hasMissingRequiredDocs(vehicle)
         || hasLowMargin(vehicle, targetProfit)
         || hasNoSalePrice(vehicle)
     case 'dead-stock':
-      return heldDays > 90
+      return isInStock && heldDays > 90
     case 'missing-docs':
       return hasMissingRequiredDocs(vehicle)
     case 'low-margin':
