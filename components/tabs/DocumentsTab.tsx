@@ -201,8 +201,55 @@ export default function DocumentsTab({ id }: { id: string }) {
     setExtracting(null)
   }
 
+  // Document completion score
+  const lang = settings?.lang ?? 'el'
+  const checks = [
+    { key: 'vin',    done: !!v?.vin,       label: 'VIN' },
+    { key: 'invoice',done: (v?.documents||[]).some((d:string) => /invoice|fattura|rechnung|facture/i.test(d)),
+      label: lang==='el'?'Τιμολόγιο':lang==='it'?'Fattura':lang==='de'?'Rechnung':lang==='fr'?'Facture':'Invoice' },
+    { key: 'cmr',    done: (v?.documents||[]).some((d:string) => /cmr/i.test(d)),   label: 'CMR' },
+    { key: 'coc',    done: (v?.documents||[]).some((d:string) => /coc|certificate/i.test(d)),
+      label: lang==='el'?'COC/Πιστοποιητικό':lang==='it'?'COC/Certificato':lang==='de'?'COC/Zertifikat':'COC/Certificate' },
+    { key: 'photos', done: !!v?.photo,
+      label: lang==='el'?'Φωτογραφία':lang==='it'?'Foto':lang==='de'?'Foto':lang==='fr'?'Photo':'Photo' },
+  ]
+  const score = Math.round((checks.filter(c => c.done).length / checks.length) * 100)
+
   return (
     <div>
+      {/* Completion Score */}
+      <div style={{ background: score === 100 ? '#F0FDF4' : score >= 60 ? '#FEF3C7' : '#FEF2F2',
+        border: `1px solid ${score === 100 ? '#BBF7D0' : score >= 60 ? '#FDE68A' : '#FECACA'}`,
+        borderRadius: 10, padding: '12px 16px', marginBottom: 16,
+        display: 'flex', alignItems: 'center', gap: 16 }}>
+        {/* Progress circle */}
+        <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+          <svg viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+            <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" strokeWidth="3" />
+            <circle cx="18" cy="18" r="15.9" fill="none"
+              stroke={score === 100 ? '#16A34A' : score >= 60 ? '#D97706' : '#DC2626'}
+              strokeWidth="3"
+              strokeDasharray={`${score} ${100 - score}`}
+              strokeLinecap="round" />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
+            {score}%
+          </div>
+        </div>
+        {/* Checklist */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            {lang==='el'?'Πληρότητα Εγγράφων':lang==='it'?'Completezza Documenti':lang==='de'?'Dokumentenvollständigkeit':lang==='fr'?'Complétude Documents':'Document Completion'}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
+            {checks.map(ch => (
+              <span key={ch.key} style={{ fontSize: 12, color: ch.done ? 'var(--success)' : 'var(--danger)' }}>
+                {ch.done ? '✅' : '❌'} {ch.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
       {/* Upload button */}
       <div style={{ marginBottom: 16, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
