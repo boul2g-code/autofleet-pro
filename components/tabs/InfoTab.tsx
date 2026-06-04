@@ -20,15 +20,15 @@ export default function InfoTab({ id }: { id: string }) {
   const up = (patch: Parameters<typeof updateVehicle>[1]) => updateVehicle(id, patch)
 
   // Auto-fill specs when make+model+fuel are set
-  // Local spec parser — no API, rules + override table
-  const autoFill = (make: string, model: string) => {
+
+  const autoFill = (make: string, model: string, fuel: string) => {
+    void fuel  // fuel arg kept for call-site compatibility
     if (!make && !model) return
     const specs = parseVehicleSpecs(make, model)
     if (!specs) return
     const patch: Parameters<typeof updateVehicle>[1] = {}
     if (specs.fuelType && !v?.fuelType) patch.fuelType = specs.fuelType as typeof v.fuelType
     if (specs.engineCC && !v?.engineCC) patch.engineCC = specs.engineCC
-    // powerKW only from high-confidence override table
     if (specs.confidence === 'high' && specs.powerKW && !v?.powerKW) patch.powerKW = specs.powerKW
     if (Object.keys(patch).length > 0) updateVehicle(id, patch)
   }
@@ -178,7 +178,7 @@ Reply ONLY with valid JSON, no markdown:
         <div className="field-group">
           <label style={{ display:'flex', justifyContent:'space-between' }}>
             <span>{t(lang, 'field.make')}</span>
-            >⚙️ {lang==='el'?'φόρτωση...':lang==='it'?'caricamento...':lang==='de'?'laden...':lang==='fr'?'chargement...':'loading...'}</span>}
+            }>⚙️ {lang==='el'?'φόρτωση...':lang==='it'?'caricamento...':lang==='de'?'laden...':lang==='fr'?'chargement...':'loading...'}</span>}
           </label>
           <select value={v.make || ''} onChange={e => up({ make: e.target.value, model: '' })}>
             <option value="">—</option>
@@ -188,12 +188,12 @@ Reply ONLY with valid JSON, no markdown:
         <div className="field-group">
           <label>{t(lang, 'field.model')}</label>
           {models.length > 0 ? (
-            <select value={v.model || ''} onChange={e => { up({ model: e.target.value }); autoFill(v?.make||'', e.target.value) }}>
+            <select value={v.model || ''} onChange={e => { up({ model: e.target.value }); autoFill(v?.make||'', e.target.value, v?.fuelType||'') }}>
               <option value="">—</option>
               {models.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           ) : (
-            <input value={v.model || ''} onChange={e => { up({ model: e.target.value }); autoFill(v?.make||'', e.target.value) }} placeholder="Model" />
+            <input value={v.model || ''} onChange={e => { up({ model: e.target.value }); autoFill(v?.make||'', e.target.value, v?.fuelType||'') }} placeholder="Model" />
           )}
         </div>
       </div>
@@ -301,7 +301,7 @@ Reply ONLY with valid JSON, no markdown:
       <div className="field-row">
         <div className="field-group">
           <label>{t(lang, 'field.fuel')}</label>
-          <select value={v.fuelType || ''} onChange={e => { up({ fuelType: e.target.value as FuelType }); autoFill(v?.make||'', v?.model||'') }}>
+          <select value={v.fuelType || ''} onChange={e => { up({ fuelType: e.target.value as FuelType }); autoFill(v?.make||'', v?.model||'', e.target.value) }}>
             <option value="">—</option>
             {FUELS.map(f => <option key={f} value={f}>{t(lang, `fuel.${f}`)}</option>)}
           </select>
