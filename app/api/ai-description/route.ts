@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
+import { getServerAnthropicKey } from '@/lib/server/anthropic'
 
 export async function POST(req: Request) {
   try {
-    const { vehicle, targetLang, marketplace, apiKey } = await req.json()
-    const key = apiKey || process.env.ANTHROPIC_API_KEY
+    const { vehicle, targetLang, marketplace } = await req.json()
+    const key = await getServerAnthropicKey()
     if (!key) return NextResponse.json({ error: 'No API key' }, { status: 400 })
 
     const langNames: Record<string, string> = {

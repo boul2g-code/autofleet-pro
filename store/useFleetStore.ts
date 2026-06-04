@@ -81,7 +81,7 @@ export const useFleetStore = create<FleetStore>((set, get) => ({
       }
       return created
     } finally {
-      setTimeout(() => { _addLock = false }, 2000)
+      _addLock = false
     }
   },
 

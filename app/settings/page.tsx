@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
 
@@ -44,6 +44,31 @@ export default function SettingsPage() {
   const [storeCost, setStoreCost]   = useState(String(org.defaultStoreCost || 8))
   const [transport, setTransport]   = useState(String(org.defaultTransportCostPerKm || 1.2))
   const [margin, setMargin]         = useState(String(org.marginTarget || 15))
+
+  useEffect(() => {
+    setName(org.name || '')
+    setVat(org.vat || '')
+    setTaxOffice(org.taxOffice || '')
+    setCountry(org.country || '')
+    setAddress(org.address || '')
+    setCity(org.city || '')
+    setZip(org.zip || '')
+    setPhone(org.phone || '')
+    setEmail(org.email || '')
+    setWebsite(org.website || '')
+    setLogo(org.logo || '')
+    setPrimary(org.primaryColor || '#6366F1')
+    setSecondary(org.secondaryColor || '#1E293B')
+    setResp(org.responsible || '')
+    setStamp(org.stamp || '')
+    setAutoscout(org.autoscout || '')
+    setMobilede(org.mobilede || '')
+    setCargr(org.cargr || '')
+    setFacebook(org.facebook || '')
+    setStoreCost(String(org.defaultStoreCost || 8))
+    setTransport(String(org.defaultTransportCostPerKm || 1.2))
+    setMargin(String(org.marginTarget || 15))
+  }, [org])
 
   const save = () => {
     const newOrg: OrgData = {
