@@ -202,15 +202,14 @@ export default function DocumentsTab({ id }: { id: string }) {
   }
 
   // Document completion score
-  const lang = settings?.lang ?? 'el'
   const checks = [
     { key: 'vin',    done: !!v?.vin,       label: 'VIN' },
-    { key: 'invoice',done: (v?.documents||[]).some((d:string) => /invoice|fattura|rechnung|facture/i.test(d)),
+    { key: 'invoice',done: (v?.documents||[]).some((d:VehicleDocument) => /invoice|fattura|rechnung|facture/i.test(d.type||'')),
       label: lang==='el'?'Τιμολόγιο':lang==='it'?'Fattura':lang==='de'?'Rechnung':lang==='fr'?'Facture':'Invoice' },
-    { key: 'cmr',    done: (v?.documents||[]).some((d:string) => /cmr/i.test(d)),   label: 'CMR' },
-    { key: 'coc',    done: (v?.documents||[]).some((d:string) => /coc|certificate/i.test(d)),
+    { key: 'cmr',    done: (v?.documents||[]).some((d:VehicleDocument) => /cmr/i.test(d.type||'')),   label: 'CMR' },
+    { key: 'coc',    done: (v?.documents||[]).some((d:VehicleDocument) => /coc|certificate/i.test(d.type||'')),
       label: lang==='el'?'COC/Πιστοποιητικό':lang==='it'?'COC/Certificato':lang==='de'?'COC/Zertifikat':'COC/Certificate' },
-    { key: 'photos', done: !!v?.photo,
+    { key: 'photos', done: !!(v?.photo || (v?.documents||[]).some((d:VehicleDocument) => d.type === 'photo')),
       label: lang==='el'?'Φωτογραφία':lang==='it'?'Foto':lang==='de'?'Foto':lang==='fr'?'Photo':'Photo' },
   ]
   const score = Math.round((checks.filter(c => c.done).length / checks.length) * 100)
