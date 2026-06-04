@@ -23,6 +23,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
   const logout = async () => {
     const sb = createClient()
     await sb.auth.signOut()
+    useFleetStore.getState().reset()
     router.push('/login')
   }
 
