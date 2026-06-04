@@ -175,104 +175,86 @@ export default function DashboardPage() {
 
   const maxTrendVal = Math.max(...stats.fleetTrend.map(t => t.value), 1)
 
+  const healthScore = stats.healthScore
+  const scoreColor = healthScore >= 80 ? '#16A34A' : healthScore >= 60 ? '#D97706' : '#DC2626'
+  const scoreBg = healthScore >= 80 ? '#F0FDF4' : healthScore >= 60 ? '#FFFBEB' : '#FEF2F2'
+  const scoreBorder = healthScore >= 80 ? '#BBF7D0' : healthScore >= 60 ? '#FDE68A' : '#FECACA'
+
   return (
     <AppShell>
       {/* ── DEALER HEALTH PANEL ── */}
-      {(() => {
-        const score = stats.healthScore
-        const scoreColor = score >= 80 ? '#16A34A' : score >= 60 ? '#D97706' : '#DC2626'
-        const scoreBg = score >= 80 ? '#F0FDF4' : score >= 60 ? '#FFFBEB' : '#FEF2F2'
-        const scoreBorder = score >= 80 ? '#BBF7D0' : score >= 60 ? '#FDE68A' : '#FECACA'
-        const hasIssues = stats.healthIssues.length > 0
-        return (
+      <div style={{
+        background: scoreBg,
+        border: `1.5px solid ${scoreBorder}`,
+        borderRadius: 12,
+        padding: '14px 20px',
+        marginBottom: 16,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 20,
+        flexWrap: 'wrap',
+      }}>
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
           <div style={{
-            background: scoreBg,
-            border: `1.5px solid ${scoreBorder}`,
-            borderRadius: 12,
-            padding: '14px 20px',
-            marginBottom: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 20,
-            flexWrap: 'wrap',
+            width: 64, height: 64, borderRadius: '50%',
+            background: 'white',
+            border: `3px solid ${scoreColor}`,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
           }}>
-            {/* Score circle */}
-            <div style={{ textAlign: 'center', flexShrink: 0 }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%',
-                background: 'white',
-                border: `3px solid ${scoreColor}`,
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                boxShadow: `0 0 0 4px ${scoreBg}`,
-              }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{score}</div>
-                <div style={{ fontSize: 9, color: scoreColor, fontWeight: 600 }}>/100</div>
-              </div>
-              <div style={{ fontSize: 10, color: '#6B7280', marginTop: 4, fontWeight: 600 }}>
-                {L(lang,'Υγεία Στόλου','Salute Flotta','Flotten-Status','Santé Flotte','Salud Flota','Fleet Health')}
-              </div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{healthScore}</div>
+            <div style={{ fontSize: 9, color: scoreColor, fontWeight: 600 }}>/100</div>
+          </div>
+          <div style={{ fontSize: 10, color: '#6B7280', marginTop: 4, fontWeight: 600 }}>
+            {L(lang,'Υγεία Στόλου','Salute Flotta','Flotten-Status','Santé Flotte','Salud Flota','Fleet Health')}
+          </div>
+        </div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          {stats.healthIssues.length === 0 ? (
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#16A34A' }}>
+              ✅ {L(lang,'Όλα καλά! Δεν υπάρχουν προβλήματα.','Tutto ok! Nessun problema.','Alles gut!','Tout va bien!','¡Todo bien!','All good! No issues.')}
             </div>
-
-            {/* Issues */}
-            <div style={{ flex: 1, minWidth: 200 }}>
-              {!hasIssues ? (
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#16A34A' }}>
-                  ✅ {L(lang,'Όλα καλά! Δεν υπάρχουν προβλήματα.','Tutto ok! Nessun problema.','Alles gut! Keine Probleme.','Tout va bien! Aucun problème.','¡Todo bien! Sin problemas.','All good! No issues.')}
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px 16px' }}>
+              {stats.deadStockCount > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
+                  <span>🚨</span>
+                  <span style={{ fontWeight:700, color:'#DC2626' }}>{stats.deadStockCount}</span>
+                  <span style={{ color:'#374151' }}>{L(lang,'οχήματα >90 ημέρες','veicoli >90 giorni','Fzg. >90 Tage','véhicules >90j','veh. >90 días','vehicles >90 days')}</span>
                 </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px 16px' }}>
-                  {stats.deadStockCount > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                      <span style={{ fontSize: 16 }}>🚨</span>
-                      <span style={{ fontWeight: 700, color: '#DC2626' }}>{stats.deadStockCount}</span>
-                      <span style={{ color: '#374151' }}>
-                        {L(lang,'οχήματα >90 ημέρες','veicoli >90 giorni','Fahrzeuge >90 Tage','véhicules >90 jours','vehículos >90 días','vehicles >90 days')}
-                      </span>
-                    </div>
-                  )}
-                  {stats.lockedCapital > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                      <span style={{ fontSize: 16 }}>💰</span>
-                      <span style={{ fontWeight: 700, color: '#D97706' }}>{fmtCur(stats.lockedCapital, lang)}</span>
-                      <span style={{ color: '#374151' }}>
-                        {L(lang,'δεσμευμένο','bloccato','gebunden','bloqué','bloqueado','locked')}
-                      </span>
-                    </div>
-                  )}
-                  {stats.missingDocsCount > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                      <span style={{ fontSize: 16 }}>📄</span>
-                      <span style={{ fontWeight: 700, color: '#D97706' }}>{stats.missingDocsCount}</span>
-                      <span style={{ color: '#374151' }}>
-                        {L(lang,'ελλιπείς φάκελοι','fascicoli incompleti','unvollständige Akten','dossiers incomplets','expedientes incompletos','incomplete files')}
-                      </span>
-                    </div>
-                  )}
-                  {stats.belowTargetMargin > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                      <span style={{ fontSize: 16 }}>📉</span>
-                      <span style={{ fontWeight: 700, color: '#DC2626' }}>{stats.belowTargetMargin}</span>
-                      <span style={{ color: '#374151' }}>
-                        {L(lang,'χαμηλά περιθώρια','margini bassi','niedrige Margen','marges faibles','márgenes bajos','low margins')}
-                      </span>
-                    </div>
-                  )}
-                  {stats.noSalePrice > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                      <span style={{ fontSize: 16 }}>🏷️</span>
-                      <span style={{ fontWeight: 700, color: '#6B7280' }}>{stats.noSalePrice}</span>
-                      <span style={{ color: '#374151' }}>
-                        {L(lang,'χωρίς τιμή πώλησης','senza prezzo vendita','ohne Verkaufspreis','sans prix de vente','sin precio de venta','no sale price set')}
-                      </span>
-                    </div>
-                  )}
+              )}
+              {stats.lockedCapital > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
+                  <span>💰</span>
+                  <span style={{ fontWeight:700, color:'#D97706' }}>{fmtCur(stats.lockedCapital, lang)}</span>
+                  <span style={{ color:'#374151' }}>{L(lang,'δεσμευμένο','bloccato','gebunden','bloqué','bloqueado','locked')}</span>
+                </div>
+              )}
+              {stats.missingDocsCount > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
+                  <span>📄</span>
+                  <span style={{ fontWeight:700, color:'#D97706' }}>{stats.missingDocsCount}</span>
+                  <span style={{ color:'#374151' }}>{L(lang,'ελλιπείς φάκελοι','fascicoli incompleti','unvollst. Akten','dossiers incomplets','expedientes incompletos','incomplete files')}</span>
+                </div>
+              )}
+              {stats.belowTargetMargin > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
+                  <span>📉</span>
+                  <span style={{ fontWeight:700, color:'#DC2626' }}>{stats.belowTargetMargin}</span>
+                  <span style={{ color:'#374151' }}>{L(lang,'χαμηλά περιθώρια','margini bassi','niedrige Margen','marges faibles','márgenes bajos','low margins')}</span>
+                </div>
+              )}
+              {stats.noSalePrice > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
+                  <span>🏷️</span>
+                  <span style={{ fontWeight:700, color:'#6B7280' }}>{stats.noSalePrice}</span>
+                  <span style={{ color:'#374151' }}>{L(lang,'χωρίς τιμή πώλησης','senza prezzo','ohne Verkaufspreis','sans prix','sin precio','no sale price')}</span>
                 </div>
               )}
             </div>
-          </div>
-        )
-      })()}
+          )}
+        </div>
+      </div>
 
       {/* ── MORNING BRIEF ── */}
       <div style={{
