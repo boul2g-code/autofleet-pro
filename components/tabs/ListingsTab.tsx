@@ -81,7 +81,6 @@ export default function ListingsTab({ id }: { id: string }) {
           },
           targetLang: aiLang,
           marketplace: aiMarket,
-          apiKey: settings.anthropicKey,
         }),
       })
       const data = await res.json()

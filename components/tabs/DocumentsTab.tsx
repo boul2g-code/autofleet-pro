@@ -164,17 +164,22 @@ export default function DocumentsTab({ id }: { id: string }) {
     setLastResult(null)
     try {
       const isPDF = doc.name.toLowerCase().endsWith('.pdf')
-      let text = ''
+      let patch: Record<string, unknown> = {}
 
       if (isPDF) {
-        // For PDF: try to extract embedded text via fetch + text parsing
-        text = doc.name + ' ' + (doc.url.length > 100 ? 'document' : '')
+        const res = await fetch('/api/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ docUrl: doc.url, vehicleId: id }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data?.error || 'PDF extraction failed')
+        patch = data?.patch || {}
       } else {
         // For images: use Tesseract OCR
-        text = await runOCR(doc.url, false)
+        const text = await runOCR(doc.url, false)
+        patch = extractFields(text)
       }
-
-      const patch = extractFields(text)
       const found = Object.keys(patch).filter(k => k !== 'purchase' || (patch.purchase as Record<string,unknown>)?.price)
 
       if (found.length > 0) {
@@ -209,7 +214,7 @@ export default function DocumentsTab({ id }: { id: string }) {
     { key: 'cmr',    done: (v?.documents||[]).some((d:VehicleDocument) => /cmr/i.test(d.type||'')),   label: 'CMR' },
     { key: 'coc',    done: (v?.documents||[]).some((d:VehicleDocument) => /coc|certificate/i.test(d.type||'')),
       label: lang==='el'?'COC/Πιστοποιητικό':lang==='it'?'COC/Certificato':lang==='de'?'COC/Zertifikat':'COC/Certificate' },
-    { key: 'photos', done: !!(v?.photo || (v?.documents||[]).some((d:VehicleDocument) => d.type === 'photo')),
+    { key: 'photos', done: !!v?.photo,
       label: lang==='el'?'Φωτογραφία':lang==='it'?'Foto':lang==='de'?'Foto':lang==='fr'?'Photo':'Photo' },
   ]
   const score = Math.round((checks.filter(c => c.done).length / checks.length) * 100)

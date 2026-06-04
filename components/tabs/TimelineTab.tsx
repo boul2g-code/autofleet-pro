@@ -49,7 +49,7 @@ export default function TimelineTab({ id }: Props) {
   )
   // Listed / for sale
   if (v.status === 'for_sale' || undefined) {
-    add(undefined || v.storage?.arrivalDate,
+    add(v.storage?.arrivalDate,
       L(lang,'Δημοσιεύτηκε προς πώληση','Messo in vendita','Zum Verkauf eingestellt','Mis en vente','Publicado en venta','Listed for sale'),
       v.sale?.price ? `€${v.sale.price.toLocaleString()}` : undefined,
       '#8B5CF6'

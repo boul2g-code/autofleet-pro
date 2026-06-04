@@ -2,12 +2,14 @@
 import { useState } from 'react'
 import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
+import { IMPORT_COLUMN_MAP, getImportPreview, rowToVehiclePatch, type ImportRow } from '@/lib/importVehicles'
 import * as XLSX from 'xlsx'
 
 export default function ImportPage() {
-  const { vehicles, addVehicle, updateVehicle, settings } = useFleetStore()
+  const { vehicles, addVehicle, settings } = useFleetStore()
   const lang = settings?.lang ?? 'el'
-  const [preview, setPreview] = useState<Record<string, string>[]>([])
+  const [rows, setRows] = useState<ImportRow[]>([])
+  const [preview, setPreview] = useState<ImportRow[]>([])
   const [done, setDone] = useState(0)
   const [importing, setImporting] = useState(false)
   const [fileName, setFileName] = useState('')
@@ -35,20 +37,6 @@ export default function ImportPage() {
     return val[lang] || val['en']
   }
 
-  const COLUMN_MAP: Record<string, string> = {
-    make:'make', marca:'make', marque:'make', marke:'make',
-    model:'model', modello:'model', modèle:'model', modell:'model', modelo:'model',
-    year:'year', anno:'year', année:'year', jahr:'year', año:'year', έτος:'year', χρονολογία:'year',
-    plate:'plate', targa:'plate', immatriculation:'plate', kennzeichen:'plate', matricula:'plate', πινακίδα:'plate',
-    vin:'vin', telaio:'vin',
-    mileage:'mileage', km:'mileage', chilometri:'mileage', kilomètre:'mileage', kilometer:'mileage', kilometraje:'mileage', χιλιόμετρα:'mileage',
-    price:'purchase.price', prezzo:'purchase.price', prix:'purchase.price', preis:'purchase.price', precio:'purchase.price', τιμή:'purchase.price', αγορά:'purchase.price',
-    color:'color', colore:'color', couleur:'color', farbe:'color', χρώμα:'color',
-    fuel:'fuelType', carburante:'fuelType', combustible:'fuelType', kraftstoff:'fuelType', καύσιμο:'fuelType',
-    category:'category', categoria:'category', catégorie:'category', kategorie:'category', categoría:'category', κατηγορία:'category',
-    notes:'notes', note:'notes', beschreibung:'notes', σημειώσεις:'notes',
-  }
-
   const parseFile = async (file: File) => {
     setError('')
     setFileName(file.name)
@@ -56,45 +44,36 @@ export default function ImportPage() {
       const buf = await file.arrayBuffer()
       const wb = XLSX.read(buf)
       const ws = wb.Sheets[wb.SheetNames[0]]
-      const data = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '' })
-      if (!data.length) { setError(t('noFile')); return }
-      setPreview(data.slice(0, 20))
+      const data = XLSX.utils.sheet_to_json<ImportRow>(ws, { defval: '' })
+      if (!data.length) {
+        setRows([])
+        setPreview([])
+        setError(t('noFile'))
+        return
+      }
+      setRows(data)
+      setPreview(getImportPreview(data))
     } catch {
+      setRows([])
+      setPreview([])
       setError(t('noFile'))
     }
   }
 
   const doImport = async () => {
-    if (!preview.length) return
+    if (!rows.length) return
     setImporting(true)
     setDone(0)
     let count = 0
-    for (const row of preview) {
-      const v = await addVehicle()
+    for (const row of rows) {
+      const patch = rowToVehiclePatch(row)
+      const v = await addVehicle(patch)
       if (!v) continue
-      const patch: Record<string, unknown> = {}
-      const purchase: Record<string, unknown> = {}
-      for (const [rawKey, val] of Object.entries(row)) {
-        const key = rawKey.toLowerCase().trim()
-        const mapped = COLUMN_MAP[key]
-        if (!mapped || !val) continue
-        if (mapped === 'purchase.price') {
-          const n = parseFloat(String(val).replace(/[^\d.]/g,''))
-          if (!isNaN(n)) purchase.price = n
-        } else if (mapped === 'year' || mapped === 'mileage') {
-          const n = parseInt(String(val).replace(/[^\d]/g,''))
-          if (!isNaN(n)) patch[mapped] = n
-        } else {
-          patch[mapped] = String(val)
-        }
-      }
-      if (Object.keys(purchase).length) patch.purchase = purchase
-      updateVehicle(v.id, patch)
       count++
       setDone(count)
-      await new Promise(r => setTimeout(r, 150))
     }
     setImporting(false)
+    setRows([])
     setPreview([])
     setFileName('')
     const msg = (T.successMsg as Record<string,string>)[lang] || (T.successMsg as Record<string,string>)['en']; alert(`${count} ${msg}`)
@@ -157,19 +136,19 @@ export default function ImportPage() {
           <div className="card" style={{ padding:0, overflow:'hidden' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', borderBottom:'1px solid var(--border)' }}>
               <div style={{ fontWeight:600, fontSize:14 }}>
-                {t('preview')} ({preview.length} {t('rows')})
+                {t('preview')} ({preview.length}/{rows.length} {t('rows')})
               </div>
               <button className="btn btn-primary" onClick={doImport} disabled={importing} style={{ fontSize:13 }}>
                 {importing
-                  ? `${t('importing')} ${done}/${preview.length}...`
-                  : `${t('importBtn')} ${preview.length} ${t('rows')}`}
+                  ? `${t('importing')} ${done}/${rows.length}...`
+                  : `${t('importBtn')} ${rows.length} ${t('rows')}`}
               </button>
             </div>
 
             {/* Progress bar */}
             {importing && (
               <div style={{ height:4, background:'var(--surface2)' }}>
-                <div style={{ height:'100%', width:`${(done/preview.length)*100}%`, background:'var(--primary)', transition:'width 0.3s' }} />
+                <div style={{ height:'100%', width:`${rows.length ? (done/rows.length)*100 : 0}%`, background:'var(--primary)', transition:'width 0.3s' }} />
               </div>
             )}
 
@@ -180,7 +159,7 @@ export default function ImportPage() {
                     {Object.keys(preview[0]).slice(0,9).map(k => (
                       <th key={k} style={{ padding:'8px 10px', textAlign:'left', fontWeight:600, fontSize:11, color:'var(--text2)', textTransform:'uppercase', letterSpacing:'0.04em', whiteSpace:'nowrap' }}>
                         {k}
-                        {COLUMN_MAP[k.toLowerCase().trim()] && (
+                        {IMPORT_COLUMN_MAP[k.toLowerCase().trim()] && (
                           <span style={{ color:'var(--primary)', marginLeft:4 }}>✓</span>
                         )}
                       </th>
@@ -202,7 +181,7 @@ export default function ImportPage() {
             </div>
             {preview.length > 10 && (
               <div style={{ padding:'8px 16px', fontSize:12, color:'var(--text2)', borderTop:'1px solid var(--border)' }}>
-                ... +{preview.length - 10} {lang==='el'?'ακόμα σειρές':lang==='it'?'altre righe':lang==='de'?'weitere Zeilen':lang==='fr'?'autres lignes':lang==='es'?'filas más':'more rows'}
+                ... +{rows.length - 10} {lang==='el'?'ακόμα σειρές':lang==='it'?'altre righe':lang==='de'?'weitere Zeilen':lang==='fr'?'autres lignes':lang==='es'?'filas más':'more rows'}
               </div>
             )}
           </div>

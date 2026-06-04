@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
+import { getServerAnthropicKey } from '@/lib/server/anthropic'
 
 export async function POST(req: Request) {
   try {
     const { docUrl, vehicleId } = await req.json()
-    const apiKey = req.headers.get('x-anthropic-key') || process.env.ANTHROPIC_API_KEY
+    const apiKey = await getServerAnthropicKey()
     if (!apiKey) return NextResponse.json({ error: 'No API key' }, { status: 400 })
 
     const isImage = docUrl.startsWith('data:image')
