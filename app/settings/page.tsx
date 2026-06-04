@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import AppShell from '@/components/AppShell'
+import { getEffectiveTargetProfit } from '@/lib/vehicleHealth'
 import { useFleetStore } from '@/store/useFleetStore'
 
 type OrgData = {
@@ -10,7 +11,7 @@ type OrgData = {
   logo?: string; primaryColor?: string; secondaryColor?: string;
   responsible?: string; stamp?: string;
   autoscout?: string; mobilede?: string; cargr?: string; facebook?: string;
-  defaultStoreCost?: number; defaultTransportCostPerKm?: number; marginTarget?: number;
+  defaultStoreCost?: number; defaultTransportCostPerKm?: number; marginTarget?: number; targetProfit?: number;
 }
 
 type Section = 'company' | 'branding' | 'documents' | 'marketplace' | 'financials' | 'backup'
@@ -45,7 +46,7 @@ export default function SettingsPage() {
   const [facebook, setFacebook]     = useState(org.facebook || '')
   const [storeCost, setStoreCost]   = useState(String(org.defaultStoreCost || 8))
   const [transport, setTransport]   = useState(String(org.defaultTransportCostPerKm || 1.2))
-  const [margin, setMargin]         = useState(String(org.marginTarget || 15))
+  const [targetProfit, setTargetProfit] = useState(String(getEffectiveTargetProfit(org)))
 
   useEffect(() => {
     setName(org.name || '')
@@ -69,7 +70,7 @@ export default function SettingsPage() {
     setFacebook(org.facebook || '')
     setStoreCost(String(org.defaultStoreCost || 8))
     setTransport(String(org.defaultTransportCostPerKm || 1.2))
-    setMargin(String(org.marginTarget || 15))
+    setTargetProfit(String(getEffectiveTargetProfit(org)))
   }, [org])
 
   const save = async () => {
@@ -79,7 +80,8 @@ export default function SettingsPage() {
       responsible, stamp, autoscout, mobilede, cargr, facebook,
       defaultStoreCost: parseFloat(storeCost) || 8,
       defaultTransportCostPerKm: parseFloat(transport) || 1.2,
-      marginTarget: parseFloat(margin) || 15,
+      marginTarget: typeof org.marginTarget === 'number' ? org.marginTarget : undefined,
+      targetProfit: parseFloat(targetProfit) || 2000,
     }
     setSaving(true)
     setSaveError('')
@@ -294,8 +296,8 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="field-group">
-              <label>{lang==='el'?'Στόχος Περιθωρίου %':lang==='it'?'Target Margine %':lang==='de'?'Margenziel %':lang==='fr'?'Objectif Marge %':lang==='es'?'Objetivo Margen %':'Margin Target %'}</label>
-              <input type="number" value={margin} onChange={e=>setMargin(e.target.value)} min="0" max="100" />
+              <label>{lang==='el'?'Στόχος Κέρδους €':lang==='it'?'Target Profitto €':lang==='de'?'Zielgewinn €':lang==='fr'?'Objectif Profit €':lang==='es'?'Objetivo Beneficio €':'Target Profit €'}</label>
+              <input type="number" value={targetProfit} onChange={e=>setTargetProfit(e.target.value)} min="0" step="100" />
             </div>
             <div style={{ marginTop:12, padding:12, background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, fontSize:13 }}>
               <strong style={{ color:'#92400E' }}>{lang==='el'?'Παράδειγμα':lang==='it'?'Esempio':lang==='de'?'Beispiel':lang==='fr'?'Exemple':lang==='es'?'Ejemplo':'Example'}:</strong>

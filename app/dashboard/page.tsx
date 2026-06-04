@@ -4,6 +4,14 @@ import Link from 'next/link'
 import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
 import { calcFinancials, fmtCur } from '@/lib/financials'
+import {
+  getEffectiveTargetProfit,
+  getMissingDocTypes,
+  hasLowMargin,
+  hasMissingRequiredDocs,
+  hasNoSalePrice,
+  type RequiredDocType,
+} from '@/lib/vehicleHealth'
 import BackupReminder from '@/components/BackupReminder'
 
 function daysSince(date?: string) {
@@ -20,11 +28,15 @@ function L(lang: string, el: string, it: string, de: string, fr: string, es: str
   return map[lang] || en
 }
 
+type MissingDocGroup = {
+  type: RequiredDocType
+  count: number
+}
+
 export default function DashboardPage() {
   const { vehicles, settings } = useFleetStore()
   const lang = settings?.lang ?? 'el'
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const org = settings?.org as any
+  const org = settings?.org
 
   const defaultStoreCost = org?.defaultStoreCost || 8
 
@@ -39,6 +51,7 @@ export default function DashboardPage() {
     const inStock = vehicles.filter(v => ['purchased','transit_in','stored','for_sale'].includes(v.status || ''))
     const sold = vehicles.filter(v => ['sold','transit_out','delivered'].includes(v.status || ''))
     const stockValue = inStock.reduce((s, v) => s + (v.purchase?.price || 0), 0)
+    const targetProfit = getEffectiveTargetProfit(org)
 
     const thisMonth = new Date(); thisMonth.setDate(1)
     const monthSold = sold.filter(v => v.sale?.date && new Date(v.sale.date) >= thisMonth)
@@ -64,13 +77,22 @@ export default function DashboardPage() {
     const over90 = inStock.filter(v => daysSince(v.purchase?.date || v.created_at) > 90)
     const over45 = inStock.filter(v => { const d = daysSince(v.purchase?.date || v.created_at); return d > 45 && d <= 90 })
     const over120 = inStock.filter(v => daysSince(v.purchase?.date || v.created_at) > 120)
+    const missingDocsVehicles = inStock.filter(hasMissingRequiredDocs)
+    const missingDocGroups: MissingDocGroup[] = (['invoice', 'registration', 'coc', 'cmr'] as const)
+      .map(type => ({
+        type,
+        count: inStock.filter(v => getMissingDocTypes(v).includes(type)).length,
+      }))
+      .filter(group => group.count > 0)
+    const belowTargetMarginVehicles = inStock.filter(v => hasLowMargin(v, targetProfit))
+    const noSalePriceVehicles = inStock.filter(hasNoSalePrice)
     const agingCost = [...over90, ...over45].reduce((s, v) => {
       return s + (daysSince(v.purchase?.date || v.created_at) * (v.storage?.costPerDay || defaultStoreCost))
     }, 0)
 
     const inTransit = vehicles.filter(v => ['transit_in','transit_out'].includes(v.status || ''))
     const pendingDelivery = vehicles.filter(v => v.status === 'transit_out').length
-    const missingDocs = vehicles.filter(v => v.status === 'for_sale' && (!v.documents || v.documents.length === 0)).length
+    const missingDocs = missingDocsVehicles.length
 
     // Top profit opportunities (for_sale or stored with sale price set)
     const opportunities = inStock
@@ -122,40 +144,39 @@ export default function DashboardPage() {
       .sort((a, b) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime())
       .slice(0, 6)
 
-    const highMargin = inStock.filter(v => {
-      const p = (v.sale?.price || 0) - (v.purchase?.price || 0) - (v.transportIn?.cost || 0)
-      return p > 4000
-    }).length
+    const highMargin = inStock.filter(v => calcFinancials(v).grossProfit > 4000).length
 
     // ── Health Score ────────────────────────────────────────
     const totalInStock = inStock.length
     const deadStockCount = over90.length
-    const missingDocsCount = (missingDocs as typeof vehicles).length
-    const belowTargetMargin = inStock.filter(v => {
-      if (!v.sale?.price || !v.purchase?.price) return false
-      const margin = v.sale.price - v.purchase.price - (v.transportIn?.cost || 0)
-      const targetMargin = (settings?.org as Record<string,unknown> & {targetMargin?:number})?.targetMargin || 2000
-      return margin < targetMargin && margin > 0
-    }).length
-    const noSalePrice = inStock.filter(v => v.status === 'for_sale' && !v.sale?.price).length
+    const missingDocsCount = missingDocsVehicles.length
+    const belowTargetMargin = belowTargetMarginVehicles.length
+    const noSalePrice = noSalePriceVehicles.length
     const lockedCapital = over90.reduce((s, v) => s + (v.purchase?.price || 0), 0)
+    const deadStockPenalty = totalInStock > 0
+      ? Math.min(30, Math.round((deadStockCount / totalInStock) * 30))
+      : 0
+    const missingDocsPenalty = totalInStock > 0
+      ? Math.min(20, Math.round((missingDocsCount / totalInStock) * 20))
+      : 0
+    const lowMarginPenalty = totalInStock > 0
+      ? Math.min(20, Math.round((belowTargetMargin / totalInStock) * 20))
+      : 0
+    const noSalePricePenalty = totalInStock > 0
+      ? Math.min(15, Math.round((noSalePrice / totalInStock) * 15))
+      : 0
 
     // Score: start at 100, deduct for problems
-    let healthScore = 100
-    if (totalInStock > 0) {
-      healthScore -= Math.min(30, Math.round((deadStockCount / totalInStock) * 30))
-      healthScore -= Math.min(20, Math.round((missingDocsCount / Math.max(inStock.length, 1)) * 20))
-      healthScore -= Math.min(20, Math.round((belowTargetMargin / Math.max(inStock.length, 1)) * 20))
-      healthScore -= Math.min(15, Math.round((noSalePrice / Math.max(inStock.length, 1)) * 15))
-    }
-    healthScore = Math.max(0, healthScore)
-
-    const healthIssues: string[] = []
-    if (deadStockCount > 0) healthIssues.push(`dead_stock:${deadStockCount}`)
-    if (lockedCapital > 0) healthIssues.push(`capital:${lockedCapital}`)
-    if (missingDocsCount > 0) healthIssues.push(`docs:${missingDocsCount}`)
-    if (belowTargetMargin > 0) healthIssues.push(`margin:${belowTargetMargin}`)
-    if (noSalePrice > 0) healthIssues.push(`no_price:${noSalePrice}`)
+    const healthScore = Math.max(
+      0,
+      100 - deadStockPenalty - missingDocsPenalty - lowMarginPenalty - noSalePricePenalty,
+    )
+    const healthBreakdown = [
+      { key: 'dead-stock', penalty: deadStockPenalty, count: deadStockCount },
+      { key: 'missing-docs', penalty: missingDocsPenalty, count: missingDocsCount },
+      { key: 'low-margin', penalty: lowMarginPenalty, count: belowTargetMargin },
+      { key: 'no-sale-price', penalty: noSalePricePenalty, count: noSalePrice },
+    ].filter(item => item.count > 0 && item.penalty > 0)
 
     return {
       total: vehicles.length, inStock: inStock.length, stockValue,
@@ -163,10 +184,10 @@ export default function DashboardPage() {
       over90: over90.length, over45: over45.length, over120: over120.length,
       agingCost, inTransit: inTransit.length, pendingDelivery, missingDocs,
       highMargin, topOpp, needsAttn, opportunities, deadStock, fleetTrend, recent,
-      healthScore, healthIssues, deadStockCount, missingDocsCount,
-      belowTargetMargin, noSalePrice, lockedCapital,
+      healthScore, deadStockCount, missingDocsCount, missingDocGroups,
+      belowTargetMargin, noSalePrice, lockedCapital, targetProfit, healthBreakdown,
     }
-  }, [vehicles, defaultStoreCost, lang])
+  }, [vehicles, defaultStoreCost, lang, org])
 
   const statusColor: Record<string, string> = {
     purchased:'#3B82F6',transit_in:'#10B981',stored:'#F59E0B',
@@ -176,9 +197,22 @@ export default function DashboardPage() {
   const maxTrendVal = Math.max(...stats.fleetTrend.map(t => t.value), 1)
 
   const healthScore = stats.healthScore
-  const scoreColor = healthScore >= 80 ? '#16A34A' : healthScore >= 60 ? '#D97706' : '#DC2626'
-  const scoreBg = healthScore >= 80 ? '#F0FDF4' : healthScore >= 60 ? '#FFFBEB' : '#FEF2F2'
-  const scoreBorder = healthScore >= 80 ? '#BBF7D0' : healthScore >= 60 ? '#FDE68A' : '#FECACA'
+  const scoreColor = healthScore >= 90 ? '#16A34A' : healthScore >= 70 ? '#D97706' : '#DC2626'
+  const scoreBg = healthScore >= 90 ? '#F0FDF4' : healthScore >= 70 ? '#FFFBEB' : '#FEF2F2'
+  const scoreBorder = healthScore >= 90 ? '#BBF7D0' : healthScore >= 70 ? '#FDE68A' : '#FECACA'
+  const scoreTooltip = [
+    `Score ${healthScore}/100`,
+    ...stats.healthBreakdown.map(item => {
+      const label = item.key === 'dead-stock'
+        ? 'Dead Stock'
+        : item.key === 'missing-docs'
+          ? 'Missing Documents'
+          : item.key === 'low-margin'
+            ? 'Low Margin'
+            : 'No Sale Price'
+      return `-${item.penalty} ${label}`
+    }),
+  ].join('\n')
 
   return (
     <AppShell>
@@ -201,7 +235,7 @@ export default function DashboardPage() {
             border: `3px solid ${scoreColor}`,
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-          }}>
+          }} title={scoreTooltip}>
             <div style={{ fontSize: 20, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{healthScore}</div>
             <div style={{ fontSize: 9, color: scoreColor, fontWeight: 600 }}>/100</div>
           </div>
@@ -209,50 +243,98 @@ export default function DashboardPage() {
             {L(lang,'Υγεία Στόλου','Salute Flotta','Flotten-Status','Santé Flotte','Salud Flota','Fleet Health')}
           </div>
         </div>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          {stats.healthIssues.length === 0 ? (
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#16A34A' }}>
-              ✅ {L(lang,'Όλα καλά! Δεν υπάρχουν προβλήματα.','Tutto ok! Nessun problema.','Alles gut!','Tout va bien!','¡Todo bien!','All good! No issues.')}
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              {stats.healthBreakdown.length === 0 ? (
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#16A34A' }}>
+                  ✅ {L(lang,'Όλα καλά! Δεν υπάρχουν προβλήματα.','Tutto ok! Nessun problema.','Alles gut!','Tout va bien!','¡Todo bien!','All good! No issues.')}
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '6px 16px' }}>
+                    {stats.deadStockCount > 0 && (
+                      <Link href="/vehicles?health=dead-stock" style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#374151', textDecoration:'none' }}>
+                        <span>🚨</span>
+                        <span style={{ fontWeight:700, color:'#DC2626' }}>{stats.deadStockCount}</span>
+                        <span>{L(lang,'οχήματα >90 ημέρες','veicoli >90 giorni','Fzg. >90 Tage','véhicules >90j','veh. >90 días','vehicles >90 days')}</span>
+                      </Link>
+                    )}
+                    {stats.lockedCapital > 0 && (
+                      <Link href="/vehicles?health=dead-stock" style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#374151', textDecoration:'none' }}>
+                        <span>💰</span>
+                        <span style={{ fontWeight:700, color:'#D97706' }}>{fmtCur(stats.lockedCapital)}</span>
+                        <span>{L(lang,'δεσμευμένο','bloccato','gebunden','bloqué','bloqueado','locked')}</span>
+                      </Link>
+                    )}
+                    {stats.belowTargetMargin > 0 && (
+                      <Link href="/vehicles?health=low-margin" style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#374151', textDecoration:'none' }}>
+                        <span>📉</span>
+                        <span style={{ fontWeight:700, color:'#DC2626' }}>{stats.belowTargetMargin}</span>
+                        <span>{L(lang,`κάτω από στόχο ${fmtCur(stats.targetProfit)}`,`sotto target ${fmtCur(stats.targetProfit)}`,`unter Ziel ${fmtCur(stats.targetProfit)}`,`sous objectif ${fmtCur(stats.targetProfit)}`,`bajo objetivo ${fmtCur(stats.targetProfit)}`,`below ${fmtCur(stats.targetProfit)} target`)}</span>
+                      </Link>
+                    )}
+                    {stats.noSalePrice > 0 && (
+                      <Link href="/vehicles?health=no-sale-price" style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#374151', textDecoration:'none' }}>
+                        <span>🏷️</span>
+                        <span style={{ fontWeight:700, color:'#6B7280' }}>{stats.noSalePrice}</span>
+                        <span>{L(lang,'χωρίς τιμή πώλησης','senza prezzo','ohne Verkaufspreis','sans prix','sin precio','no sale price')}</span>
+                      </Link>
+                    )}
+                  </div>
+
+                  {stats.missingDocGroups.length > 0 && (
+                    <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#92400E' }}>📄 {L(lang,'Λείπουν:','Mancano:','Fehlen:','Manquent:','Faltan:','Missing:')}</span>
+                      {stats.missingDocGroups.map(group => (
+                        <Link
+                          key={group.type}
+                          href="/vehicles?health=missing-docs"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '4px 9px',
+                            borderRadius: 999,
+                            background: '#FFF7ED',
+                            border: '1px solid #FED7AA',
+                            fontSize: 12,
+                            color: '#9A3412',
+                            textDecoration: 'none',
+                            fontWeight: 600,
+                          }}
+                        >
+                          <span>{group.count}</span>
+                          <span>{group.type === 'invoice' ? 'Invoice' : group.type === 'registration' ? 'Registration' : group.type === 'coc' ? 'COC' : 'CMR'}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: 10, fontSize: 12, color: '#6B7280', display: 'flex', flexDirection: 'column', gap: 2 }} title={scoreTooltip}>
+                    {stats.healthBreakdown.map(item => (
+                      <span key={item.key}>
+                        -{item.penalty}{' '}
+                        {item.key === 'dead-stock'
+                          ? L(lang,'Dead Stock','Dead Stock','Dead Stock','Dead Stock','Dead Stock','Dead Stock')
+                          : item.key === 'missing-docs'
+                            ? L(lang,'Ελλιπή έγγραφα','Documenti mancanti','Fehlende Dokumente','Documents manquants','Documentos faltantes','Missing documents')
+                            : item.key === 'low-margin'
+                              ? L(lang,'Χαμηλό κέρδος','Margine basso','Niedrige Marge','Faible marge','Margen bajo','Low margin')
+                              : L(lang,'Χωρίς τιμή πώλησης','Senza prezzo','Kein Verkaufspreis','Sans prix','Sin precio','No sale price')}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px 16px' }}>
-              {stats.deadStockCount > 0 && (
-                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
-                  <span>🚨</span>
-                  <span style={{ fontWeight:700, color:'#DC2626' }}>{stats.deadStockCount}</span>
-                  <span style={{ color:'#374151' }}>{L(lang,'οχήματα >90 ημέρες','veicoli >90 giorni','Fzg. >90 Tage','véhicules >90j','veh. >90 días','vehicles >90 days')}</span>
-                </div>
-              )}
-              {stats.lockedCapital > 0 && (
-                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
-                  <span>💰</span>
-                  <span style={{ fontWeight:700, color:'#D97706' }}>{fmtCur(stats.lockedCapital, lang)}</span>
-                  <span style={{ color:'#374151' }}>{L(lang,'δεσμευμένο','bloccato','gebunden','bloqué','bloqueado','locked')}</span>
-                </div>
-              )}
-              {stats.missingDocsCount > 0 && (
-                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
-                  <span>📄</span>
-                  <span style={{ fontWeight:700, color:'#D97706' }}>{stats.missingDocsCount}</span>
-                  <span style={{ color:'#374151' }}>{L(lang,'ελλιπείς φάκελοι','fascicoli incompleti','unvollst. Akten','dossiers incomplets','expedientes incompletos','incomplete files')}</span>
-                </div>
-              )}
-              {stats.belowTargetMargin > 0 && (
-                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
-                  <span>📉</span>
-                  <span style={{ fontWeight:700, color:'#DC2626' }}>{stats.belowTargetMargin}</span>
-                  <span style={{ color:'#374151' }}>{L(lang,'χαμηλά περιθώρια','margini bassi','niedrige Margen','marges faibles','márgenes bajos','low margins')}</span>
-                </div>
-              )}
-              {stats.noSalePrice > 0 && (
-                <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13 }}>
-                  <span>🏷️</span>
-                  <span style={{ fontWeight:700, color:'#6B7280' }}>{stats.noSalePrice}</span>
-                  <span style={{ color:'#374151' }}>{L(lang,'χωρίς τιμή πώλησης','senza prezzo','ohne Verkaufspreis','sans prix','sin precio','no sale price')}</span>
-                </div>
-              )}
-            </div>
-          )}
+
+            {stats.healthBreakdown.length > 0 && (
+              <Link href="/vehicles?health=attention" className="btn btn-primary" style={{ textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                {L(lang,'Fix Issues','Correggi Problemi','Probleme beheben','Corriger les problèmes','Corregir problemas','Fix Issues')}
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

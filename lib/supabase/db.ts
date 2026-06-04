@@ -298,6 +298,7 @@ function normalizeOrganization(value: unknown): Organization | undefined {
   if (typeof raw.defaultStoreCost === 'number') org.defaultStoreCost = raw.defaultStoreCost
   if (typeof raw.defaultTransportCostPerKm === 'number') org.defaultTransportCostPerKm = raw.defaultTransportCostPerKm
   if (typeof raw.marginTarget === 'number') org.marginTarget = raw.marginTarget
+  if (typeof raw.targetProfit === 'number') org.targetProfit = raw.targetProfit
   if (typeof raw.plan === 'string') org.plan = raw.plan
   if (typeof raw.status === 'string') org.status = raw.status
   if (typeof raw.trial_ends_at === 'string') org.trial_ends_at = raw.trial_ends_at

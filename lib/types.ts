@@ -157,6 +157,7 @@ export interface Organization {
   defaultStoreCost?: number
   defaultTransportCostPerKm?: number
   marginTarget?: number
+  targetProfit?: number
   // Plan
   plan?: string
   status?: string

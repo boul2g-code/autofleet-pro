@@ -1,10 +1,13 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client'
-import { useState, useMemo, useRef } from 'react'
+import { Suspense, useState, useMemo, useRef } from 'react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import { calcFinancials, fmtCur } from '@/lib/financials'
 import type { VehicleStatus } from '@/lib/types'
+import { getEffectiveTargetProfit, matchesVehicleHealthFilter, type VehicleHealthFilter } from '@/lib/vehicleHealth'
 import AppShell from '@/components/AppShell'
 import InfoTab from '@/components/tabs/InfoTab'
 import PurchaseTab from '@/components/tabs/PurchaseTab'
@@ -53,9 +56,19 @@ const COLS: { key: SortKey; label: string }[] = [
   { key: 'profit',   label: 'Profit €' },
 ]
 
-export default function VehiclesPage() {
+const HEALTH_FILTERS: VehicleHealthFilter[] = [
+  'attention', 'dead-stock', 'missing-docs', 'low-margin', 'no-sale-price',
+]
+
+function daysSince(date?: string) {
+  if (!date) return 0
+  return Math.floor((Date.now() - new Date(date).getTime()) / 86400000)
+}
+
+function VehiclesPageContent() {
   const { vehicles, addVehicle, deleteVehicle, settings, loading } = useFleetStore()
   const lang = settings.lang
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'all'>('all')
   const [adding, setAdding] = useState(false)
@@ -65,6 +78,11 @@ export default function VehiclesPage() {
   const [confirmDel, setConfirmDel] = useState(0)
   const [sortKey, setSortKey] = useState<SortKey>('make')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const targetProfit = getEffectiveTargetProfit(settings.org)
+  const rawHealthFilter = searchParams.get('health')
+  const healthFilter = HEALTH_FILTERS.includes(rawHealthFilter as VehicleHealthFilter)
+    ? (rawHealthFilter as VehicleHealthFilter)
+    : null
 
   const v = selectedId ? vehicles.find(x => x.id === selectedId) || null : null
 
@@ -81,6 +99,9 @@ export default function VehiclesPage() {
     const q = search.toLowerCase()
     const list = vehicles.filter(v => {
       if (statusFilter !== 'all' && v.status !== statusFilter) return false
+      if (healthFilter && !matchesVehicleHealthFilter(v, healthFilter, targetProfit, daysSince(v.purchase?.date || v.created_at))) {
+        return false
+      }
       if (!q) return true
       return [v.make, v.model, v.plate, v.vin, v.color, String(v.year || ''), v.purchase?.sellerName, v.sale?.buyerName]
         .some(f => (f || '').toLowerCase().includes(q))
@@ -118,7 +139,19 @@ export default function VehiclesPage() {
       }
       return sortDir === 'asc' ? (valA as number) - (valB as number) : (valB as number) - (valA as number)
     })
-  }, [vehicles, search, statusFilter, sortKey, sortDir])
+  }, [vehicles, search, statusFilter, sortKey, sortDir, healthFilter, targetProfit])
+
+  const healthFilterLabel = healthFilter === 'attention'
+    ? (lang === 'el' ? 'Όλα τα θέματα' : 'All issues')
+    : healthFilter === 'dead-stock'
+      ? (lang === 'el' ? 'Dead Stock >90 ημέρες' : 'Dead Stock >90 days')
+      : healthFilter === 'missing-docs'
+        ? (lang === 'el' ? 'Ελλιπή έγγραφα' : 'Missing documents')
+        : healthFilter === 'low-margin'
+          ? (lang === 'el' ? 'Χαμηλό κέρδος' : 'Low margin')
+          : healthFilter === 'no-sale-price'
+            ? (lang === 'el' ? 'Χωρίς τιμή πώλησης' : 'No sale price')
+            : ''
 
   const handleAdd = async () => {
     if (adding || addingRef.current) return
@@ -238,6 +271,20 @@ export default function VehiclesPage() {
         </div>
       </div>
 
+      {healthFilter && (
+        <div className="card" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 13 }}>
+            <strong>{lang === 'el' ? 'Fix Issues:' : 'Fix Issues:'}</strong> {healthFilterLabel}
+            <span style={{ color: 'var(--text2)', marginLeft: 8 }}>
+              {filtered.length} {lang === 'el' ? 'οχήματα' : 'vehicles'}
+            </span>
+          </div>
+          <Link href="/vehicles" className="btn btn-ghost" style={{ fontSize: 12, textDecoration: 'none' }}>
+            {lang === 'el' ? 'Καθαρισμός φίλτρου' : 'Clear filter'}
+          </Link>
+        </div>
+      )}
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--text2)' }}>⏳</div>
       ) : filtered.length === 0 ? (
@@ -311,5 +358,13 @@ export default function VehiclesPage() {
         </div>
       )}
     </AppShell>
+  )
+}
+
+export default function VehiclesPage() {
+  return (
+    <Suspense fallback={<AppShell><div style={{ textAlign: 'center', padding: 40, color: 'var(--text2)' }}>⏳</div></AppShell>}>
+      <VehiclesPageContent />
+    </Suspense>
   )
 }
