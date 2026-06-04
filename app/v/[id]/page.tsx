@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { isPublicVehicleStatus } from '@/lib/vehiclePublic'
 
@@ -24,20 +24,10 @@ type PublicVehicleRow = {
   notes: string | null
 }
 
-function createServiceClient(serviceKey: string) {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceKey,
-    { auth: { persistSession: false } }
-  )
-}
-
 export default async function PublicVehiclePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceKey) notFound()
+  const sb = await createClient()
 
-  const sb = createServiceClient(serviceKey)
   const { data: v, error } = await sb
     .from('vehicles')
     .select('id,status,make,model,year,fuel_type,gear_type,mileage,sale,photo,color,power_kw,engine_cc,doors,seats,plate,vin,notes')
@@ -79,13 +69,11 @@ export default async function PublicVehiclePage({ params }: { params: Promise<{ 
           .title{font-size:26px;font-weight:800;margin-bottom:3px}
           .subtitle{color:#64748b;font-size:14px;margin-bottom:14px}
           .price{font-size:30px;font-weight:800;color:#16a34a;margin-bottom:16px}
-          .price-note{font-size:12px;color:#64748b;margin-top:2px}
           .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
           .field{background:#f8fafc;border-radius:8px;padding:10px 12px}
           .field-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px}
           .field-value{font-size:14px;font-weight:600}
           .color-dot{width:14px;height:14px;border-radius:50%;border:1px solid #ddd;display:inline-block;margin-right:5px;vertical-align:middle}
-          .footer{text-align:center;padding:20px;color:#94a3b8;font-size:12px}
           .powered{background:#0f172a;color:#475569;text-align:center;padding:12px;font-size:11px}
           @media(max-width:500px){.grid{grid-template-columns:1fr}.photo{height:220px}.title{font-size:22px}}
         `}</style>
@@ -115,11 +103,7 @@ export default async function PublicVehiclePage({ params }: { params: Promise<{ 
                 {v.mileage && <span> · {v.mileage.toLocaleString()} km</span>}
               </div>
 
-              {price && (
-                <div>
-                  <div className="price">€{price.toLocaleString()}</div>
-                </div>
-              )}
+              {price && <div className="price">€{price.toLocaleString()}</div>}
 
               <div className="grid">
                 {v.mileage && <div className="field"><div className="field-label">Mileage</div><div className="field-value">{v.mileage.toLocaleString()} km</div></div>}
