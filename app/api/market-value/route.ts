@@ -46,12 +46,31 @@ Reply ONLY with valid JSON, no markdown:
       }),
     })
 
+    if (!resp.ok) {
+      const errText = await resp.text()
+      console.error('Anthropic API error:', resp.status, errText)
+      return NextResponse.json({ error: 'AI service error' }, { status: 502 })
+    }
+
     const data = await resp.json()
     const text = (data?.content?.[0]?.text || '').trim()
+    if (!text) {
+      return NextResponse.json({ error: 'Empty AI response' }, { status: 502 })
+    }
     const clean = text.replace(/```json|```/g, '').trim()
-    const marketValue = JSON.parse(clean)
+    let marketValue
+    try {
+      marketValue = JSON.parse(clean)
+    } catch {
+      console.error('Could not parse market value JSON:', clean)
+      return NextResponse.json({ error: 'Could not parse market value' }, { status: 422 })
+    }
+    if (!marketValue?.low || !marketValue?.high) {
+      return NextResponse.json({ error: 'Invalid market value response' }, { status: 422 })
+    }
     return NextResponse.json({ marketValue })
   } catch (error) {
+    console.error('market-value route error:', error)
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 }
