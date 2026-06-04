@@ -3,7 +3,7 @@ import React from 'react'
 import { useFleetStore } from '@/store/useFleetStore'
 import { t } from '@/lib/i18n'
 import { VEHICLE_MAKES, VEHICLE_MODELS, COLORS } from '@/lib/vehicleData'
-import { parseVehicleSpecs } from '@/lib/vehicleSpecs'
+import { getVehicleSpecs, parseVehicleSpecs } from '@/lib/vehicleSpecs'
 import type { VehicleCategory, VehicleStatus, FuelType, GearType } from '@/lib/types'
 
 const CATEGORIES: VehicleCategory[] = ['car','truck','van','bus','moto','construction']
@@ -20,17 +20,35 @@ export default function InfoTab({ id }: { id: string }) {
   const up = (patch: Parameters<typeof updateVehicle>[1]) => updateVehicle(id, patch)
 
   // Auto-fill specs when make+model+fuel are set
+  const [specsLoading, setSpecsLoading] = React.useState(false)
 
-  const autoFill = (make: string, model: string, fuel: string) => {
-    void fuel  // fuel arg kept for call-site compatibility
-    if (!make && !model) return
-    const specs = parseVehicleSpecs(make, model)
-    if (!specs) return
-    const patch: Parameters<typeof updateVehicle>[1] = {}
-    if (specs.fuelType && !v?.fuelType) patch.fuelType = specs.fuelType as typeof v.fuelType
-    if (specs.engineCC && !v?.engineCC) patch.engineCC = specs.engineCC
-    if (specs.confidence === 'high' && specs.powerKW && !v?.powerKW) patch.powerKW = specs.powerKW
-    if (Object.keys(patch).length > 0) updateVehicle(id, patch)
+  const autoFill = async (make: string, model: string, fuel: string) => {
+    if (!make || !model) return
+
+    // 1. Try static lookup first (instant, no API)
+    if (fuel) {
+      const specs = getVehicleSpecs(make, model, fuel)
+      if (specs) {
+        const patch: Parameters<typeof updateVehicle>[1] = {}
+        if (specs.engineCC && !v?.engineCC) patch.engineCC = specs.engineCC
+        if (specs.powerKW && !v?.powerKW) patch.powerKW = specs.powerKW
+        if (specs.doors && !v?.doors) patch.doors = specs.doors
+        if (specs.seats && !v?.seats) patch.seats = specs.seats
+        if (specs.gearType && !v?.gearType) patch.gearType = specs.gearType as typeof v.gearType
+        if (Object.keys(patch).length > 0) { updateVehicle(id, patch); return }
+      }
+    }
+
+    // 2. Local pattern parser (no API needed)
+    const parsed = parseVehicleSpecs(make, model)
+    if (parsed) {
+      const patch2: Parameters<typeof updateVehicle>[1] = {}
+      if (parsed.fuelType && !v?.fuelType) patch2.fuelType = parsed.fuelType as typeof v.fuelType
+      if (parsed.engineCC && !v?.engineCC) patch2.engineCC = parsed.engineCC
+      if (parsed.confidence === 'high' && parsed.powerKW && !v?.powerKW) patch2.powerKW = parsed.powerKW
+      if (Object.keys(patch2).length > 0) updateVehicle(id, patch2)
+    }
+    setSpecsLoading(false)
   }
 
   // Market Value Estimate via Claude AI
@@ -178,7 +196,7 @@ Reply ONLY with valid JSON, no markdown:
         <div className="field-group">
           <label style={{ display:'flex', justifyContent:'space-between' }}>
             <span>{t(lang, 'field.make')}</span>
-            }>⚙️ {lang==='el'?'φόρτωση...':lang==='it'?'caricamento...':lang==='de'?'laden...':lang==='fr'?'chargement...':'loading...'}</span>}
+            {specsLoading && <span style={{ fontSize:10, color:'var(--primary)', fontWeight:600 }}>⚙️ {lang==='el'?'φόρτωση...':lang==='it'?'caricamento...':lang==='de'?'laden...':lang==='fr'?'chargement...':'loading...'}</span>}
           </label>
           <select value={v.make || ''} onChange={e => up({ make: e.target.value, model: '' })}>
             <option value="">—</option>
