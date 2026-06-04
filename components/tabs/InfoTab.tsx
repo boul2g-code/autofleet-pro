@@ -25,16 +25,26 @@ export default function InfoTab({ id }: { id: string }) {
   const autoFill = async (make: string, model: string, fuel: string) => {
     if (!make || !model) return
 
+    // Always reset auto-filled spec fields when make/model changes
+    // so switching from A4 3.0 to A3 1.6 clears the old values
+    const reset: Parameters<typeof updateVehicle>[1] = {
+      engineCC: undefined,
+      powerKW: undefined,
+      fuelType: undefined,
+      gearType: undefined,
+    }
+    updateVehicle(id, reset)
+
     // 1. Try static lookup first (instant, no API)
     if (fuel) {
       const specs = getVehicleSpecs(make, model, fuel)
       if (specs) {
         const patch: Parameters<typeof updateVehicle>[1] = {}
-        if (specs.engineCC && !v?.engineCC) patch.engineCC = specs.engineCC
-        if (specs.powerKW && !v?.powerKW) patch.powerKW = specs.powerKW
-        if (specs.doors && !v?.doors) patch.doors = specs.doors
-        if (specs.seats && !v?.seats) patch.seats = specs.seats
-        if (specs.gearType && !v?.gearType) patch.gearType = specs.gearType as typeof v.gearType
+        if (specs.engineCC) patch.engineCC = specs.engineCC
+        if (specs.powerKW) patch.powerKW = specs.powerKW
+        if (specs.doors) patch.doors = specs.doors
+        if (specs.seats) patch.seats = specs.seats
+        if (specs.gearType) patch.gearType = specs.gearType as typeof v.gearType
         if (Object.keys(patch).length > 0) { updateVehicle(id, patch); return }
       }
     }
@@ -43,9 +53,9 @@ export default function InfoTab({ id }: { id: string }) {
     const parsed = parseVehicleSpecs(make, model)
     if (parsed) {
       const patch2: Parameters<typeof updateVehicle>[1] = {}
-      if (parsed.fuelType && !v?.fuelType) patch2.fuelType = parsed.fuelType as typeof v.fuelType
-      if (parsed.engineCC && !v?.engineCC) patch2.engineCC = parsed.engineCC
-      if (parsed.confidence === 'high' && parsed.powerKW && !v?.powerKW) patch2.powerKW = parsed.powerKW
+      if (parsed.fuelType) patch2.fuelType = parsed.fuelType as typeof v.fuelType
+      if (parsed.engineCC) patch2.engineCC = parsed.engineCC
+      if (parsed.confidence === 'high' && parsed.powerKW) patch2.powerKW = parsed.powerKW
       if (Object.keys(patch2).length > 0) updateVehicle(id, patch2)
     }
     setSpecsLoading(false)
