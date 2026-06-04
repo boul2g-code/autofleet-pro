@@ -18,6 +18,7 @@ import ListingsTab from '@/components/tabs/ListingsTab'
 import InspectionTab from '@/components/tabs/InspectionTab'
 import FlyerTab from '@/components/tabs/FlyerTab'
 import ScoreTab from '@/components/tabs/ScoreTab'
+import TimelineTab from '@/components/tabs/TimelineTab'
 
 const STATUS_FILTERS: (VehicleStatus | 'all')[] = [
   'all','purchased','transit_in','stored','for_sale','sold','transit_out','delivered'
@@ -36,6 +37,7 @@ const TABS = [
   { key: 'listings', label: 'tab.listings' },
   { key: 'flyer', label: 'tab.flyer' },
   { key: 'score', label: 'tab.score' },
+  { key: 'timeline', label: 'tab.timeline' },
 ]
 
 type SortKey = 'make' | 'plate' | 'year' | 'mileage' | 'status' | 'purchase' | 'profit'
@@ -198,6 +200,7 @@ export default function VehiclesPage() {
           {activeTab === 'listings' && <ListingsTab id={selectedId} />}
           {activeTab === 'flyer' && <FlyerTab id={selectedId} />}
           {activeTab === 'score' && <ScoreTab id={selectedId} />}
+              {activeTab === 'timeline' && <TimelineTab id={selectedId} />}
         </div>
       </AppShell>
     )
