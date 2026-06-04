@@ -25,6 +25,7 @@ export default function InfoTab({ id }: { id: string }) {
   const autoFill = async (make: string, model: string, fuel: string) => {
     if (!make || !model) return
 
+    setAutoFillConf(null)
     // Always reset auto-filled spec fields when make/model changes
     // so switching from A4 3.0 to A3 1.6 clears the old values
     const reset: Parameters<typeof updateVehicle>[1] = {
@@ -45,7 +46,7 @@ export default function InfoTab({ id }: { id: string }) {
         if (specs.doors) patch.doors = specs.doors
         if (specs.seats) patch.seats = specs.seats
         if (specs.gearType) patch.gearType = specs.gearType as typeof v.gearType
-        if (Object.keys(patch).length > 0) { updateVehicle(id, patch); return }
+        if (Object.keys(patch).length > 0) { updateVehicle(id, patch); setAutoFillConf('high'); return }
       }
     }
 
@@ -56,7 +57,12 @@ export default function InfoTab({ id }: { id: string }) {
       if (parsed.fuelType) patch2.fuelType = parsed.fuelType as typeof v.fuelType
       if (parsed.engineCC) patch2.engineCC = parsed.engineCC
       if (parsed.confidence === 'high' && parsed.powerKW) patch2.powerKW = parsed.powerKW
-      if (Object.keys(patch2).length > 0) updateVehicle(id, patch2)
+      if (Object.keys(patch2).length > 0) {
+        updateVehicle(id, patch2)
+        setAutoFillConf(parsed.confidence)
+      }
+    } else {
+      setAutoFillConf(null)
     }
     setSpecsLoading(false)
   }
@@ -129,6 +135,7 @@ Reply ONLY with valid JSON, no markdown:
   // VIN decode via NHTSA (free, no API key)
   const [vinLoading, setVinLoading] = React.useState(false)
   const [vinResult, setVinResult] = React.useState<string>('')
+  const [autoFillConf, setAutoFillConf] = React.useState<'high'|'low'|null>(null)
   const [scanLoading, setScanLoading] = React.useState(false)
   const [scanMsg, setScanMsg] = React.useState<string>('')
 
@@ -345,7 +352,19 @@ Reply ONLY with valid JSON, no markdown:
 
       <div className="field-row">
         <div className="field-group">
-          <label>{t(lang, 'field.engineCC')}</label>
+          <label style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <span>{t(lang, 'field.engineCC')}</span>
+            {autoFillConf === 'high' && (
+              <span style={{ fontSize:10, background:'#D1FAE5', color:'#065F46', borderRadius:4, padding:'1px 6px', fontWeight:600 }}>
+                ✓ {lang==='el'?'Αυτόματο':lang==='it'?'Auto':lang==='de'?'Auto':lang==='fr'?'Auto':'Auto-filled'}
+              </span>
+            )}
+            {autoFillConf === 'low' && (
+              <span style={{ fontSize:10, background:'#FEF3C7', color:'#92400E', borderRadius:4, padding:'1px 6px', fontWeight:600 }}>
+                ⚠ {lang==='el'?'Εκτίμηση':lang==='it'?'Stima':lang==='de'?'Schätzung':lang==='fr'?'Estimé':'Estimate'}
+              </span>
+            )}
+          </label>
           <input type="number" value={v.engineCC || ''} onChange={e => up({ engineCC: +e.target.value })} placeholder="2000" />
         </div>
         <div className="field-group">
