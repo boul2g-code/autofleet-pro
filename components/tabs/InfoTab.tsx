@@ -136,6 +136,7 @@ Reply ONLY with valid JSON, no markdown:
   const [vinLoading, setVinLoading] = React.useState(false)
   const [vinResult, setVinResult] = React.useState<string>('')
   const [autoFillConf, setAutoFillConf] = React.useState<'high'|'low'|null>(null)
+  const [dupVin, setDupVin] = React.useState(false)
   const [scanLoading, setScanLoading] = React.useState(false)
   const [scanMsg, setScanMsg] = React.useState<string>('')
 
@@ -307,7 +308,11 @@ Reply ONLY with valid JSON, no markdown:
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
             <input 
               value={v.vin || ''} 
-              onChange={e => { up({ vin: e.target.value.toUpperCase() }); setVinResult('') }} 
+              onChange={e => {
+                const val = e.target.value.toUpperCase()
+                up({ vin: val }); setVinResult('')
+                setDupVin(val.length >= 11 && vehicles.some(x => x.id !== id && x.vin === val))
+              }} 
               placeholder="WBA3B9C50FK123456" 
               maxLength={17}
               style={{ flex:1, fontFamily:'monospace', letterSpacing:'0.05em' }}
@@ -326,6 +331,7 @@ Reply ONLY with valid JSON, no markdown:
               {vinResult}
             </div>
           )}
+          {dupVin && <div style={{ color:'#DC2626', fontSize:12, fontWeight:600, marginTop:4 }}>⚠️ {lang==='el'?'VIN υπάρχει ήδη σε άλλο όχημα':lang==='it'?'VIN già presente in un altro veicolo':lang==='de'?'VIN bereits in anderem Fahrzeug':'VIN already exists in another vehicle'}</div>}
         </div>
         <div className="field-group">
           <label>{t(lang, 'field.plate')}</label>
