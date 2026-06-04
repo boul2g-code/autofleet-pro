@@ -140,10 +140,9 @@ export function parseVehicleSpecs(
 ): VehicleSpecSuggestion | null {
   if (!make && !model) return null
   const combined = `${make} ${model}`.toLowerCase().trim()
-  const modelLower = model.toLowerCase().trim()
 
   // 1. Check high-confidence overrides
-  const overrideKey = `${make.toLowerCase()}|${modelLower}`
+  const overrideKey = `${make.toLowerCase()}|${model.toLowerCase().trim()}`
   if (OVERRIDES[overrideKey]) {
     const o = OVERRIDES[overrideKey]
     return { engineCC: o.engineCC, powerKW: o.powerKW, fuelType: o.fuelType, confidence: 'high' }
@@ -174,9 +173,6 @@ export function parseVehicleSpecs(
     }
   }
 
-  // If confidence is low, never fill powerKW
-  // (too many variants per displacement - e.g. 2.0 TDI can be 90, 110, 140, 150, 184kW)
-  delete result.powerKW
-
+  // powerKW intentionally omitted for low-confidence (too many variants per displacement)
   return filled ? result : null
 }
