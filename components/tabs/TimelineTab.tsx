@@ -32,41 +32,34 @@ export default function TimelineTab({ id }: Props) {
     '#2563EB'
   )
   // Transport In
-  add(v.transportIn?.pickupDate,
+  add(v.transportIn?.departureDate,
     L(lang,'Παραλαβή (αναχώρηση)','Ritiro (partenza)','Abholung (Abfahrt)','Enlèvement (départ)','Recogida (salida)','Pickup (departure)'),
-    v.transportIn?.from || undefined,
+    v.transportIn?.origin || undefined,
     '#7C3AED'
   )
-  add(v.transportIn?.deliveryDate,
+  add(v.transportIn?.arrivalDate,
     L(lang,'Άφιξη στην αποθήκη','Arrivo in magazzino','Ankunft im Lager','Arrivée en entrepôt','Llegada al almacén','Arrived at storage'),
-    v.transportIn?.to || undefined,
+    v.transportIn?.destination || undefined,
     '#059669'
   )
   // Storage
-  add(v.storage?.startDate,
+  add(v.storage?.arrivalDate,
     L(lang,'Εισαγωγή σε αποθήκη','Ingresso in magazzino','Einlagerung','Entrée en entrepôt','Entrada en almacén','Entered storage'),
     undefined, '#F59E0B'
   )
   // Listed / for sale
-  if (v.status === 'for_sale' || v.sale?.listedDate) {
-    add(v.sale?.listedDate || v.storage?.endDate,
+  if (v.status === 'for_sale' || undefined) {
+    add(undefined || v.storage?.arrivalDate,
       L(lang,'Δημοσιεύτηκε προς πώληση','Messo in vendita','Zum Verkauf eingestellt','Mis en vente','Publicado en venta','Listed for sale'),
       v.sale?.price ? `€${v.sale.price.toLocaleString()}` : undefined,
       '#8B5CF6'
     )
   }
-  // Price change (if sale date different from listed)
-  if (v.sale?.priceChangedDate) {
-    add(v.sale.priceChangedDate,
-      L(lang,'Αλλαγή τιμής','Cambio prezzo','Preisänderung','Changement de prix','Cambio de precio','Price changed'),
-      v.sale?.price ? `→ €${v.sale.price.toLocaleString()}` : undefined,
-      '#F59E0B'
-    )
-  }
+
   // Transport Out
-  add(v.transportOut?.pickupDate,
+  add(v.transportOut?.departureDate,
     L(lang,'Παράδοση (αναχώρηση)','Consegna (partenza)','Lieferung (Abfahrt)','Livraison (départ)','Entrega (salida)','Delivery (departure)'),
-    v.transportOut?.to || undefined,
+    v.transportOut?.destination || undefined,
     '#7C3AED'
   )
   // Sale
@@ -76,7 +69,7 @@ export default function TimelineTab({ id }: Props) {
     '#16A34A'
   )
   // Delivered
-  add(v.transportOut?.deliveryDate,
+  add(v.transportOut?.arrivalDate,
     L(lang,'Παραδόθηκε','Consegnato','Geliefert','Livré','Entregado','Delivered'),
     undefined, '#059669'
   )
