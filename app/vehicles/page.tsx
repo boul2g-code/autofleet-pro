@@ -200,7 +200,7 @@ export default function VehiclesPage() {
           {activeTab === 'listings' && <ListingsTab id={selectedId} />}
           {activeTab === 'flyer' && <FlyerTab id={selectedId} />}
           {activeTab === 'score' && <ScoreTab id={selectedId} />}
-              {activeTab === 'timeline' && <TimelineTab id={selectedId} />}
+              {activeTab === 'timeline' && selectedId && <TimelineTab id={selectedId} />}
         </div>
       </AppShell>
     )
