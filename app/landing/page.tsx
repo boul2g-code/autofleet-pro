@@ -25,7 +25,7 @@ const T = {
     en: 'AutoFleet Pro shows which vehicles have been sitting too long, the real profit margin per vehicle and manages stock, transport and documents in one place.',
   },
   // CTA
-  cta: { it:'Prova gratis 14 giorni', el:'Δοκίμασε δωρεάν 14 ημέρες', de:'14 Tage kostenlos testen', fr:'Essai gratuit 14 jours', es:'Prueba gratis 14 días', en:'Free trial 14 days' },
+  cta: { it:'Prova gratis 1 mese', el:'Δοκίμασε δωρεάν 1 μήνα', de:'1 Monat kostenlos testen', fr:'Essai gratuit 1 mois', es:'Prueba gratis 1 mes', en:'Free trial 1 month' },
   cta2: { it:'Guarda demo →', el:'Δες demo →', de:'Demo ansehen →', fr:'Voir démo →', es:'Ver demo →', en:'Watch demo →' },
   // No CC
   nocc: { it:'Nessuna carta di credito richiesta', el:'Χωρίς πιστωτική κάρτα', de:'Keine Kreditkarte erforderlich', fr:'Aucune carte de crédit requise', es:'Sin tarjeta de crédito', en:'No credit card required' },
@@ -43,7 +43,7 @@ const T = {
   // Social proof numbers
   spTitle: { it:'Numeri reali dal nostro ambiente demo', el:'Πραγματικοί αριθμοί από το demo περιβάλλον', de:'Echte Zahlen aus unserer Demo-Umgebung', fr:'Chiffres réels de notre environnement démo', es:'Números reales de nuestro entorno demo', en:'Real numbers from our demo environment' },
   // Pricing
-  pTitle: { it:'Starter €49 / Pro €99 · 14 giorni gratis', el:'Founder Plan — Μόνο για τα πρώτα 10 αυτοκτηματαγορεία', de:'Founder Plan — Nur für die ersten 10 Händler', fr:'Plan Fondateur — Seulement pour les 10 premiers concessionnaires', es:'Plan Fundador — Solo para los 10 primeros concesionarios', en:'Founder Plan — Only for the first 10 dealers' },
+  pTitle: { it:'Starter €49 / Pro €99 · 1 mese gratis', el:'Founder Plan — Μόνο για τα πρώτα 10 αυτοκτηματαγορεία', de:'Founder Plan — Nur für die ersten 10 Händler', fr:'Plan Fondateur — Seulement pour les 10 premiers concessionnaires', es:'Plan Fundador — Solo para los 10 primeros concesionarios', en:'Founder Plan — Only for the first 10 dealers' },
   pSub: { it:'Prezzo bloccato per sempre. Non aumenterà mai.', el:'Τιμή κλειδωμένη για πάντα. Δεν θα αυξηθεί ποτέ.', de:'Preis für immer gesperrt. Er wird nie steigen.', fr:'Prix bloqué pour toujours. Il n\'augmentera jamais.', es:'Precio bloqueado para siempre. Nunca subirá.', en:'Price locked forever. It will never increase.' },
   pFeatures: {
     it: ['Tutti i veicoli illimitati','Dashboard con alert stock fermo','Margine reale per veicolo','Export PDF, CMR, Excel','Branding con il tuo logo','6 lingue','Supporto diretto dal fondatore'],
@@ -130,7 +130,7 @@ export default function LandingPage() {
         <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' }}>
           {/* Badge */}
           <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'#EEF2FF', color:'#6366F1', borderRadius:20, padding:'6px 14px', fontSize:13, fontWeight:600, marginBottom:24 }}>
-            🎯 Starter €49 · Pro €99 · {lang==='el'?'14 ημέρες δωρεάν':lang==='de'?'14 Tage gratis':lang==='fr'?'14 jours gratuits':lang==='es'?'14 días gratis':'14 giorni gratis'}
+            🎯 Starter €49 · Pro €99 · {lang==='el'?'1 μήνας δωρεάν':lang==='de'?'1 Monat gratis':lang==='fr'?'1 mois gratuit':lang==='es'?'1 mes gratis':'1 mese gratis'}
           </div>
 
           <h1 style={{ fontSize:'clamp(28px,4vw,48px)', fontWeight:800, lineHeight:1.1, marginBottom:20, color:'#111827' }}>
@@ -320,7 +320,7 @@ export default function LandingPage() {
           <h2 style={{ fontSize:'clamp(22px,3vw,32px)', fontWeight:800, marginBottom:8 }}>
             {lang==='el'?'Επιλέξτε πλάνο':lang==='de'?'Plan wählen':lang==='fr'?'Choisissez votre plan':lang==='es'?'Elige tu plan':'Scegli il tuo piano'}
           </h2>
-          <p style={{ color:'#6B7280', marginBottom:32, fontSize:15 }}>{lang==='el'?'14 ημέρες δωρεάν σε κάθε πλάνο. Χωρίς πιστωτική κάρτα.':lang==='de'?'14 Tage kostenlos in jedem Plan. Keine Kreditkarte.':lang==='fr'?'14 jours gratuits sur chaque plan. Aucune carte de crédit.':lang==='es'?'14 días gratis en cada plan. Sin tarjeta de crédito.':'14 giorni gratis su ogni piano. Nessuna carta di credito.'}</p>
+          <p style={{ color:'#6B7280', marginBottom:32, fontSize:15 }}>{lang==='el'?'1 μήνας δωρεάν σε κάθε πλάνο. Χωρίς πιστωτική κάρτα.':lang==='de'?'1 Monat kostenlos in jedem Plan. Keine Kreditkarte.':lang==='fr'?'1 mois gratuit sur chaque plan. Aucune carte de crédit.':lang==='es'?'1 mes gratis en cada plan. Sin tarjeta de crédito.':'1 mese gratis su ogni piano. Nessuna carta di credito.'}</p>
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
             {/* Starter */}
@@ -328,7 +328,7 @@ export default function LandingPage() {
               <div style={{ fontSize:13, fontWeight:600, color:'#6B7280', marginBottom:8 }}>Starter</div>
               <div style={{ fontSize:44, fontWeight:800, color:'#111827', lineHeight:1 }}>€49</div>
               <div style={{ color:'#6B7280', fontSize:13, marginBottom:20 }}>/{lang==='el'?'μήνα':lang==='de'?'Monat':lang==='fr'?'mois':lang==='es'?'mes':'mese'}</div>
-              {['100 '+( lang==='el'?'οχήματα':lang==='it'?'veicoli':lang==='de'?'Fahrzeuge':lang==='fr'?'véhicules':lang==='es'?'vehículos':'vehicles'),'Dashboard + Alerts','PDF, CMR, Excel','1 '+( lang==='el'?'χρήστης':lang==='it'?'utente':lang==='de'?'Benutzer':lang==='fr'?'utilisateur':lang==='es'?'usuario':'user'),'14 '+(lang==='el'?'ημέρες δωρεάν':lang==='it'?'giorni gratis':lang==='de'?'Tage kostenlos':lang==='fr'?'jours gratuits':lang==='es'?'días gratis':'days free')].map((f,i)=>(
+              {['100 '+( lang==='el'?'οχήματα':lang==='it'?'veicoli':lang==='de'?'Fahrzeuge':lang==='fr'?'véhicules':lang==='es'?'vehículos':'vehicles'),'Dashboard + Alerts','PDF, CMR, Excel','1 '+( lang==='el'?'χρήστης':lang==='it'?'utente':lang==='de'?'Benutzer':lang==='fr'?'utilisateur':lang==='es'?'usuario':'user'),'1 '+(lang==='el'?'μήνας δωρεάν':lang==='it'?'mese gratis':lang==='de'?'Monat kostenlos':lang==='fr'?'mois gratuit':lang==='es'?'mes gratis':'month free')].map((f,i)=>(
                 <div key={i} style={{ display:'flex', gap:8, marginBottom:8, fontSize:13, color:'#374151' }}>
                   <span style={{ color:'#6366F1', fontWeight:700 }}>✓</span><span>{f}</span>
                 </div>
@@ -345,7 +345,7 @@ export default function LandingPage() {
               <div style={{ fontSize:13, fontWeight:600, color:'#94A3B8', marginBottom:8 }}>Pro</div>
               <div style={{ fontSize:44, fontWeight:800, color:'white', lineHeight:1 }}>€99</div>
               <div style={{ color:'#64748B', fontSize:13, marginBottom:20 }}>/{lang==='el'?'μήνα':lang==='de'?'Monat':lang==='fr'?'mois':lang==='es'?'mes':'mese'}</div>
-              {[(lang==='el'?'Απεριόριστα οχήματα':lang==='it'?'Veicoli illimitati':lang==='de'?'Unbegrenzte Fahrzeuge':lang==='fr'?'Véhicules illimités':lang==='es'?'Vehículos ilimitados':'Unlimited vehicles'),(lang==='el'?'Πολλαπλοί χρήστες':lang==='it'?'Utenti multipli':lang==='de'?'Mehrere Benutzer':lang==='fr'?'Utilisateurs multiples':lang==='es'?'Usuarios múltiples':'Multiple users'),'Dashboard + Alerts + Analytics','PDF, CMR, Excel, Flyer',(lang==='el'?'Branding με το λογότυπό σου':lang==='it'?'Branding con il tuo logo':lang==='de'?'Branding mit deinem Logo':lang==='fr'?'Branding avec votre logo':lang==='es'?'Branding con tu logo':'Branding with your logo'),'14 '+(lang==='el'?'ημέρες δωρεάν':lang==='it'?'giorni gratis':lang==='de'?'Tage kostenlos':lang==='fr'?'jours gratuits':lang==='es'?'días gratis':'days free')].map((f,i)=>(
+              {[(lang==='el'?'Απεριόριστα οχήματα':lang==='it'?'Veicoli illimitati':lang==='de'?'Unbegrenzte Fahrzeuge':lang==='fr'?'Véhicules illimités':lang==='es'?'Vehículos ilimitados':'Unlimited vehicles'),(lang==='el'?'Πολλαπλοί χρήστες':lang==='it'?'Utenti multipli':lang==='de'?'Mehrere Benutzer':lang==='fr'?'Utilisateurs multiples':lang==='es'?'Usuarios múltiples':'Multiple users'),'Dashboard + Alerts + Analytics','PDF, CMR, Excel, Flyer',(lang==='el'?'Branding με το λογότυπό σου':lang==='it'?'Branding con il tuo logo':lang==='de'?'Branding mit deinem Logo':lang==='fr'?'Branding avec votre logo':lang==='es'?'Branding con tu logo':'Branding with your logo'),'1 '+(lang==='el'?'μήνας δωρεάν':lang==='it'?'mese gratis':lang==='de'?'Monat kostenlos':lang==='fr'?'mois gratuit':lang==='es'?'mes gratis':'month free')].map((f,i)=>(
                 <div key={i} style={{ display:'flex', gap:8, marginBottom:8, fontSize:13, color:'#E2E8F0' }}>
                   <span style={{ color:'#A5B4FC', fontWeight:700 }}>✓</span><span>{f}</span>
                 </div>
