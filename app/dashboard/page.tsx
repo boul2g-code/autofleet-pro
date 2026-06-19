@@ -4,6 +4,7 @@ import Link from 'next/link'
 import AppShell from '@/components/AppShell'
 import { useFleetStore } from '@/store/useFleetStore'
 import { calcFinancials, fmtCur } from '@/lib/financials'
+import { localeForLang, t } from '@/lib/i18n'
 import {
   getEffectiveTargetProfit,
   getMissingDocTypes,
@@ -23,11 +24,6 @@ const catIcon: Record<string, string> = {
   car: '🚗', truck: '🚛', van: '🚐', bus: '🚌', moto: '🏍️', construction: '🏗️'
 }
 
-function L(lang: string, el: string, it: string, de: string, fr: string, es: string, en: string) {
-  const map: Record<string, string> = { el, it, de, fr, es }
-  return map[lang] || en
-}
-
 type MissingDocGroup = {
   type: RequiredDocType
   count: number
@@ -36,6 +32,7 @@ type MissingDocGroup = {
 export default function DashboardPage() {
   const { vehicles, settings } = useFleetStore()
   const lang = settings?.lang ?? 'el'
+  const tx = (key: string, vars?: Record<string, string | number>) => t(lang, key, vars)
   const org = settings?.org
 
   const defaultStoreCost = org?.defaultStoreCost || 8
@@ -43,9 +40,9 @@ export default function DashboardPage() {
   const now = new Date()
   const hour = now.getHours()
   const greeting =
-    hour < 12 ? L(lang,'Καλημέρα','Buongiorno','Guten Morgen','Bonjour','Buenos días','Good morning')
-    : hour < 18 ? L(lang,'Καλό απόγευμα','Buon pomeriggio','Guten Tag','Bon après-midi','Buenas tardes','Good afternoon')
-    : L(lang,'Καλησπέρα','Buonasera','Guten Abend','Bonsoir','Buenas noches','Good evening')
+    hour < 12 ? tx('dash.greeting.morning')
+    : hour < 18 ? tx('dash.greeting.afternoon')
+    : tx('dash.greeting.evening')
 
   const stats = useMemo(() => {
     const inStock = vehicles.filter(v => ['purchased','transit_in','stored','for_sale'].includes(v.status || ''))
@@ -117,7 +114,7 @@ export default function DashboardPage() {
       const d = new Date()
       d.setMonth(d.getMonth() - i)
       const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}`
-      const monthName = d.toLocaleString(lang === 'el' ? 'el-GR' : lang === 'it' ? 'it-IT' : lang === 'de' ? 'de-DE' : lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-GB', { month: 'short' })
+      const monthName = d.toLocaleString(localeForLang(lang), { month: 'short' })
       // Vehicles purchased up to end of this month, not yet sold
       const val = vehicles
         .filter(v => {
@@ -201,15 +198,15 @@ export default function DashboardPage() {
   const scoreBg = healthScore >= 90 ? '#F0FDF4' : healthScore >= 70 ? '#FFFBEB' : '#FEF2F2'
   const scoreBorder = healthScore >= 90 ? '#BBF7D0' : healthScore >= 70 ? '#FDE68A' : '#FECACA'
   const scoreTooltip = [
-    `Score ${healthScore}/100`,
+    tx('dash.scoreSummary', { score: healthScore }),
     ...stats.healthBreakdown.map(item => {
       const label = item.key === 'dead-stock'
-        ? 'Dead Stock'
+        ? tx('dash.breakdown.deadStock')
         : item.key === 'missing-docs'
-          ? 'Missing Documents'
+          ? tx('dash.breakdown.missingDocs')
           : item.key === 'low-margin'
-            ? 'Low Margin'
-            : 'No Sale Price'
+            ? tx('dash.breakdown.lowMargin')
+            : tx('dash.breakdown.noSalePrice')
       return `-${item.penalty} ${label}`
     }),
   ].join('\n')
@@ -240,7 +237,7 @@ export default function DashboardPage() {
             <div style={{ fontSize: 9, color: scoreColor, fontWeight: 600 }}>/100</div>
           </div>
           <div style={{ fontSize: 10, color: '#6B7280', marginTop: 4, fontWeight: 600 }}>
-            {L(lang,'Υγεία Στόλου','Salute Flotta','Flotten-Status','Santé Flotte','Salud Flota','Fleet Health')}
+            {tx('dash.fleetHealth')}
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 240 }}>
@@ -248,7 +245,7 @@ export default function DashboardPage() {
             <div style={{ flex: 1, minWidth: 220 }}>
               {stats.healthBreakdown.length === 0 ? (
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#16A34A' }}>
-                  ✅ {L(lang,'Όλα καλά! Δεν υπάρχουν προβλήματα.','Tutto ok! Nessun problema.','Alles gut!','Tout va bien!','¡Todo bien!','All good! No issues.')}
+                  ✅ {tx('dash.allGoodNoIssues')}
                 </div>
               ) : (
                 <>
@@ -257,35 +254,35 @@ export default function DashboardPage() {
                       <Link href="/vehicles?health=dead-stock" style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#374151', textDecoration:'none' }}>
                         <span>🚨</span>
                         <span style={{ fontWeight:700, color:'#DC2626' }}>{stats.deadStockCount}</span>
-                        <span>{L(lang,'οχήματα >90 ημέρες','veicoli >90 giorni','Fzg. >90 Tage','véhicules >90j','veh. >90 días','vehicles >90 days')}</span>
+                        <span>{tx('dash.healthVehiclesOverDays', { count: stats.deadStockCount, days: 90 })}</span>
                       </Link>
                     )}
                     {stats.lockedCapital > 0 && (
                       <Link href="/vehicles?health=dead-stock" style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#374151', textDecoration:'none' }}>
                         <span>💰</span>
                         <span style={{ fontWeight:700, color:'#D97706' }}>{fmtCur(stats.lockedCapital)}</span>
-                        <span>{L(lang,'δεσμευμένο','bloccato','gebunden','bloqué','bloqueado','locked')}</span>
+                        <span>{tx('dash.lockedCapital')}</span>
                       </Link>
                     )}
                     {stats.belowTargetMargin > 0 && (
                       <Link href="/vehicles?health=low-margin" style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#374151', textDecoration:'none' }}>
                         <span>📉</span>
                         <span style={{ fontWeight:700, color:'#DC2626' }}>{stats.belowTargetMargin}</span>
-                        <span>{L(lang,`κάτω από στόχο ${fmtCur(stats.targetProfit)}`,`sotto target ${fmtCur(stats.targetProfit)}`,`unter Ziel ${fmtCur(stats.targetProfit)}`,`sous objectif ${fmtCur(stats.targetProfit)}`,`bajo objetivo ${fmtCur(stats.targetProfit)}`,`below ${fmtCur(stats.targetProfit)} target`)}</span>
+                        <span>{tx('dash.belowTarget', { amount: fmtCur(stats.targetProfit) })}</span>
                       </Link>
                     )}
                     {stats.noSalePrice > 0 && (
                       <Link href="/vehicles?health=no-sale-price" style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#374151', textDecoration:'none' }}>
                         <span>🏷️</span>
                         <span style={{ fontWeight:700, color:'#6B7280' }}>{stats.noSalePrice}</span>
-                        <span>{L(lang,'χωρίς τιμή πώλησης','senza prezzo','ohne Verkaufspreis','sans prix','sin precio','no sale price')}</span>
+                        <span>{tx('dash.noSalePrice')}</span>
                       </Link>
                     )}
                   </div>
 
                   {stats.missingDocGroups.length > 0 && (
                     <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#92400E' }}>📄 {L(lang,'Λείπουν:','Mancano:','Fehlen:','Manquent:','Faltan:','Missing:')}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#92400E' }}>📄 {tx('dash.missingLabel')}</span>
                       {stats.missingDocGroups.map(group => (
                         <Link
                           key={group.type}
@@ -305,7 +302,7 @@ export default function DashboardPage() {
                           }}
                         >
                           <span>{group.count}</span>
-                          <span>{group.type === 'invoice' ? 'Invoice' : group.type === 'registration' ? 'Registration' : group.type === 'coc' ? 'COC' : 'CMR'}</span>
+                          <span>{tx(`doc.${group.type}`)}</span>
                         </Link>
                       ))}
                     </div>
@@ -316,12 +313,12 @@ export default function DashboardPage() {
                       <span key={item.key}>
                         -{item.penalty}{' '}
                         {item.key === 'dead-stock'
-                          ? L(lang,'Dead Stock','Dead Stock','Dead Stock','Dead Stock','Dead Stock','Dead Stock')
+                          ? tx('dash.breakdown.deadStock')
                           : item.key === 'missing-docs'
-                            ? L(lang,'Ελλιπή έγγραφα','Documenti mancanti','Fehlende Dokumente','Documents manquants','Documentos faltantes','Missing documents')
+                            ? tx('dash.breakdown.missingDocs')
                             : item.key === 'low-margin'
-                              ? L(lang,'Χαμηλό κέρδος','Margine basso','Niedrige Marge','Faible marge','Margen bajo','Low margin')
-                              : L(lang,'Χωρίς τιμή πώλησης','Senza prezzo','Kein Verkaufspreis','Sans prix','Sin precio','No sale price')}
+                              ? tx('dash.breakdown.lowMargin')
+                              : tx('dash.breakdown.noSalePrice')}
                       </span>
                     ))}
                   </div>
@@ -331,7 +328,7 @@ export default function DashboardPage() {
 
             {stats.healthBreakdown.length > 0 && (
               <Link href="/vehicles?health=attention" className="btn btn-primary" style={{ textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                {L(lang,'Fix Issues','Correggi Problemi','Probleme beheben','Corriger les problèmes','Corregir problemas','Fix Issues')}
+                {tx('dash.fixIssues')}
               </Link>
             )}
           </div>
@@ -346,18 +343,18 @@ export default function DashboardPage() {
       }}>
         <div>
           <div style={{color:'#94A3B8',fontSize:12,marginBottom:3}}>
-            {now.toLocaleDateString(lang==='el'?'el-GR':lang==='it'?'it-IT':lang==='de'?'de-DE':lang==='fr'?'fr-FR':'en-GB',{weekday:'long',day:'numeric',month:'long'})}
+            {now.toLocaleDateString(localeForLang(lang),{weekday:'long',day:'numeric',month:'long'})}
           </div>
           <div style={{color:'#F1F5F9',fontSize:17,fontWeight:700,marginBottom:10}}>
             {greeting}{org?.name?`, ${org.name}`:''} 👋
           </div>
           <div style={{display:'flex',flexWrap:'wrap',gap:14}}>
-            {stats.over90>0&&<span style={{color:'#FCA5A5',fontSize:13}}>⚠️ <strong>{stats.over90}</strong> {L(lang,'οχήματα >90 ημέρες','veicoli >90 giorni','Fahrzeuge >90 Tage','véhicules >90 jours','vehículos >90 días','vehicles >90 days')}</span>}
-            {stats.highMargin>0&&<span style={{color:'#86EFAC',fontSize:13}}>💰 <strong>{stats.highMargin}</strong> {L(lang,'περιθώριο >€4.000','margine >€4.000','Marge >€4.000','marge >€4.000','margen >€4.000','margin >€4,000')}</span>}
-            {stats.pendingDelivery>0&&<span style={{color:'#93C5FD',fontSize:13}}>🚚 <strong>{stats.pendingDelivery}</strong> {L(lang,'παραδόσεις εκκρεμούν','consegne in sospeso','Lieferungen ausstehend','livraisons en attente','entregas pendientes','pending deliveries')}</span>}
-            {stats.missingDocs>0&&<span style={{color:'#FDE68A',fontSize:13}}>📄 <strong>{stats.missingDocs}</strong> {L(lang,'έγγραφα λείπουν','documenti mancanti','Dokumente fehlen','documents manquants','documentos faltantes','missing documents')}</span>}
+            {stats.over90>0&&<span style={{color:'#FCA5A5',fontSize:13}}>⚠️ <strong>{stats.over90}</strong> {tx('dash.healthVehiclesOverDays', { count: stats.over90, days: 90 })}</span>}
+            {stats.highMargin>0&&<span style={{color:'#86EFAC',fontSize:13}}>💰 <strong>{stats.highMargin}</strong> {tx('dash.marginOverAmount', { amount: '€4.000' })}</span>}
+            {stats.pendingDelivery>0&&<span style={{color:'#93C5FD',fontSize:13}}>🚚 <strong>{stats.pendingDelivery}</strong> {tx('dash.pendingDeliveries')}</span>}
+            {stats.missingDocs>0&&<span style={{color:'#FDE68A',fontSize:13}}>📄 <strong>{stats.missingDocs}</strong> {tx('dash.missingDocuments')}</span>}
             {stats.over90===0&&stats.highMargin===0&&stats.pendingDelivery===0&&stats.missingDocs===0&&(
-              <span style={{color:'#86EFAC',fontSize:13}}>✅ {L(lang,'Όλα εντάξει!','Tutto ok!','Alles gut!','Tout va bien!','¡Todo bien!','All good!')}</span>
+              <span style={{color:'#86EFAC',fontSize:13}}>✅ {tx('dash.allGoodShort')}</span>
             )}
           </div>
         </div>
@@ -366,19 +363,19 @@ export default function DashboardPage() {
           <div style={{color:stats.totalProfit>=0?'#86EFAC':'#FCA5A5',fontSize:22,fontWeight:700}}>
             {stats.totalProfit>=0?'+':''}{fmtCur(stats.totalProfit)}
           </div>
-          <div style={{color:'#64748B',fontSize:11}}>{stats.sold} {L(lang,'πωλήσεις','vendite','Verkäufe','ventes','ventas','sold')}{stats.avgDays>0?` · ø ${stats.avgDays}d`:''}</div>
+          <div style={{color:'#64748B',fontSize:11}}>{tx('dash.basedOnSales', { count: stats.sold })}{stats.avgDays>0?` · ø ${stats.avgDays}d`:''}</div>
         </div>
       </div>
 
       {/* ── KPI CARDS ── */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10,marginBottom:16}}>
         {[
-          {label:L(lang,'Σύνολο','Totale','Gesamt','Total','Total','Total'),value:stats.total,icon:'🚗',color:'#6366F1'},
-          {label:L(lang,'Σε Απόθεμα','In Stock','In Lager','En Stock','En Stock','In Stock'),value:stats.inStock,icon:'📦',color:'#8B5CF6'},
-          {label:L(lang,'Αξία Αποθέματος','Valore Stock','Lagerwert','Valeur Stock','Valor Stock','Stock Value'),value:fmtCur(stats.stockValue),icon:'💶',color:'#059669'},
-          {label:L(lang,'Κέρδος Μήνα','Profitto Mese','Monatsgewinn','Profit Mois','Ganancia Mes','Month Profit'),value:fmtCur(stats.monthProfit),icon:'📅',color:stats.monthProfit>=0?'#059669':'#DC2626'},
-          {label:L(lang,'Σε Μεταφορά','In Transito','Im Transport','En Transit','En Tránsito','In Transit'),value:stats.inTransit,icon:'🚚',color:'#0284C7'},
-          {label:L(lang,'Πωλήθηκαν','Venduti','Verkauft','Vendus','Vendidos','Sold'),value:stats.sold,icon:'✅',color:'#16A34A'},
+          {label:tx('dash.total'),value:stats.total,icon:'🚗',color:'#6366F1'},
+          {label:tx('dash.inStock'),value:stats.inStock,icon:'📦',color:'#8B5CF6'},
+          {label:tx('dash.stockValue'),value:fmtCur(stats.stockValue),icon:'💶',color:'#059669'},
+          {label:tx('dash.monthProfit'),value:fmtCur(stats.monthProfit),icon:'📅',color:stats.monthProfit>=0?'#059669':'#DC2626'},
+          {label:tx('dash.inTransit'),value:stats.inTransit,icon:'🚚',color:'#0284C7'},
+          {label:tx('dash.sold'),value:stats.sold,icon:'✅',color:'#16A34A'},
         ].map(k=>(
           <div key={k.label} className="card" style={{padding:'10px 14px',display:'flex',alignItems:'center',gap:10}}>
             <span style={{fontSize:20}}>{k.icon}</span>
@@ -396,7 +393,7 @@ export default function DashboardPage() {
         {/* Fleet Value Trend */}
         <div className="card" style={{padding:'14px 16px'}}>
           <div style={{fontWeight:600,fontSize:13,marginBottom:12}}>
-            📈 {L(lang,'Αξία Στόλου - Τελευταίοι 6 Μήνες','Valore Flotta - Ultimi 6 Mesi','Flottenw. - Letzte 6 Monate','Valeur Flotte - 6 Derniers Mois','Valor Flota - Últimos 6 Meses','Fleet Value - Last 6 Months')}
+            📈 {tx('dash.fleetValueLastMonths')}
           </div>
           <div style={{display:'flex',gap:6,alignItems:'flex-end',height:80}}>
             {stats.fleetTrend.map((t,i)=>(
@@ -424,13 +421,13 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-          <div style={{fontSize:10,color:'var(--text2)',marginTop:4}}>{L(lang,'Κέρδος ανά μήνα','Profitto mensile','Gewinn pro Monat','Profit mensuel','Ganancia mensual','Monthly profit')}</div>
+          <div style={{fontSize:10,color:'var(--text2)',marginTop:4}}>{tx('dash.monthlyProfit')}</div>
         </div>
 
         {/* Avg Days to Sell */}
         <div className="card" style={{padding:'14px 16px',display:'flex',flexDirection:'column',justifyContent:'center'}}>
           <div style={{fontWeight:600,fontSize:12,color:'var(--text2)',marginBottom:8}}>
-            ⏱ {L(lang,'Μ.Ο. Ημέρες Πώλησης','Giorni Medi Vendita','Ø Verkaufstage','Jours Moyens Vente','Días Medios Venta','Avg Days to Sell')}
+            ⏱ {tx('dash.avgDaysToSellLong')}
           </div>
           <div style={{fontSize:40,fontWeight:800,color:'var(--text)',lineHeight:1}}>
             {stats.avgDays>0?stats.avgDays:'—'}
@@ -441,17 +438,17 @@ export default function DashboardPage() {
               marginTop:8,fontSize:13,fontWeight:600,
               color:stats.avgDaysDelta<0?'var(--success)':'var(--danger)',
             }}>
-              {stats.avgDaysDelta>0?'↑':'↓'} {Math.abs(stats.avgDaysDelta)}d {L(lang,'από πέρσι','dal mese precedente','vom Vormonat','du mois précédent','del mes anterior','vs prev. period')}
+              {stats.avgDaysDelta>0?'↑':'↓'} {Math.abs(stats.avgDaysDelta)}d {tx('dash.vsPrevPeriod')}
             </div>
           )}
           {stats.avgDays===0&&(
             <div style={{fontSize:12,color:'var(--text2)',marginTop:8}}>
-              {L(lang,'Δεν υπάρχουν πωλήσεις ακόμα','Nessuna vendita ancora','Noch keine Verkäufe','Pas encore de ventes','Sin ventas aún','No sales yet')}
+              {tx('dash.noSalesYet')}
             </div>
           )}
           <div style={{marginTop:12,paddingTop:8,borderTop:'1px solid var(--border)'}}>
             <div style={{fontSize:11,color:'var(--text2)'}}>
-              {L(lang,'Βασίζεται σε','Basato su','Basiert auf','Basé sur','Basado en','Based on')} {stats.sold} {L(lang,'πωλήσεις','vendite','Verkäufe','ventes','ventas','sales')}
+              {tx('dash.basedOnSales', { count: stats.sold })}
             </div>
           </div>
         </div>
@@ -463,10 +460,10 @@ export default function DashboardPage() {
         {/* Dead Stock >120 days */}
         <div style={{background:'#FEF2F2',border:'1px solid #FECACA',borderRadius:10,padding:'14px 16px'}}>
           <div style={{fontWeight:700,fontSize:13,color:'#991B1B',marginBottom:10}}>
-            💀 {L(lang,`Dead Stock (${stats.over120} οχήματα >120 ημέρες)`,`Dead Stock (${stats.over120} veicoli >120 giorni)`,`Dead Stock (${stats.over120} Fahrzeuge >120 Tage)`,`Dead Stock (${stats.over120} véhicules >120 jours)`,`Dead Stock (${stats.over120} vehículos >120 días)`,`Dead Stock (${stats.over120} vehicles >120 days)`)}
+            💀 {tx('dash.deadStockTitle', { count: stats.over120, days: 120 })}
           </div>
           {stats.deadStock.length===0?(
-            <div style={{fontSize:13,color:'#16a34a',fontWeight:500}}>✅ {L(lang,'Κανένα!','Nessuno!','Keines!','Aucun!','¡Ninguno!','None!')}</div>
+            <div style={{fontSize:13,color:'#16a34a',fontWeight:500}}>✅ {tx('dash.none')}</div>
           ):(
             <div style={{display:'flex',flexDirection:'column',gap:5}}>
               {stats.deadStock.map(v=>{
@@ -481,7 +478,7 @@ export default function DashboardPage() {
                 )
               })}
               <div style={{fontSize:11,color:'#B91C1C',marginTop:4}}>
-                {L(lang,'Εκτιμ. κόστος αναμονής συνολικά:','Costo stimato totale:','Gesch. Gesamtkosten:','Coût total estimé:','Coste total estimado:','Est. total holding cost:')} <strong>{fmtCur(stats.agingCost)}</strong>
+                {tx('dash.totalHoldingCost')} <strong>{fmtCur(stats.agingCost)}</strong>
               </div>
             </div>
           )}
@@ -490,11 +487,11 @@ export default function DashboardPage() {
         {/* Top Profit Opportunities */}
         <div style={{background:'#F0FDF4',border:'1px solid #BBF7D0',borderRadius:10,padding:'14px 16px'}}>
           <div style={{fontWeight:700,fontSize:13,color:'#166534',marginBottom:10}}>
-            🏆 {L(lang,'Κορυφαίες Ευκαιρίες Κέρδους','Top Opportunità di Profitto','Top Gewinnchancen','Top Opportunités de Profit','Top Oportunidades Beneficio','Top Profit Opportunities')}
+            🏆 {tx('dash.topProfitOpportunities')}
           </div>
           {stats.opportunities.length===0?(
             <div style={{fontSize:13,color:'var(--text2)'}}>
-              {L(lang,'Βάλε τιμή πώλησης στα οχήματα','Imposta prezzi di vendita','Verkaufspreise setzen','Définir prix de vente','Establecer precios venta','Set sale prices on vehicles')}
+              {tx('dash.setSalePrices')}
             </div>
           ):(
             <div style={{display:'flex',flexDirection:'column',gap:5}}>
@@ -506,7 +503,7 @@ export default function DashboardPage() {
                 </Link>
               ))}
               <div style={{fontSize:11,color:'#166534',marginTop:4}}>
-                {L(lang,'Πούλα σήμερα, βγάλε:','Vendi oggi, guadagni:','Heute verkaufen, Gewinn:','Vends aujourd\'hui, gagnes:','Vende hoy, ganas:','Sell today, earn:')} <strong>{fmtCur(stats.opportunities.reduce((s,x)=>s+x.profit,0))}</strong>
+                {tx('dash.sellTodayEarn')} <strong>{fmtCur(stats.opportunities.reduce((s,x)=>s+x.profit,0))}</strong>
               </div>
             </div>
           )}
@@ -518,7 +515,7 @@ export default function DashboardPage() {
         {(stats.over90>0||stats.over45>0)?(
           <div style={{background:'#FEF3C7',border:'1px solid #FDE68A',borderRadius:10,padding:'14px 16px'}}>
             <div style={{fontWeight:700,fontSize:13,color:'#92400E',marginBottom:8}}>
-              ⚠️ {L(lang,`${stats.over90+stats.over45} οχήματα >30 ημέρες`,`${stats.over90+stats.over45} veicoli >30 giorni`,`${stats.over90+stats.over45} Fahrzeuge >30 Tage`,`${stats.over90+stats.over45} véhicules >30 jours`,`${stats.over90+stats.over45} vehículos >30 días`,`${stats.over90+stats.over45} vehicles >30 days`)}
+              ⚠️ {tx('dash.healthVehiclesOverDays', { count: stats.over90 + stats.over45, days: 30 })}
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:3}}>
               {vehicles.filter(v=>['purchased','transit_in','stored','for_sale'].includes(v.status||''))
@@ -539,7 +536,7 @@ export default function DashboardPage() {
           </div>
         ):(
           <div className="card" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:90,color:'var(--text2)',fontSize:13}}>
-            ✅ {L(lang,'Κανένα πρόβλημα!','Nessun problema!','Kein Problem!','Aucun problème!','¡Sin problemas!','No stock issues!')}
+            ✅ {tx('dash.noStockIssues')}
           </div>
         )}
 
@@ -547,7 +544,7 @@ export default function DashboardPage() {
           <Link href={`/vehicles/${stats.topOpp.id}`} style={{textDecoration:'none'}}>
             <div style={{background:'#EEF2FF',border:'1px solid #C7D2FE',borderRadius:10,padding:'14px 16px',height:'100%'}}>
               <div style={{fontWeight:700,fontSize:12,color:'#4F46E5',marginBottom:6}}>
-                🚀 {L(lang,'Επόμενη Πώληση','Prossima Vendita','Nächster Verkauf','Prochaine Vente','Próxima Venta','Next Best Sale')}
+                🚀 {tx('dash.nextBestSale')}
               </div>
               <div style={{fontSize:15,fontWeight:700}}>{catIcon[stats.topOpp.category||'car']} {stats.topOpp.make} {stats.topOpp.model}</div>
               <div style={{fontSize:11,color:'var(--text2)',margin:'3px 0'}}>{stats.topOpp.year} · {stats.topOpp.plate}</div>
@@ -556,7 +553,7 @@ export default function DashboardPage() {
           </Link>
         ):(
           <div className="card" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:90,color:'var(--text2)',fontSize:13}}>
-            {L(lang,'Δεν υπάρχουν προς πώληση','Nessun veicolo in vendita','Keine zum Verkauf','Aucun en vente','Sin vehículos en venta','No vehicles for sale')}
+            {tx('dash.noVehiclesForSale')}
           </div>
         )}
       </div>
@@ -564,24 +561,15 @@ export default function DashboardPage() {
       {/* ── Fleet Status ── */}
       <div className="card" style={{marginBottom:12,padding:'10px 16px'}}>
         <div style={{fontSize:11,fontWeight:600,color:'var(--text2)',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.04em'}}>
-          {L(lang,'Κατάσταση Στόλου','Stato Flotta','Flottenübersicht','État Flotte','Estado Flota','Fleet Status')}
+          {tx('dash.fleetStatus')}
         </div>
         <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
           {(['purchased','transit_in','stored','for_sale','sold','transit_out','delivered'] as const).map(status=>{
             const count=vehicles.filter(v=>v.status===status).length
-            const labels: Record<string,Record<string,string>> = {
-              purchased:{el:'Αγοράστηκε',it:'Acquistato',de:'Gekauft',fr:'Acheté',es:'Comprado',en:'Purchased'},
-              transit_in:{el:'Μεταφορά Εισ.',it:'Transito In',de:'Transport Ein',fr:'Transit Entrant',es:'Tránsito Ent.',en:'Transit In'},
-              stored:{el:'Σε Αποθήκη',it:'In Magazzino',de:'Im Lager',fr:'En Entrepôt',es:'En Almacén',en:'Stored'},
-              for_sale:{el:'Προς Πώληση',it:'In Vendita',de:'Zum Verkauf',fr:'En Vente',es:'En Venta',en:'For Sale'},
-              sold:{el:'Πωλήθηκε',it:'Venduto',de:'Verkauft',fr:'Vendu',es:'Vendido',en:'Sold'},
-              transit_out:{el:'Μεταφορά Εξ.',it:'Transito Out',de:'Transport Aus',fr:'Transit Sortant',es:'Tránsito Sal.',en:'Transit Out'},
-              delivered:{el:'Παραδόθηκε',it:'Consegnato',de:'Geliefert',fr:'Livré',es:'Entregado',en:'Delivered'},
-            }
             return(
               <div key={status} style={{display:'flex',alignItems:'center',gap:4,fontSize:12}}>
                 <div style={{width:8,height:8,borderRadius:'50%',background:statusColor[status],flexShrink:0}}/>
-                <span style={{color:'var(--text2)'}}>{labels[status]?.[lang]||labels[status].en}</span>
+                <span style={{color:'var(--text2)'}}>{tx(`status.${status}`)}</span>
                 <span style={{fontWeight:700}}>{count}</span>
               </div>
             )
@@ -593,25 +581,16 @@ export default function DashboardPage() {
       <div className="card" style={{padding:0,overflow:'hidden'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 16px',borderBottom:'1px solid var(--border)'}}>
           <div style={{fontWeight:600,fontSize:13}}>
-            {L(lang,'Πρόσφατα Οχήματα','Veicoli Recenti','Letzte Fahrzeuge','Véhicules Récents','Vehículos Recientes','Recent Vehicles')}
+            {tx('dash.recentVehicles')}
           </div>
           <Link href="/vehicles" style={{fontSize:12,color:'var(--primary)',textDecoration:'none'}}>
-            {L(lang,'Δείτε όλα →','Vedi tutti →','Alle anzeigen →','Voir tout →','Ver todos →','View all →')}
+            {tx('action.viewAll')} →
           </Link>
         </div>
         <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
           <tbody>
             {stats.recent.map(v=>{
               const fin=calcFinancials(v)
-              const statusLabels: Record<string,Record<string,string>> = {
-                purchased:{el:'Αγοράστηκε',it:'Acquistato',de:'Gekauft',fr:'Acheté',es:'Comprado',en:'Purchased'},
-                transit_in:{el:'Μεταφορά Εισ.',it:'Transito In',de:'Transport Ein',fr:'Transit In',es:'Tránsito Ent.',en:'Transit In'},
-                stored:{el:'Σε Αποθήκη',it:'In Magazzino',de:'Im Lager',fr:'En Stock',es:'En Almacén',en:'Stored'},
-                for_sale:{el:'Προς Πώληση',it:'In Vendita',de:'Zum Verkauf',fr:'En Vente',es:'En Venta',en:'For Sale'},
-                sold:{el:'Πωλήθηκε',it:'Venduto',de:'Verkauft',fr:'Vendu',es:'Vendido',en:'Sold'},
-                transit_out:{el:'Μεταφορά Εξ.',it:'Transito Out',de:'Transport Aus',fr:'Transit Out',es:'Tránsito Sal.',en:'Transit Out'},
-                delivered:{el:'Παραδόθηκε',it:'Consegnato',de:'Geliefert',fr:'Livré',es:'Entregado',en:'Delivered'},
-              }
               return(
                 <tr key={v.id} style={{borderBottom:'1px solid var(--border)'}}>
                   <td style={{padding:'8px 16px',width:32}}><span style={{fontSize:18}}>{catIcon[v.category||'car']||'🚗'}</span></td>
@@ -623,7 +602,7 @@ export default function DashboardPage() {
                   </td>
                   <td style={{padding:'8px 8px'}}>
                     <span className={`badge status-${v.status}`} style={{fontSize:10}}>
-                      {statusLabels[v.status||'']?.[lang]||v.status}
+                      {v.status ? tx(`status.${v.status}`) : '—'}
                     </span>
                   </td>
                   <td style={{padding:'8px 16px',textAlign:'right',fontWeight:600,fontSize:12,

@@ -2,7 +2,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useFleetStore } from '@/store/useFleetStore'
-import { t } from '@/lib/i18n'
+import { LANGUAGES, t } from '@/lib/i18n'
 import type { Lang } from '@/lib/types'
 import { isPublicVehicleStatus } from '@/lib/vehiclePublic'
 
@@ -17,7 +17,7 @@ const MARKETPLACES = [
   { name: 'Mascus.com', url: 'https://www.mascus.com', flag: '🌐', connected: false },
 ]
 
-const AI_LABELS: Record<string, Record<Lang, string>> = {
+const AI_LABELS: Record<string, Partial<Record<Lang, string>>> = {
   aiTitle:    { el:'🤖 AI Δημιουργία Αγγελίας', en:'🤖 AI Generate Ad', de:'🤖 KI Anzeige erstellen', fr:'🤖 IA Générer annonce', it:'🤖 AI Genera annuncio', es:'🤖 IA Generar anuncio' },
   aiSub:      { el:'Δημιουργία επαγγελματικής αγγελίας με AI σε δευτερόλεπτα', en:'Generate professional listing with AI in seconds', de:'Professionelle Anzeige mit KI in Sekunden erstellen', fr:'Générer une annonce professionnelle avec IA en secondes', it:'Genera un annuncio professionale con AI in secondi', es:'Genera un anuncio profesional con IA en segundos' },
   forMarket:  { el:'Για marketplace', en:'For marketplace', de:'Für Marktplatz', fr:'Pour marketplace', it:'Per marketplace', es:'Para marketplace' },
@@ -140,12 +140,11 @@ export default function ListingsTab({ id }: { id: string }) {
           <div style={{ flex: 1, minWidth: 140 }}>
             <label style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 4, display: 'block' }}>{LL(lang, 'inLang')}</label>
             <select value={aiLang} onChange={e => setAiLang(e.target.value as Lang)} style={{ width: '100%' }}>
-              <option value="it">🇮🇹 Italiano</option>
-              <option value="de">🇩🇪 Deutsch</option>
-              <option value="en">🇬🇧 English</option>
-              <option value="el">🇬🇷 Ελληνικά</option>
-              <option value="fr">🇫🇷 Français</option>
-              <option value="es">🇪🇸 Español</option>
+              {LANGUAGES.map(option => (
+                <option key={option.code} value={option.code}>
+                  {option.flag} {option.label}
+                </option>
+              ))}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end' }}>

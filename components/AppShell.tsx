@@ -6,6 +6,7 @@ import GlobalSearch from './GlobalSearch'
 import BackupReminder from './BackupReminder'
 import { useFleetStore } from '@/store/useFleetStore'
 import { createClient } from '@/lib/supabase/client'
+import { t } from '@/lib/i18n'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -14,9 +15,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [justSaved, setJustSaved] = useState(false)
 
   const lang = settings?.lang ?? 'en'
-  const SL: Record<string,string> = { el:'Αποθήκευση', en:'Save', de:'Speichern', fr:'Enregistrer', it:'Salva', es:'Guardar' }
-  const SV: Record<string,string> = { el:'✓ Αποθηκεύτηκε!', en:'✓ Saved!', de:'✓ Gespeichert!', fr:'✓ Enregistré!', it:'✓ Salvato!', es:'✓ Guardado!' }
-  const SG: Record<string,string> = { el:'Αποθήκευση...', en:'Saving...', de:'Speichern...', fr:'Sauvegarde...', it:'Salvataggio...', es:'Guardando...' }
 
   // Extract vehicle id from path /vehicles/[id]
   const vehicleMatch = pathname?.match(/^\/vehicles\/([^/]+)$/)
@@ -69,12 +67,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (saving) {
-        const msg = lang === 'el' ? 'Υπάρχουν αλλαγές που δεν αποθηκεύτηκαν. Θέλεις να αποθηκεύσεις πριν φύγεις;'
-          : lang === 'it' ? 'Ci sono modifiche non salvate. Vuoi salvare prima di uscire?'
-          : lang === 'de' ? 'Es gibt nicht gespeicherte Änderungen. Möchten Sie speichern?'
-          : lang === 'fr' ? 'Il y a des modifications non sauvegardées. Voulez-vous sauvegarder?'
-          : lang === 'es' ? '¿Hay cambios sin guardar. ¿Desea guardar antes de salir?'
-          : 'There are unsaved changes. Save before leaving?'
+        const msg = t(lang, 'shell.unsavedChanges')
         e.preventDefault()
         e.returnValue = msg
         // Try to flush in background
@@ -132,10 +125,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             }}
           >
             {saving
-              ? `⏳ ${SG[lang] || 'Saving...'}`
+              ? `⏳ ${t(lang, 'veh.saving')}`
               : justSaved
-                ? (SV[lang] || '✓ Saved!')
-                : `💾 ${SL[lang] || 'Save'}`
+                ? `✓ ${t(lang, 'veh.saved')}`
+                : `💾 ${t(lang, 'action.save')}`
             }
           </button>
 

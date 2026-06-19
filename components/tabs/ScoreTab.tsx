@@ -5,7 +5,7 @@ import { calcFinancials, fmtCur } from '@/lib/financials'
 import { scoreVehicle } from '@/lib/vehicleScore'
 import type { Lang } from '@/lib/types'
 
-const T: Record<string, Record<Lang, string>> = {
+const T: Record<string, Partial<Record<Lang, string>>> = {
   saleScore:   { el:'Βαθμός Πωλησιμότητας', en:'Saleability Score', de:'Verkaufbarkeit', fr:'Score de vente', it:'Score vendibilità', es:'Puntuación venta' },
   highProb:    { el:'Υψηλή πιθανότητα πώλησης', en:'High sale probability', de:'Hohe Verkaufswahrscheinlichkeit', fr:'Haute probabilité', it:'Alta probabilità di vendita', es:'Alta probabilidad de venta' },
   medProb:     { el:'Μέτρια πιθανότητα', en:'Medium probability', de:'Mittlere Wahrscheinlichkeit', fr:'Probabilité moyenne', it:'Probabilità media', es:'Probabilidad media' },
@@ -35,7 +35,7 @@ const T: Record<string, Record<Lang, string>> = {
 const LL = (lang: Lang, key: string) => T[key]?.[lang] || T[key]?.en || key
 
 // Translated score reasons
-const REASON_T: Record<string, Record<Lang, string>> = {
+const REASON_T: Record<string, Partial<Record<Lang, string>>> = {
   'Popular make':           { el:'Δημοφιλής μάρκα', en:'Popular make', de:'Beliebte Marke', fr:'Marque populaire', it:'Marca popolare', es:'Marca popular' },
   'Premium brand':          { el:'Premium μάρκα', en:'Premium brand', de:'Premiummarke', fr:'Marque premium', it:'Marca premium', es:'Marca premium' },
   'Low mileage':            { el:'Χαμηλά χιλιόμετρα', en:'Low mileage', de:'Niedrige Laufleistung', fr:'Faible kilométrage', it:'Chilometraggio basso', es:'Bajo kilometraje' },

@@ -46,14 +46,14 @@ const TABS = [
 type SortKey = 'make' | 'plate' | 'year' | 'mileage' | 'status' | 'purchase' | 'profit'
 type SortDir = 'asc' | 'desc'
 
-const COLS: { key: SortKey; label: string }[] = [
-  { key: 'make',     label: 'Make / Model' },
-  { key: 'plate',    label: 'Plate' },
-  { key: 'year',     label: 'Year' },
-  { key: 'mileage',  label: 'km' },
-  { key: 'status',   label: 'Status' },
-  { key: 'purchase', label: 'Purchase €' },
-  { key: 'profit',   label: 'Profit €' },
+const COLS: { key: SortKey; labelKey: string }[] = [
+  { key: 'make',     labelKey: 'vehicles.makeModel' },
+  { key: 'plate',    labelKey: 'field.plate' },
+  { key: 'year',     labelKey: 'field.year' },
+  { key: 'mileage',  labelKey: 'vehicles.mileageShort' },
+  { key: 'status',   labelKey: 'field.status' },
+  { key: 'purchase', labelKey: 'vehicles.purchasePriceShort' },
+  { key: 'profit',   labelKey: 'vehicles.profitShort' },
 ]
 
 const HEALTH_FILTERS: VehicleHealthFilter[] = [
@@ -68,6 +68,7 @@ function daysSince(date?: string) {
 function VehiclesPageContent() {
   const { vehicles, addVehicle, deleteVehicle, settings, loading } = useFleetStore()
   const lang = settings.lang
+  const tx = (key: string, vars?: Record<string, string | number>) => t(lang, key, vars)
   const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'all'>('all')
@@ -142,15 +143,15 @@ function VehiclesPageContent() {
   }, [vehicles, search, statusFilter, sortKey, sortDir, healthFilter, targetProfit])
 
   const healthFilterLabel = healthFilter === 'attention'
-    ? (lang === 'el' ? 'Όλα τα θέματα' : 'All issues')
+    ? tx('vehicles.health.attention')
     : healthFilter === 'dead-stock'
-      ? (lang === 'el' ? 'Dead Stock >90 ημέρες' : 'Dead Stock >90 days')
+      ? tx('vehicles.health.deadStock')
       : healthFilter === 'missing-docs'
-        ? (lang === 'el' ? 'Ελλιπή έγγραφα' : 'Missing documents')
+        ? tx('vehicles.health.missingDocs')
         : healthFilter === 'low-margin'
-          ? (lang === 'el' ? 'Χαμηλό κέρδος' : 'Low margin')
+          ? tx('vehicles.health.lowMargin')
           : healthFilter === 'no-sale-price'
-            ? (lang === 'el' ? 'Χωρίς τιμή πώλησης' : 'No sale price')
+            ? tx('vehicles.health.noSalePrice')
             : ''
 
   const handleAdd = async () => {
@@ -174,7 +175,8 @@ function VehiclesPageContent() {
     if (!selectedId) return
     if (confirmDel === 0) { setConfirmDel(1); return }
     const veh = vehicles.find(x => x.id === selectedId)
-    const ok = window.confirm(`⚠️ Delete ${veh?.make || ''} ${veh?.model || ''} ${veh?.plate || ''}?\n\nThis cannot be undone.`)
+    const name = `${veh?.make || ''} ${veh?.model || ''} ${veh?.plate || ''}`.trim()
+    const ok = window.confirm(tx('vehicles.deletePrompt', { name }))
     if (!ok) { setConfirmDel(0); return }
     await deleteVehicle(selectedId)
     setSelectedId(null)
@@ -191,7 +193,7 @@ function VehiclesPageContent() {
           </button>
           <div style={{ flex: 1 }}>
             <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
-              {v?.make || '— New Vehicle —'} {v?.model || ''} {v?.year ? `(${v.year})` : ''}
+              {v?.make || `— ${tx('vehicles.newVehiclePlaceholder')} —`} {v?.model || ''} {v?.year ? `(${v.year})` : ''}
             </h1>
             <div style={{ display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap', alignItems: 'center' }}>
               {v?.plate && <span style={{ color: 'var(--text2)', fontSize: 13 }}>📋 {v.plate}</span>}
@@ -201,7 +203,7 @@ function VehiclesPageContent() {
             </div>
           </div>
           <button className="btn btn-danger" onClick={handleDelete} style={{ fontSize: 13 }}>
-            {confirmDel === 1 ? '⚠️ Confirm?' : `🗑️ ${t(lang, 'action.delete')}`}
+            {confirmDel === 1 ? tx('vehicles.confirmDelete') : `🗑️ ${t(lang, 'action.delete')}`}
           </button>
         </div>
 
@@ -274,19 +276,19 @@ function VehiclesPageContent() {
       {healthFilter && (
         <div className="card" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 13 }}>
-            <strong>{lang === 'el' ? 'Fix Issues:' : 'Fix Issues:'}</strong> {healthFilterLabel}
+            <strong>{tx('vehicles.fixIssues')}</strong> {healthFilterLabel}
             <span style={{ color: 'var(--text2)', marginLeft: 8 }}>
-              {filtered.length} {lang === 'el' ? 'οχήματα' : 'vehicles'}
+              {tx('vehicles.count', { count: filtered.length })}
             </span>
           </div>
           <Link href="/vehicles" className="btn btn-ghost" style={{ fontSize: 12, textDecoration: 'none' }}>
-            {lang === 'el' ? 'Καθαρισμός φίλτρου' : 'Clear filter'}
+            {tx('vehicles.clearFilter')}
           </Link>
         </div>
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text2)' }}>⏳</div>
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text2)' }}>⏳ {tx('vehicles.loading')}</div>
       ) : filtered.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text2)' }}>
           <div style={{ fontSize: 40 }}>🚗</div>
@@ -312,7 +314,7 @@ function VehiclesPageContent() {
                         color: sortKey === col.key ? 'var(--primary)' : 'var(--text2)',
                         transition: 'color 0.15s',
                       }}>
-                      {col.label}
+                      {tx(col.labelKey)}
                       {sortKey === col.key
                         ? (sortDir === 'asc' ? ' ↑' : ' ↓')
                         : ' ↕'}
@@ -353,7 +355,7 @@ function VehiclesPageContent() {
           </div>
           <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)', color: 'var(--text2)', fontSize: 12 }}>
             {filtered.length} {t(lang, 'manifest.vehicles')}
-            {sortKey && <span style={{ marginLeft: 8 }}>· {t(lang, 'veh.sortedBy') || 'sorted by'} {COLS.find(c => c.key === sortKey)?.label} {sortDir === 'asc' ? '↑' : '↓'}</span>}
+            {sortKey && <span style={{ marginLeft: 8 }}>· {tx('vehicles.sortedBy')} {tx(COLS.find(c => c.key === sortKey)?.labelKey || 'vehicles.makeModel')} {sortDir === 'asc' ? '↑' : '↓'}</span>}
           </div>
         </div>
       )}

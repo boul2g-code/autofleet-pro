@@ -1,4 +1,4 @@
-export type Lang = 'el' | 'en' | 'de' | 'fr' | 'it' | 'es'
+export type Lang = 'el' | 'en' | 'de' | 'fr' | 'it' | 'es' | 'sq' | 'sr' | 'bg' | 'mk'
 export type VehicleStatus = 'purchased' | 'transit_in' | 'stored' | 'for_sale' | 'sold' | 'transit_out' | 'delivered'
 export type VehicleCategory = 'car' | 'truck' | 'van' | 'bus' | 'moto' | 'construction'
 export type FuelType = 'diesel' | 'petrol' | 'hybrid' | 'electric' | 'lpg' | 'cng' | 'other'

@@ -32,14 +32,12 @@ const TABS = [
   { key: 'flyer',        label: 'tab.flyer' },
 ]
 
-const SL: Record<string,string> = { el:'Αποθήκευση', en:'Save', de:'Speichern', fr:'Enregistrer', it:'Salva', es:'Guardar' }
-const SV: Record<string,string> = { el:'✓ Αποθηκεύτηκε!', en:'✓ Saved!', de:'✓ Gespeichert!', fr:'✓ Enregistré!', it:'✓ Salvato!', es:'✓ Guardado!' }
-
 export default function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const { vehicles, ensureVehicle, deleteVehicle, flushSave, flushAll, settings, loading, saving, savedId } = useFleetStore()
   const lang = settings.lang
+  const tx = (key: string, vars?: Record<string, string | number>) => t(lang, key, vars)
   const [activeTab, setActiveTab] = useState('info')
   const [deleting, setDeleting] = useState(false)
   const [confirmDel, setConfirmDel] = useState(0)
@@ -85,7 +83,7 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
   }, [saving, flushAll])
 
   if (!v && (loading || !lookupDone)) return (
-    <AppShell><div style={{textAlign:'center',padding:60,color:'var(--text2)'}}>⏳ Loading...</div></AppShell>
+    <AppShell><div style={{textAlign:'center',padding:60,color:'var(--text2)'}}>⏳ {tx('vehicles.loading')}</div></AppShell>
   )
   if (!v) return (
     <AppShell>
@@ -100,7 +98,8 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
 
   const handleDelete = async () => {
     if (confirmDel===0){setConfirmDel(1);return}
-    if(!window.confirm(`Delete ${v.make||''} ${v.model||''} ${v.plate||''}?`)){setConfirmDel(0);return}
+    const name = `${v.make||''} ${v.model||''} ${v.plate||''}`.trim()
+    if(!window.confirm(tx('vehicles.deletePrompt', { name }))){setConfirmDel(0);return}
     setDeleting(true); await deleteVehicle(id); router.push('/vehicles')
   }
 
@@ -116,7 +115,7 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
         </button>
         <div style={{flex:1, minWidth:0}}>
           <div style={{fontWeight:700, fontSize:15, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
-            {v.make||'New'} {v.model||'Vehicle'} {v.year?`(${v.year})`:''}
+            {v.make||tx('vehicles.newVehiclePlaceholder')} {v.model||''} {v.year?`(${v.year})`:''}
           </div>
           <div style={{display:'flex', gap:6, marginTop:2, alignItems:'center', flexWrap:'wrap'}}>
             {v.plate && <span style={{color:'var(--text2)',fontSize:11}}>📋 {v.plate}</span>}
@@ -125,7 +124,7 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
         </div>
         <button className="btn btn-danger" onClick={handleDelete} disabled={deleting}
           style={{fontSize:12, padding:'5px 10px', flexShrink:0}}>
-          {confirmDel===1 ? '⚠️?' : '🗑️'}
+          {confirmDel===1 ? tx('vehicles.confirmDelete') : `🗑️ ${tx('action.delete')}`}
         </button>
       </div>
 
@@ -149,7 +148,7 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
           letterSpacing: 0.3,
         }}
       >
-        {saving ? '⏳ ...' : justSaved ? (SV[lang]||'✓ Saved!') : `💾 ${SL[lang]||'Save'}`}
+        {saving ? `⏳ ${tx('veh.saving')}` : justSaved ? `✓ ${tx('veh.saved')}` : `💾 ${tx('action.save')}`}
       </button>
 
       {/* ── TABS ── */}

@@ -59,7 +59,7 @@ export default function GlobalSearch({ onSelect }: { onSelect?: (id: string) => 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
           <span style={{ fontSize: 18 }}>🔍</span>
           <input ref={inputRef} value={q} onChange={e => setQ(e.target.value)}
-            placeholder={`${t(lang, 'veh.search')} plate, VIN, make, buyer, CMR...`}
+            placeholder={t(lang, 'vehicles.searchPlaceholderLong', { search: t(lang, 'veh.search') })}
             style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 16, color: 'var(--text)' }}
             autoFocus />
           <span style={{ fontSize: 11, color: 'var(--text2)', background: 'var(--surface2)', padding: '2px 6px', borderRadius: 4 }}>ESC</span>
@@ -68,7 +68,7 @@ export default function GlobalSearch({ onSelect }: { onSelect?: (id: string) => 
           <div style={{ maxHeight: 400, overflowY: 'auto' }}>
             {results.length === 0 ? (
               <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text2)', fontSize: 14 }}>
-                No results for "{q}"
+                {t(lang, 'vehicles.searchNoResults', { query: q })}
               </div>
             ) : results.map(v => (
               <div key={v.id}
@@ -101,7 +101,7 @@ export default function GlobalSearch({ onSelect }: { onSelect?: (id: string) => 
         )}
         {q.length < 2 && (
           <div style={{ padding: '12px 16px', color: 'var(--text2)', fontSize: 13 }}>
-            Type at least 2 characters to search...
+            {t(lang, 'vehicles.searchTypeMore')}
           </div>
         )}
       </div>

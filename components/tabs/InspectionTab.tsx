@@ -5,7 +5,7 @@ import type { InspectionItem } from '@/lib/types'
 import type { Lang } from '@/lib/types'
 
 // Translated area names
-const AREAS: Record<string, Record<Lang, string>> = {
+const AREAS: Record<string, Partial<Record<Lang, string>>> = {
   'front_bumper':     { el:'Εμπρός προφυλακτήρας', en:'Front bumper',     de:'Frontstoßstange',    fr:'Pare-chocs avant',    it:'Paraurti anteriore',  es:'Paragolpes delantero' },
   'hood':             { el:'Καπό',                  en:'Hood',             de:'Motorhaube',          fr:'Capot',               it:'Cofano',              es:'Capó' },
   'windshield':       { el:'Παρμπρίζ',              en:'Windshield',       de:'Windschutzscheibe',   fr:'Pare-brise',          it:'Parabrezza',          es:'Parabrisas' },
@@ -85,7 +85,7 @@ export default function InspectionTab({ id }: { id: string }) {
   }
 
   const condLabel = (c: string) => {
-    const labels: Record<string, Record<Lang, string>> = {
+    const labels: Record<string, Partial<Record<Lang, string>>> = {
       good: { el:'✅ Καλό', en:'✅ Good', de:'✅ Gut', fr:'✅ Bon', it:'✅ Buono', es:'✅ Bueno' },
       fair: { el:'⚠️ Μέτριο', en:'⚠️ Fair', de:'⚠️ Mäßig', fr:'⚠️ Moyen', it:'⚠️ Discreto', es:'⚠️ Regular' },
       poor: { el:'❌ Κακό', en:'❌ Poor', de:'❌ Schlecht', fr:'❌ Mauvais', it:'❌ Scarso', es:'❌ Malo' },

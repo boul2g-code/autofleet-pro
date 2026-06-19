@@ -2,12 +2,14 @@
 import { useEffect, useState } from 'react'
 import { useFleetStore } from '@/store/useFleetStore'
 import { exportVehiclesToExcel } from '@/lib/xlsxExport'
+import { t } from '@/lib/i18n'
 
 const BACKUP_KEY = 'autofleet_last_backup'
 const DAYS = 7
 
 export default function BackupReminder() {
-  const { vehicles } = useFleetStore()
+  const { vehicles, settings } = useFleetStore()
+  const lang = settings.lang
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function BackupReminder() {
   }
 
   const doExcel = async () => {
-    await exportVehiclesToExcel(vehicles)
+    await exportVehiclesToExcel(vehicles, lang)
     localStorage.setItem(BACKUP_KEY, Date.now().toString())
     setShow(false)
   }
@@ -44,18 +46,18 @@ export default function BackupReminder() {
       boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-        <div style={{ fontWeight: 600, fontSize: 14 }}>💾 Weekly Backup</div>
+        <div style={{ fontWeight: 600, fontSize: 14 }}>💾 {t(lang, 'backup.weeklyTitle')}</div>
         <button onClick={() => setShow(false)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 16 }}>✕</button>
       </div>
       <p style={{ color: 'var(--text2)', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
-        {vehicles.length} vehicles — last backup over {DAYS} days ago. Save a local copy?
+        {t(lang, 'backup.message', { count: vehicles.length, days: DAYS })}
       </p>
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="btn btn-primary" style={{ flex: 1, fontSize: 12, padding: '6px 10px' }} onClick={doBackup}>
-          📥 JSON
+          📥 {t(lang, 'backup.json')}
         </button>
         <button className="btn btn-ghost" style={{ flex: 1, fontSize: 12, padding: '6px 10px' }} onClick={doExcel}>
-          📊 Excel
+          📊 {t(lang, 'backup.excel')}
         </button>
       </div>
     </div>
