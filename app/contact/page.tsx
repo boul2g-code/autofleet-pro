@@ -3,28 +3,31 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-const LANGS = ['it', 'el', 'de', 'fr', 'es', 'en'] as const
+const LANGS = ['it', 'el', 'sq', 'de', 'fr', 'es', 'en'] as const
 type Lang = typeof LANGS[number]
-const flags: Record<Lang, string> = { it:'🇮🇹', el:'🇬🇷', de:'🇩🇪', fr:'🇫🇷', es:'🇪🇸', en:'🇬🇧' }
+type PlanKey = 'starter' | 'pro'
+const flags: Record<Lang, string> = { it:'🇮🇹', el:'🇬🇷', sq:'🇦🇱', de:'🇩🇪', fr:'🇫🇷', es:'🇪🇸', en:'🇬🇧' }
 
 const T = {
-  title: { it:'Inizia la prova gratuita', el:'Ξεκίνα τη δωρεάν δοκιμή', de:'Kostenlose Testversion starten', fr:'Démarrer l\'essai gratuit', es:'Iniciar prueba gratuita', en:'Start your free trial' },
-  sub: { it:'14 giorni gratis. Nessuna carta di credito. Cancella quando vuoi.', el:'14 ημέρες δωρεάν. Χωρίς πιστωτική κάρτα. Ακύρωση ανά πάσα στιγμή.', de:'14 Tage kostenlos. Keine Kreditkarte. Jederzeit kündigen.', fr:'14 jours gratuits. Aucune carte de crédit. Annulation à tout moment.', es:'14 días gratis. Sin tarjeta de crédito. Cancela cuando quieras.', en:'14 days free. No credit card. Cancel anytime.' },
-  plan: { it:'Piano', el:'Πλάνο', de:'Plan', fr:'Plan', es:'Plan', en:'Plan' },
-  planTrial: { it:'Trial 14 giorni (Gratuito)', el:'Δοκιμή 14 ημερών (Δωρεάν)', de:'14-Tage-Test (Kostenlos)', fr:'Essai 14 jours (Gratuit)', es:'Prueba 14 días (Gratis)', en:'14-day trial (Free)' },
-  planFounder: { it:'Founder Plan €29/mese', el:'Founder Plan €29/μήνα', de:'Founder Plan €29/Monat', fr:'Plan Fondateur €29/mois', es:'Plan Fundador €29/mes', en:'Founder Plan €29/month' },
-  name: { it:'Nome e Cognome', el:'Ονοματεπώνυμο', de:'Vor- und Nachname', fr:'Prénom et Nom', es:'Nombre y Apellido', en:'Full Name' },
-  company: { it:'Autosalone / Azienda', el:'Αυτοκτηματαγορά / Εταιρεία', de:'Autohaus / Unternehmen', fr:'Concessionnaire / Société', es:'Concesionario / Empresa', en:'Dealership / Company' },
-  email: { it:'Email', el:'Email', de:'E-Mail', fr:'E-mail', es:'Email', en:'Email' },
-  phone: { it:'Telefono (opzionale)', el:'Τηλέφωνο (προαιρετικό)', de:'Telefon (optional)', fr:'Téléphone (optionnel)', es:'Teléfono (opcional)', en:'Phone (optional)' },
-  vehicles: { it:'Quanti veicoli gestisci mediamente?', el:'Πόσα οχήματα διαχειρίζεσαι κατά μέσο όρο;', de:'Wie viele Fahrzeuge verwaltest du durchschnittlich?', fr:'Combien de véhicules gérez-vous en moyenne ?', es:'¿Cuántos vehículos gestionas de media?', en:'How many vehicles do you manage on average?' },
-  submit: { it:'Richiedi accesso gratuito', el:'Ζήτα δωρεάν πρόσβαση', de:'Kostenlosen Zugang anfragen', fr:'Demander l\'accès gratuit', es:'Solicitar acceso gratuito', en:'Request free access' },
-  sending: { it:'Invio...', el:'Αποστολή...', de:'Senden...', fr:'Envoi...', es:'Enviando...', en:'Sending...' },
-  successTitle: { it:'✅ Richiesta inviata!', el:'✅ Η αίτηση στάλθηκε!', de:'✅ Anfrage gesendet!', fr:'✅ Demande envoyée !', es:'✅ ¡Solicitud enviada!', en:'✅ Request sent!' },
-  successMsg: { it:'Ti contatteremo entro 24 ore per attivare il tuo account.', el:'Θα επικοινωνήσουμε μαζί σου εντός 24 ωρών για να ενεργοποιήσουμε τον λογαριασμό σου.', de:'Wir melden uns innerhalb von 24 Stunden, um dein Konto zu aktivieren.', fr:'Nous vous contacterons dans les 24 heures pour activer votre compte.', es:'Te contactaremos en 24 horas para activar tu cuenta.', en:'We\'ll contact you within 24 hours to activate your account.' },
-  backLanding: { it:'← Torna alla home', el:'← Πίσω στην αρχική', de:'← Zurück zur Startseite', fr:'← Retour à l\'accueil', es:'← Volver al inicio', en:'← Back to home' },
-  founderBadge: { it:'🔒 Solo 10 posti Founder — Prezzo bloccato per sempre', el:'🔒 Μόνο 10 θέσεις Founder — Τιμή κλειδωμένη για πάντα', de:'🔒 Nur 10 Founder-Plätze — Preis für immer gesperrt', fr:'🔒 Seulement 10 places Fondateur — Prix bloqué pour toujours', es:'🔒 Solo 10 plazas Fundador — Precio bloqueado para siempre', en:'🔒 Only 10 Founder spots — Price locked forever' },
-  required: { it:'Campo obbligatorio', el:'Υποχρεωτικό πεδίο', de:'Pflichtfeld', fr:'Champ obligatoire', es:'Campo obligatorio', en:'Required field' },
+  title: { it:'Attiva il primo mese gratis', el:'Ξεκίνα με τον πρώτο μήνα δωρεάν', sq:'Fillo me muajin e parë falas', de:'Starte mit dem ersten Monat gratis', fr:'Commencez avec le premier mois gratuit', es:'Empieza con el primer mes gratis', en:'Start with your first month free' },
+  sub: { it:'Primo mese gratis. Nessuna carta di credito richiesta. Continua solo se AutoFleet Pro ti aiuta davvero a vendere più velocemente.', el:'Πρώτος μήνας δωρεάν. Χωρίς πιστωτική κάρτα. Συνέχισε μόνο αν το AutoFleet Pro σε βοηθά πραγματικά να πουλάς πιο γρήγορα.', sq:'Muaji i parë falas. Nuk kërkohet kartë krediti. Vazhdo vetëm nëse AutoFleet Pro të ndihmon vërtet të shesësh automjete më shpejt.', de:'Erster Monat kostenlos. Keine Kreditkarte erforderlich. Mach nur weiter, wenn AutoFleet Pro dir wirklich hilft, schneller zu verkaufen.', fr:'Premier mois gratuit. Aucune carte de crédit requise. Continuez seulement si AutoFleet Pro vous aide vraiment à vendre plus vite.', es:'Primer mes gratis. Sin tarjeta de crédito. Continúa solo si AutoFleet Pro realmente te ayuda a vender más rápido.', en:'First Month Free. No credit card required. Continue only if AutoFleet Pro genuinely helps you sell vehicles faster.' },
+  plan: { it:'Piano', el:'Πλάνο', sq:'Plani', de:'Plan', fr:'Plan', es:'Plan', en:'Plan' },
+  planStarter: { it:'Starter €49/mese · Primo mese gratis', el:'Starter €49/μήνα · Πρώτος μήνας δωρεάν', sq:'Starter €49/muaj · Muaji i parë falas', de:'Starter €49/Monat · Erster Monat kostenlos', fr:'Starter €49/mois · Premier mois gratuit', es:'Starter €49/mes · Primer mes gratis', en:'Starter €49/month · First Month Free' },
+  planPro: { it:'Pro €99/mese · Primo mese gratis', el:'Pro €99/μήνα · Πρώτος μήνας δωρεάν', sq:'Pro €99/muaj · Muaji i parë falas', de:'Pro €99/Monat · Erster Monat kostenlos', fr:'Pro €99/mois · Premier mois gratuit', es:'Pro €99/mes · Primer mes gratis', en:'Pro €99/month · First Month Free' },
+  name: { it:'Nome e Cognome', el:'Ονοματεπώνυμο', sq:'Emri dhe mbiemri', de:'Vor- und Nachname', fr:'Prénom et Nom', es:'Nombre y Apellido', en:'Full Name' },
+  company: { it:'Autosalone / Azienda', el:'Αυτοκτηματαγορά / Εταιρεία', sq:'Salloni / Kompania', de:'Autohaus / Unternehmen', fr:'Concessionnaire / Société', es:'Concesionario / Empresa', en:'Dealership / Company' },
+  email: { it:'Email', el:'Email', sq:'Email', de:'E-Mail', fr:'E-mail', es:'Email', en:'Email' },
+  phone: { it:'Telefono (opzionale)', el:'Τηλέφωνο (προαιρετικό)', sq:'Telefoni (opsional)', de:'Telefon (optional)', fr:'Téléphone (optionnel)', es:'Teléfono (opcional)', en:'Phone (optional)' },
+  vehicles: { it:'Quanti veicoli gestisci mediamente?', el:'Πόσα οχήματα διαχειρίζεσαι κατά μέσο όρο;', sq:'Sa automjete menaxhon zakonisht?', de:'Wie viele Fahrzeuge verwaltest du durchschnittlich?', fr:'Combien de véhicules gérez-vous en moyenne ?', es:'¿Cuántos vehículos gestionas de media?', en:'How many vehicles do you manage on average?' },
+  submit: { it:'Richiedi il primo mese gratis', el:'Ζήτησε τον πρώτο μήνα δωρεάν', sq:'Kërko muajin e parë falas', de:'Kostenlosen ersten Monat anfragen', fr:'Demander le premier mois gratuit', es:'Solicitar el primer mes gratis', en:'Request first month free' },
+  sending: { it:'Invio...', el:'Αποστολή...', sq:'Po dërgohet...', de:'Senden...', fr:'Envoi...', es:'Enviando...', en:'Sending...' },
+  successTitle: { it:'✅ Richiesta inviata!', el:'✅ Η αίτηση στάλθηκε!', sq:'✅ Kërkesa u dërgua!', de:'✅ Anfrage gesendet!', fr:'✅ Demande envoyée !', es:'✅ ¡Solicitud enviada!', en:'✅ Request sent!' },
+  successMsg: { it:'Ti contatteremo entro 24 ore per attivare il tuo account.', el:'Θα επικοινωνήσουμε μαζί σου εντός 24 ωρών για να ενεργοποιήσουμε τον λογαριασμό σου.', sq:'Do të të kontaktojmë brenda 24 orëve për të aktivizuar llogarinë tënde.', de:'Wir melden uns innerhalb von 24 Stunden, um dein Konto zu aktivieren.', fr:'Nous vous contacterons dans les 24 heures pour activer votre compte.', es:'Te contactaremos en 24 horas para activar tu cuenta.', en:'We\'ll contact you within 24 hours to activate your account.' },
+  backLanding: { it:'← Torna alla home', el:'← Πίσω στην αρχική', sq:'← Kthehu te faqja kryesore', de:'← Zurück zur Startseite', fr:'← Retour à l\'accueil', es:'← Volver al inicio', en:'← Back to home' },
+  offerBadge: { it:'🚀 Primo mese gratis · Nessuna carta di credito richiesta', el:'🚀 Πρώτος μήνας δωρεάν · Χωρίς πιστωτική κάρτα', sq:'🚀 Muaji i parë falas · Pa kartë krediti', de:'🚀 Erster Monat kostenlos · Keine Kreditkarte erforderlich', fr:'🚀 Premier mois gratuit · Aucune carte de crédit requise', es:'🚀 Primer mes gratis · Sin tarjeta de crédito', en:'🚀 First Month Free · No credit card required' },
+  required: { it:'Campo obbligatorio', el:'Υποχρεωτικό πεδίο', sq:'Fushë e detyrueshme', de:'Pflichtfeld', fr:'Champ obligatoire', es:'Campo obligatorio', en:'Required field' },
+  noCardNote: { it:'Nessuna carta di credito · Annulla quando vuoi', el:'Χωρίς πιστωτική κάρτα · Ακύρωση όποτε θέλεις', sq:'Pa kartë krediti · Anulo kur të duash', de:'Keine Kreditkarte · Jederzeit kündbar', fr:'Aucune carte de crédit · Résiliation à tout moment', es:'Sin tarjeta de crédito · Cancela cuando quieras', en:'No credit card · Cancel anytime' },
+  emailDirect: { it:'O scrivi direttamente a:', el:'Ή στείλε email απευθείας:', sq:'Ose shkruaj direkt te:', de:'Oder schreib direkt an:', fr:'Ou écrivez directement à :', es:'O escribe directamente a:', en:'Or email directly:' },
 }
 
 function t(key: keyof typeof T, lang: Lang): string {
@@ -33,7 +36,7 @@ function t(key: keyof typeof T, lang: Lang): string {
 
 export default function ContactPage() {
   const [lang, setLang] = useState<Lang>('en')
-  const [plan, setPlan] = useState('')
+  const [plan, setPlan] = useState<PlanKey>('starter')
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
   const [email, setEmail] = useState('')
@@ -42,20 +45,21 @@ export default function ContactPage() {
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, boolean>>({})
+  const planOptions: Array<{ key: PlanKey; label: string }> = [
+    { key: 'starter', label: t('planStarter', lang) },
+    { key: 'pro', label: t('planPro', lang) },
+  ]
 
   useEffect(() => {
     const nav = navigator.language.toLowerCase()
-    if (nav.startsWith('el')) { setLang('el'); setPlan(t('planTrial','el')) }
-    else if (nav.startsWith('de')) { setLang('de'); setPlan(t('planTrial','de')) }
-    else if (nav.startsWith('fr')) { setLang('fr'); setPlan(t('planTrial','fr')) }
-    else if (nav.startsWith('es')) { setLang('es'); setPlan(t('planTrial','es')) }
-    else if (nav.startsWith('it')) { setLang('it'); setPlan(t('planTrial','it')) }
-    else { setLang('en'); setPlan(t('planTrial','en')) }
+    if (nav.startsWith('el')) setLang('el')
+    else if (nav.startsWith('sq')) setLang('sq')
+    else if (nav.startsWith('de')) setLang('de')
+    else if (nav.startsWith('fr')) setLang('fr')
+    else if (nav.startsWith('es')) setLang('es')
+    else if (nav.startsWith('it')) setLang('it')
+    else setLang('en')
   }, [])
-
-  useEffect(() => {
-    setPlan(t('planTrial', lang))
-  }, [lang])
 
   const validate = () => {
     const e: Record<string, boolean> = {}
@@ -73,7 +77,16 @@ export default function ContactPage() {
       await fetch('https://formspree.io/f/xpwdjkgb', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, name, company, email, phone, vehicles, lang }),
+        body: JSON.stringify({
+          plan,
+          planLabel: plan === 'starter' ? t('planStarter', lang) : t('planPro', lang),
+          name,
+          company,
+          email,
+          phone,
+          vehicles,
+          lang,
+        }),
       })
       setSent(true)
     } catch {
@@ -111,9 +124,9 @@ export default function ContactPage() {
 
       <div style={{ maxWidth:540, margin:'0 auto', padding:'48px 24px' }}>
 
-        {/* Founder badge */}
+        {/* Offer badge */}
         <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'10px 16px', marginBottom:24, fontSize:13, color:'#4F46E5', fontWeight:500, textAlign:'center' }}>
-          {t('founderBadge', lang)}
+          {t('offerBadge', lang)}
         </div>
 
         <h1 style={{ fontSize:28, fontWeight:800, marginBottom:8, color:'#111827', textAlign:'center' }}>
@@ -139,15 +152,15 @@ export default function ContactPage() {
                 {t('plan', lang)}
               </label>
               <div style={{ display:'flex', gap:8 }}>
-                {[t('planTrial', lang), t('planFounder', lang)].map(p => (
-                  <button key={p} onClick={() => setPlan(p)}
+                {planOptions.map(option => (
+                  <button key={option.key} onClick={() => setPlan(option.key)}
                     style={{
                       flex:1, padding:'10px 12px', borderRadius:8, cursor:'pointer', fontSize:13, fontWeight:500,
-                      border: plan===p ? '2px solid #6366F1' : '1px solid #E5E7EB',
-                      background: plan===p ? '#EFF6FF' : 'white',
-                      color: plan===p ? '#6366F1' : '#6B7280',
+                      border: plan===option.key ? '2px solid #6366F1' : '1px solid #E5E7EB',
+                      background: plan===option.key ? '#EFF6FF' : 'white',
+                      color: plan===option.key ? '#6366F1' : '#6B7280',
                     }}>
-                    {p}
+                    {option.label}
                   </button>
                 ))}
               </div>
@@ -192,19 +205,14 @@ export default function ContactPage() {
             </button>
 
             <div style={{ textAlign:'center', fontSize:12, color:'#9CA3AF', marginTop:12 }}>
-              {lang==='el'?'Χωρίς πιστωτική κάρτα · Ακύρωση ανά πάσα στιγμή':
-               lang==='it'?'Nessuna carta di credito · Cancella quando vuoi':
-               lang==='de'?'Keine Kreditkarte · Jederzeit kündigen':
-               lang==='fr'?'Aucune carte de crédit · Annulation à tout moment':
-               lang==='es'?'Sin tarjeta de crédito · Cancela cuando quieras':
-               'No credit card · Cancel anytime'}
+              {t('noCardNote', lang)}
             </div>
           </div>
         )}
 
         {/* Direct email fallback */}
         <div style={{ textAlign:'center', marginTop:24, fontSize:13, color:'#9CA3AF' }}>
-          {lang==='el'?'Ή στείλε email απευθείας:':lang==='it'?'O scrivi direttamente a:':lang==='de'?'Oder schreib direkt an:':lang==='fr'?'Ou écrivez directement à :':lang==='es'?'O escribe directamente a:':'Or email directly:'}{' '}
+          {t('emailDirect', lang)}{' '}
           <a href="mailto:autofleetpro1@gmail.com" style={{ color:'#6366F1', textDecoration:'none', fontWeight:500 }}>
             autofleetpro1@gmail.com
           </a>

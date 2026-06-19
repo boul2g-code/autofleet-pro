@@ -7,6 +7,8 @@ const PLANS = [
     price: '€49',
     period: '/month',
     features: ['1 user', '50 vehicles', 'All tabs & CMR', 'PDF reports', '6 languages', 'Email support'],
+    offer: 'First Month Free',
+    note: 'No credit card required',
     paypal: 'https://paypal.me/Autofleetpro/49',
     highlight: false,
   },
@@ -15,16 +17,10 @@ const PLANS = [
     price: '€99',
     period: '/month',
     features: ['3 users', 'Unlimited vehicles', 'All features', 'AI document extraction', 'Priority support', 'Excel export'],
+    offer: 'First Month Free',
+    note: 'No credit card required',
     paypal: 'https://paypal.me/Autofleetpro/99',
     highlight: true,
-  },
-  {
-    name: 'Annual',
-    price: '€490',
-    period: '/year',
-    features: ['Everything in Pro', 'Save €98 vs monthly', '1 year access', 'Free updates', 'Dedicated support'],
-    paypal: 'https://paypal.me/Autofleetpro/490',
-    highlight: false,
   },
 ]
 
@@ -43,7 +39,10 @@ export default function PricingPage() {
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 12 }}>Simple Pricing</h1>
-          <p style={{ color: '#94a3b8', fontSize: 16 }}>14-day free trial · No credit card required · Cancel anytime</p>
+          <p style={{ color: '#94a3b8', fontSize: 16, marginBottom: 10 }}>First Month Free · No credit card required · Cancel anytime</p>
+          <p style={{ color: '#cbd5e1', fontSize: 14, maxWidth: 620, margin: '0 auto', lineHeight: 1.6 }}>
+            Use AutoFleet Pro free for your first month. If it saves you time and helps you sell vehicles faster, continue. If not, cancel with no obligation.
+          </p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
@@ -61,7 +60,9 @@ export default function PricingPage() {
               )}
               <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 4 }}>{plan.name}</div>
               <div style={{ fontSize: 40, fontWeight: 800, marginBottom: 2 }}>{plan.price}</div>
-              <div style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20 }}>{plan.period}</div>
+              <div style={{ color: '#94a3b8', fontSize: 14, marginBottom: 8 }}>{plan.period}</div>
+              <div style={{ color: '#f8fafc', fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{plan.offer}</div>
+              <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 20 }}>{plan.note}</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {plan.features.map(f => (
                   <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
@@ -69,12 +70,14 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <a href={plan.paypal} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'block', textAlign: 'center', background: plan.highlight ? 'white' : '#3b82f6', color: plan.highlight ? '#1d4ed8' : 'white', padding: '12px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 15 }}>
-                Pay with PayPal →
-              </a>
+              <Link
+                href="/contact"
+                style={{ display: 'block', textAlign: 'center', background: plan.highlight ? 'white' : '#3b82f6', color: plan.highlight ? '#1d4ed8' : 'white', padding: '12px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 15 }}
+              >
+                Start first month free →
+              </Link>
               <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: '#94a3b8' }}>
-                or <Link href="/contact" style={{ color: '#60a5fa', textDecoration: 'none' }}>request free trial</Link>
+                or <a href={plan.paypal} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'none' }}>pay immediately with PayPal</a>
               </div>
             </div>
           ))}
@@ -83,10 +86,10 @@ export default function PricingPage() {
         <div style={{ marginTop: 48, background: '#1e293b', borderRadius: 16, padding: 28, border: '1px solid #334155' }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>How to get started</h2>
           {[
-            '1. Request your free trial via the contact form or PayPal',
+            '1. Start with 30 days free via the contact form',
             '2. Create your account at autofleet-pro.vercel.app/login',
             '3. Send us your email — we activate your access within 24h',
-            '4. Use the system from any device, anywhere',
+            '4. If AutoFleet Pro helps your dealership, continue. If not, cancel with no obligation.',
           ].map(step => (
             <div key={step} style={{ padding: '8px 0', borderBottom: '1px solid #334155', fontSize: 14, color: '#cbd5e1' }}>{step}</div>
           ))}
