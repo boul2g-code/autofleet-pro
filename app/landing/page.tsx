@@ -156,11 +156,7 @@ export default function LandingPage() {
         <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' }}>
           {/* Badge */}
           <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'#EEF2FF', color:'#6366F1', borderRadius:20, padding:'6px 14px', fontSize:13, fontWeight:600, marginBottom:24 }}>
-<<<<<<< HEAD
-            🎯 Starter €49 · Pro €99 · {lang==='el'?'1 μήνας δωρεάν':lang==='de'?'1 Monat gratis':lang==='fr'?'1 mois gratuit':lang==='es'?'1 mes gratis':'1 mese gratis'}
-=======
             🎯 {t('offerBadge', lang)}
->>>>>>> 0d8b611f (feat: add Balkan language support to core app)
           </div>
 
           <h1 style={{ fontSize:'clamp(28px,4vw,48px)', fontWeight:800, lineHeight:1.1, marginBottom:20, color:'#111827' }}>
