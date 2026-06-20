@@ -389,7 +389,9 @@ export default function LandingPage() {
       <footer style={{ background:'#111827', padding:'32px 24px', textAlign:'center' }}>
         <div style={{ color:'#4B5563', fontSize:13 }}>
           © 2025 AutoFleet Pro · autofleetpro1@gmail.com ·{' '}
-          <a href="https://paypal.me/Autofleetpro" style={{ color:'#6B7280' }}>PayPal</a>
+          <a href="https://paypal.me/Autofleetpro" style={{ color:'#6B7280' }}>PayPal</a> ·{' '}
+          <a href="/privacy" style={{ color:'#6B7280' }}>Privacy</a> ·{' '}
+          <a href="/terms" style={{ color:'#6B7280' }}>Terms</a>
         </div>
       </footer>
     </div>
