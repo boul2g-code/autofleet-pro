@@ -117,38 +117,41 @@ export default function LandingPage() {
     <div style={{ fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', background:'#F8FAFC', color:'#111827', minHeight:'100vh' }}>
 
       {/* ── NAV ── */}
-      <nav style={{ background:'white', borderBottom:'1px solid #E5E7EB', position:'sticky', top:0, zIndex:50, padding:'0 24px' }}>
-        <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', alignItems:'center', height:60, gap:24 }}>
-          <div style={{ fontWeight:800, fontSize:17, color:'#111827' }}>🚗 AutoFleet Pro</div>
+      <nav style={{ background:'white', borderBottom:'1px solid #E5E7EB', position:'sticky', top:0, zIndex:50, padding:'0 16px' }}>
+        {/* Desktop nav */}
+        <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', alignItems:'center', height:56, gap:16 }}>
+          <div style={{ fontWeight:800, fontSize:16, color:'#111827', whiteSpace:'nowrap' }}>🚗 AutoFleet Pro</div>
           <div style={{ flex:1 }} />
-          <a href="#features" style={{ fontSize:14, color:'#6B7280', textDecoration:'none' }}>{t('navFeatures', lang)}</a>
-          <a href="#pricing" style={{ fontSize:14, color:'#6B7280', textDecoration:'none' }}>{t('navPricing', lang)}</a>
-          {/* Lang switcher */}
-          <div style={{ display:'flex', gap:4 }}>
+          {/* Links - hidden on mobile */}
+          <a href="#features" style={{ fontSize:13, color:'#6B7280', textDecoration:'none', display:'none' }} className="desk-link">{t('navFeatures', lang)}</a>
+          <a href="#pricing" style={{ fontSize:13, color:'#6B7280', textDecoration:'none', display:'none' }} className="desk-link">{t('navPricing', lang)}</a>
+          {/* Lang switcher - compact on mobile */}
+          <div style={{ display:'flex', gap:2, flexShrink:0 }}>
             {LANGS.map(l => (
               <button key={l} onClick={() => setLang(l)}
                 title={l.toUpperCase()}
                 style={{
-                  background: lang===l ? '#6366F1' : 'var(--surface,#f8fafc)',
+                  background: lang===l ? '#6366F1' : 'transparent',
                   border: lang===l ? '2px solid #6366F1' : '1px solid #E5E7EB',
-                  borderRadius:6, padding:'4px 8px', cursor:'pointer', fontSize:16,
-                  opacity: lang===l ? 1 : 0.65,
-                  transform: lang===l ? 'scale(1.1)' : 'scale(1)',
+                  borderRadius:6, padding:'3px 5px', cursor:'pointer', fontSize:14,
+                  opacity: lang===l ? 1 : 0.6,
                   transition:'all 0.15s',
                 }}>
                 {flags[l]}
               </button>
             ))}
           </div>
+          {/* CTA - short version on mobile */}
           <Link href="/login"
-            style={{ fontSize:14, color:'#6366F1', textDecoration:'none', fontWeight:500 }}>
-            {t('navLogin', lang)}
-          </Link>
-          <Link href="/login"
-            style={{ background:'#6366F1', color:'white', padding:'8px 16px', borderRadius:7, fontSize:14, fontWeight:600, textDecoration:'none' }}>
-            {t('cta', lang)}
+            style={{ background:'#6366F1', color:'white', padding:'7px 12px', borderRadius:7, fontSize:13, fontWeight:600, textDecoration:'none', whiteSpace:'nowrap', flexShrink:0 }}>
+            {lang==='el'?'Δοκίμασε':lang==='it'?'Prova':lang==='de'?'Testen':lang==='sq'?'Provo':'Try free'}
           </Link>
         </div>
+        <style>{`
+          @media (min-width: 640px) {
+            .desk-link { display: inline !important; }
+          }
+        `}</style>
       </nav>
 
       {/* ── HERO ── */}
