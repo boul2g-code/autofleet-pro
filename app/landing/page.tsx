@@ -156,12 +156,10 @@ export default function LandingPage() {
           @media (max-width: 639px) {
             .hero-title { font-size: 28px !important; }
             .section-pad { padding-left: 16px !important; padding-right: 16px !important; }
-            .mock-wrap { transform: scale(0.58); transform-origin: top center; margin-bottom: -180px !important; }
+            
             .comp-grid { grid-template-columns: 1fr !important; }
           }
-          @media (min-width: 640px) and (max-width: 900px) {
-            .mock-wrap { transform: scale(0.75); transform-origin: top center; margin-bottom: -100px !important; }
-          }
+
         `}</style>
       </nav>
 
@@ -195,83 +193,63 @@ export default function LandingPage() {
       </section>
 
       {/* ── DASHBOARD SCREENSHOT MOCK ── */}
-      <section id="demo" style={{ background:'#1E293B', padding:'48px 24px' }}>
-        <div style={{ maxWidth:1000, margin:'0 auto' }}>
-          <div style={{ textAlign:'center', marginBottom:24 }}>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.1)', borderRadius:20, padding:'6px 14px', fontSize:13, color:'#94A3B8', marginBottom:12 }}>
-              📊 {t('dashLabel', lang)}
+      <section id="demo" style={{ background:'#0F172A', padding:'40px 16px' }}>
+        <div style={{ maxWidth:480, margin:'0 auto' }}>
+          <div style={{ fontSize:13, color:'#64748B', textAlign:'center', marginBottom:24 }}>
+            📊 {lang==='el'?'Τι βλέπεις κάθε πρωί':lang==='it'?'Cosa vedi ogni mattina':lang==='de'?'Was du jeden Morgen siehst':lang==='sq'?'Çfarë sheh çdo mëngjes':'What you see every morning'}
+          </div>
+          {/* Health Panel Card */}
+          <div style={{ background:'#1E293B', borderRadius:16, padding:20, marginBottom:12 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+              <div style={{ width:56, height:56, borderRadius:'50%', border:'3px solid #F59E0B', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0F172A' }}>
+                <div style={{ fontSize:18, fontWeight:800, color:'#F59E0B', lineHeight:1 }}>72</div>
+                <div style={{ fontSize:8, color:'#F59E0B' }}>/100</div>
+              </div>
+              <div>
+                <div style={{ color:'white', fontWeight:700, fontSize:15 }}>
+                  {lang==='el'?'Υγεία Στόλου':lang==='it'?'Salute Flotta':lang==='de'?'Flotten-Status':lang==='sq'?'Gjendja e Flotës':'Fleet Health'}
+                </div>
+                <div style={{ color:'#94A3B8', fontSize:12 }}>
+                  {lang==='el'?'Ανανεώνεται αυτόματα':lang==='it'?'Aggiornamento automatico':lang==='de'?'Automatisch aktualisiert':lang==='sq'?'Përditësohet automatikisht':'Updates automatically'}
+                </div>
+              </div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              {[
+                { icon:'🚨', val:'12', label: lang==='el'?'οχήματα >90 ημέρες':lang==='it'?'veicoli >90 giorni':lang==='de'?'Fzg. >90 Tage':lang==='sq'?'automjete >90 ditë':'vehicles >90 days', color:'#EF4444' },
+                { icon:'💰', val:'€84k', label: lang==='el'?'κεφάλαιο δεσμευμένο':lang==='it'?'capitale bloccato':lang==='de'?'Kapital gebunden':lang==='sq'?'kapital i bllokuar':'capital locked', color:'#F59E0B' },
+                { icon:'📄', val:'23', label: lang==='el'?'έγγραφα λείπουν':lang==='it'?'documenti mancanti':lang==='de'?'Dokumente fehlen':lang==='sq'?'dokumente mungojnë':'missing docs', color:'#F59E0B' },
+                { icon:'📉', val:'8', label: lang==='el'?'χαμηλά περιθώρια':lang==='it'?'margini bassi':lang==='de'?'niedrige Margen':lang==='sq'?'marzhe të ulëta':'low margins', color:'#EF4444' },
+              ].map((item, i) => (
+                <div key={i} style={{ background:'#0F172A', borderRadius:10, padding:'10px 12px', display:'flex', alignItems:'center', gap:10 }}>
+                  <span style={{ fontSize:20 }}>{item.icon}</span>
+                  <div>
+                    <div style={{ color: item.color, fontWeight:800, fontSize:16 }}>{item.val}</div>
+                    <div style={{ color:'#64748B', fontSize:11 }}>{item.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:14, background:'#6366F1', borderRadius:8, padding:'10px 16px', textAlign:'center', color:'white', fontWeight:600, fontSize:14, cursor:'pointer' }}>
+              🔧 {lang==='el'?'Διόρθωσε τα Προβλήματα':lang==='it'?'Correggi i Problemi':lang==='de'?'Probleme beheben':lang==='sq'?'Korrigjo Problemet':'Fix Issues'} →
             </div>
           </div>
-
-          {/* Dashboard mock */}
-          <div style={{ background:'#F5F7FA', borderRadius:12, overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,0.4)', border:'1px solid rgba(255,255,255,0.1)' }}>
-            {/* Top bar mock */}
-            <div style={{ background:'white', padding:'10px 16px', borderBottom:'1px solid #E5E7EB', display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:12, height:12, borderRadius:'50%', background:'#FF5F57' }} />
-              <div style={{ width:12, height:12, borderRadius:'50%', background:'#FFBD2E' }} />
-              <div style={{ width:12, height:12, borderRadius:'50%', background:'#28C840' }} />
-              <div style={{ fontSize:12, color:'#9CA3AF', marginLeft:8 }}>autofleet-pro.vercel.app/dashboard</div>
-            </div>
-            {/* Dashboard content */}
-            <div style={{ display:'grid', gridTemplateColumns:'180px 1fr', minHeight:320 }}>
-              {/* Sidebar */}
-              <div style={{ background:'#1E293B', padding:'16px 12px', display:'flex', flexDirection:'column', gap:4 }}>
-                {['⊞ Dashboard','🚗 Vehicles 56','☰ Manifest','📈 Analytics'].map((item,i) => (
-                  <div key={i} style={{
-                    padding:'8px 10px', borderRadius:6, fontSize:12, color: i===0 ? 'white' : '#94A3B8',
-                    background: i===0 ? 'rgba(37,99,235,0.6)' : 'transparent', fontWeight: i===0 ? 600 : 400,
-                  }}>{item}</div>
-                ))}
+          {/* KPI row */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+            {[
+              { val:'54', label: lang==='el'?'Οχήματα':lang==='it'?'Veicoli':'Vehicles', color:'#6366F1' },
+              { val:'€1.58M', label: lang==='el'?'Αξία Stock':'Stock Value', color:'#10B981' },
+              { val:'+€62k', label: lang==='el'?'Κέρδος':'Profit', color:'#10B981' },
+            ].map((k, i) => (
+              <div key={i} style={{ background:'#1E293B', borderRadius:10, padding:'12px 8px', textAlign:'center' }}>
+                <div style={{ color: k.color, fontWeight:800, fontSize:16 }}>{k.val}</div>
+                <div style={{ color:'#64748B', fontSize:10, marginTop:2 }}>{k.label}</div>
               </div>
-              {/* Main content */}
-              <div style={{ padding:16, display:'flex', flexDirection:'column', gap:10 }}>
-                {/* Morning brief */}
-                <div style={{ background:'linear-gradient(135deg,#1E293B,#1E3A5F)', borderRadius:8, padding:'12px 16px', color:'white' }}>
-                  <div style={{ fontSize:11, color:'#94A3B8', marginBottom:4 }}>
-                    {lang==='el'?'Καλημέρα 👋':lang==='sq'?'Mirëmëngjes 👋':lang==='de'?'Guten Morgen 👋':lang==='fr'?'Bonjour 👋':lang==='es'?'Buenos días 👋':'Buongiorno 👋'}
-                  </div>
-                  <div style={{ display:'flex', gap:16, fontSize:12 }}>
-                    <span style={{ color:'#FCA5A5' }}>⚠️ <strong>27</strong> {lang==='el'?'οχήματα >90 ημέρες':lang==='sq'?'automjete >90 ditë':'veicoli >90 giorni'}</span>
-                    <span style={{ color:'#86EFAC' }}>💰 <strong>5</strong> {lang==='el'?'περιθώριο >€4k':lang==='sq'?'marzh >€4k':'margine >€4k'}</span>
-                    <span style={{ color:'#FDE68A', marginLeft:'auto', fontWeight:700 }}>P&L +62.828€</span>
-                  </div>
-                </div>
-                {/* KPI row */}
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
-                  {[
-                    { label: lang==='el'?'Σύνολο':lang==='sq'?'Totali':lang==='de'?'Gesamt':lang==='fr'?'Total':lang==='es'?'Total':'Totale', value:'56', color:'#6366F1', icon:'🚗' },
-                    { label: lang==='el'?'Αξία Stock':lang==='sq'?'Vlera e stokut':lang==='de'?'Lagerwert':lang==='fr'?'Valeur Stock':lang==='es'?'Valor Stock':'Valore Stock', value:'€1.58M', color:'#059669', icon:'💶' },
-                    { label: lang==='el'?'Κέρδος Μήνα':lang==='sq'?'Fitimi i muajit':lang==='de'?'Gewinn Monat':lang==='fr'?'Profit Mois':lang==='es'?'Ganancia Mes':'Profitto Mese', value:'+€6.2k', color:'#059669', icon:'📅' },
-                    { label: lang==='el'?'Πωλήθηκαν':lang==='sq'?'Të shitura':lang==='de'?'Verkauft':lang==='fr'?'Vendus':lang==='es'?'Vendidos':'Venduti', value:'10', color:'#16A34A', icon:'✅' },
-                  ].map(k => (
-                    <div key={k.label} style={{ background:'white', borderRadius:8, padding:'10px 12px', border:'1px solid #E5E7EB' }}>
-                      <div style={{ fontSize:10, color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'0.04em' }}>{k.icon} {k.label}</div>
-                      <div style={{ fontSize:18, fontWeight:700, color:k.color }}>{k.value}</div>
-                    </div>
-                  ))}
-                </div>
-                {/* Dead stock + opportunities */}
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                  <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'10px 12px', fontSize:12 }}>
-                    <div style={{ fontWeight:700, color:'#991B1B', marginBottom:6 }}>💀 Dead Stock · 3 {lang==='el'?'οχήματα':lang==='sq'?'automjete':'veicoli'}</div>
-                    {['CAT 320 · 109d · €2.725','Hitachi ZX210 · 99d · €2.178','Komatsu PC210 · 79d · €1.738'].map(v=>(
-                      <div key={v} style={{ color:'#B91C1C', padding:'2px 0', borderBottom:'1px solid #FEE2E2', fontSize:11 }}>🔴 {v}</div>
-                    ))}
-                  </div>
-                  <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:8, padding:'10px 12px', fontSize:12 }}>
-                    <div style={{ fontWeight:700, color:'#166534', marginBottom:6 }}>🏆 {lang==='el'?'Top Ευκαιρίες':lang==='sq'?'Mundësitë kryesore':lang==='de'?'Top Chancen':lang==='fr'?'Top Opportunités':lang==='es'?'Top Oportunidades':'Top Opportunità'}</div>
-                    {['Hyundai HX220 · +€21.430','Doosan DX225 · +€16.650','JCB 3CX · +€12.430'].map(v=>(
-                      <div key={v} style={{ color:'#16a34a', padding:'2px 0', borderBottom:'1px solid #BBF7D0', fontSize:11 }}>💰 {v}</div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── PAIN vs GAIN ── */}
       <section id="features" style={{ padding:'64px 24px', background:'white' }}>
         <div style={{ maxWidth:900, margin:'0 auto' }}>
           <h2 style={{ textAlign:'center', fontSize:'clamp(22px,3vw,36px)', fontWeight:800, marginBottom:48 }}>
