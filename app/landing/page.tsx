@@ -156,8 +156,11 @@ export default function LandingPage() {
           @media (max-width: 639px) {
             .hero-title { font-size: 28px !important; }
             .section-pad { padding-left: 16px !important; padding-right: 16px !important; }
-            .mock-wrap { transform: scale(0.75); transform-origin: top center; margin-bottom: -80px !important; }
+            .mock-wrap { transform: scale(0.58); transform-origin: top center; margin-bottom: -180px !important; }
             .comp-grid { grid-template-columns: 1fr !important; }
+          }
+          @media (min-width: 640px) and (max-width: 900px) {
+            .mock-wrap { transform: scale(0.75); transform-origin: top center; margin-bottom: -100px !important; }
           }
         `}</style>
       </nav>
