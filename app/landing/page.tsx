@@ -114,7 +114,7 @@ export default function LandingPage() {
   const flags: Record<Lang, string> = { it:'🇮🇹', el:'🇬🇷', sq:'🇦🇱', de:'🇩🇪', fr:'🇫🇷', es:'🇪🇸', en:'🇬🇧' }
 
   return (
-    <div style={{ fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', background:'#F8FAFC', color:'#111827', minHeight:'100vh' }}>
+    <div style={{ fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', background:'#F8FAFC', color:'#111827', minHeight:'100vh', overflowX:'hidden', width:'100%' }}>
 
       {/* ── NAV ── */}
       <nav style={{ background:'white', borderBottom:'1px solid #E5E7EB', position:'sticky', top:0, zIndex:50, padding:'0 16px' }}>
@@ -148,8 +148,14 @@ export default function LandingPage() {
           </Link>
         </div>
         <style>{`
+          * { box-sizing: border-box; }
+          html, body { overflow-x: hidden; width: 100%; }
           @media (min-width: 640px) {
             .desk-link { display: inline !important; }
+          }
+          @media (max-width: 639px) {
+            .hero-title { font-size: 28px !important; }
+            .section-pad { padding-left: 16px !important; padding-right: 16px !important; }
           }
         `}</style>
       </nav>
