@@ -333,25 +333,6 @@ export default function LandingPage() {
       </section>
 
       {/* ── SOCIAL PROOF NUMBERS ── */}
-      <section style={{ padding:'48px 24px', background:'#1E293B' }}>
-        <div style={{ maxWidth:800, margin:'0 auto', textAlign:'center' }}>
-          <div style={{ fontSize:14, color:'#64748B', marginBottom:24 }}>{t('spTitle', lang)}</div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24 }}>
-            {[
-              { value:'56', label: lang==='el'?'οχήματα διαχειρισμένα':lang==='sq'?'automjete të menaxhuara':lang==='de'?'verwaltete Fahrzeuge':lang==='fr'?'véhicules gérés':lang==='es'?'vehículos gestionados':'veicoli gestiti' },
-              { value:'€367.600', label: lang==='el'?'πωλήσεις στο demo':lang==='sq'?'shitje në demo':lang==='de'?'Umsatz im Demo':lang==='fr'?'ventes en démo':lang==='es'?'ventas en demo':'vendite simulate' },
-              { value:'€62.828', label: lang==='el'?'συνολικό κέρδος tracked':lang==='sq'?'fitim total i gjurmuar':lang==='de'?'verfolgte Marge':lang==='fr'?'profit suivi':lang==='es'?'beneficio rastreado':'profitto tracciato' },
-            ].map(s => (
-              <div key={s.value}>
-                <div style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, color:'white' }}>{s.value}</div>
-                <div style={{ fontSize:13, color:'#64748B', marginTop:4 }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PRICING ── */}
       <section id="pricing" style={{ padding:'64px 24px', background:'white' }}>
         <div style={{ maxWidth:800, margin:'0 auto', textAlign:'center' }}>
           <h2 style={{ fontSize:'clamp(22px,3vw,32px)', fontWeight:800, marginBottom:8 }}>
