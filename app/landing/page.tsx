@@ -325,9 +325,22 @@ export default function LandingPage() {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
             {/* Starter */}
             <div style={{ background:'white', border:'1px solid #E5E7EB', borderRadius:14, padding:28, boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
-              <div style={{ fontSize:13, fontWeight:600, color:'#6B7280', marginBottom:8 }}>Starter</div>
-              <div style={{ fontSize:44, fontWeight:800, color:'#111827', lineHeight:1 }}>€49</div>
-              <div style={{ color:'#6B7280', fontSize:13, marginBottom:20 }}>/{t('monthLabel', lang)}</div>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                <span style={{ fontSize:13, fontWeight:600, color:'#6B7280' }}>Starter</span>
+                <span style={{ background:'#FEF3C7', color:'#92400E', fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:999 }}>
+                  {lang==='el'?'FOUNDER ΤΙΜΗ':lang==='it'?'PREZZO FOUNDER':lang==='de'?'FOUNDER PREIS':lang==='sq'?'ÇMIM FOUNDER':'FOUNDER PRICE'}
+                </span>
+              </div>
+              <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
+                <div style={{ fontSize:44, fontWeight:800, color:'#111827', lineHeight:1 }}>€30</div>
+                <div style={{ fontSize:20, color:'#9CA3AF', textDecoration:'line-through' }}>€49</div>
+              </div>
+              <div style={{ color:'#16A34A', fontSize:12, fontWeight:600, marginBottom:4 }}>
+                🔒 {lang==='el'?'Η τιμή κλειδώνει για πάντα':lang==='it'?'Prezzo bloccato per sempre':lang==='de'?'Preis für immer gesperrt':lang==='sq'?'Çmimi bllokuar përgjithmonë':'Price locked forever'}
+              </div>
+              <div style={{ color:'#6B7280', fontSize:12, marginBottom:20 }}>
+                {lang==='el'?'Μόνο για τους πρώτους 10 dealers':lang==='it'?'Solo per i primi 10 dealer':lang==='de'?'Nur für die ersten 10 Händler':lang==='sq'?'Vetëm për 10 dealer të parët':'Only for the first 10 dealers'}
+              </div>
               {tArr('starterFeatures', lang).map((f,i)=>(
                 <div key={i} style={{ display:'flex', gap:8, marginBottom:8, fontSize:13, color:'#374151' }}>
                   <span style={{ color:'#6366F1', fontWeight:700 }}>✓</span><span>{f}</span>
