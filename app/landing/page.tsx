@@ -142,7 +142,7 @@ export default function LandingPage() {
             ))}
           </div>
           {/* CTA - short version on mobile */}
-          <Link href="/login"
+          <Link href="/login?signup=1"
             style={{ background:'#6366F1', color:'white', padding:'7px 12px', borderRadius:7, fontSize:13, fontWeight:600, textDecoration:'none', whiteSpace:'nowrap', flexShrink:0 }}>
             {lang==='el'?'Δοκίμασε':lang==='it'?'Prova':lang==='de'?'Testen':lang==='sq'?'Provo':'Try free'}
           </Link>
@@ -179,7 +179,7 @@ export default function LandingPage() {
           </p>
 
           <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap', marginBottom:12 }}>
-            <Link href="/login"
+            <Link href="/login?signup=1"
               style={{ background:'#6366F1', color:'white', padding:'14px 28px', borderRadius:8, fontSize:16, fontWeight:700, textDecoration:'none', boxShadow:'0 4px 14px rgba(99,102,241,0.3)' }}>
               {t('cta', lang)}
             </Link>
@@ -346,7 +346,7 @@ export default function LandingPage() {
                   <span style={{ color:'#6366F1', fontWeight:700 }}>✓</span><span>{f}</span>
                 </div>
               ))}
-              <Link href="/login" style={{ display:'block', background:'#6366F1', color:'white', padding:'12px 20px', borderRadius:8, fontSize:14, fontWeight:700, textDecoration:'none', marginTop:20, textAlign:'center' }}>
+              <Link href="/login?signup=1" style={{ display:'block', background:'#6366F1', color:'white', padding:'12px 20px', borderRadius:8, fontSize:14, fontWeight:700, textDecoration:'none', marginTop:20, textAlign:'center' }}>
                 {t('trialBtn', lang)}
               </Link>
             </div>
@@ -363,7 +363,7 @@ export default function LandingPage() {
                   <span style={{ color:'#A5B4FC', fontWeight:700 }}>✓</span><span>{f}</span>
                 </div>
               ))}
-              <Link href="/login" style={{ display:'block', background:'#6366F1', color:'white', padding:'12px 20px', borderRadius:8, fontSize:14, fontWeight:700, textDecoration:'none', marginTop:20, textAlign:'center', boxShadow:'0 4px 14px rgba(99,102,241,0.4)' }}>
+              <Link href="/login?signup=1" style={{ display:'block', background:'#6366F1', color:'white', padding:'12px 20px', borderRadius:8, fontSize:14, fontWeight:700, textDecoration:'none', marginTop:20, textAlign:'center', boxShadow:'0 4px 14px rgba(99,102,241,0.4)' }}>
                 {t('trialBtn', lang)}
               </Link>
             </div>
