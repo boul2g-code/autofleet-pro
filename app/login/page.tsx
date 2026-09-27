@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -10,14 +10,21 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const [company, setCompany] = useState('')
+  useEffect(() => { setIsSignup(new URLSearchParams(window.location.search).get('signup') === '1') }, [])
   const sb = createClient()
 
   const handle = async () => {
     setError('')
     setLoading(true)
     if (isSignup) {
-      const { error } = await sb.auth.signUp({ email, password })
+      if (!company.trim()) { setError('Enter your company name'); setLoading(false); return }
+      const { error, data } = await sb.auth.signUp({ email, password, options: {
+        data: { company_name: company.trim() },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      } })
       if (error) setError(error.message)
+      else if (data.session) router.push('/dashboard')
       else setError('Check your email to confirm your account.')
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password })
@@ -41,6 +48,10 @@ export default function LoginPage() {
           <input type="email" value={email} onChange={e => setEmail(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handle()} placeholder="you@example.com" />
         </div>
+        {isSignup && <div className="field-group">
+          <label>Company name</label>
+          <input value={company} onChange={e => setCompany(e.target.value)} placeholder="Your dealership" />
+        </div>}
         <div className="field-group">
           <label>Password</label>
           <input type="password" value={password} onChange={e => setPassword(e.target.value)}
