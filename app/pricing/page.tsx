@@ -7,9 +7,8 @@ const PLANS = [
     price: '€49',
     period: '/month',
     features: ['1 user', '50 vehicles', 'All tabs & CMR', 'PDF reports', '6 languages', 'Email support'],
-    offer: 'First Month Free',
-    note: 'No credit card required',
-    paypal: 'https://paypal.me/Autofleetpro/49',
+    offer: 'Self-service account',
+    note: 'No card collected during registration',
     highlight: false,
   },
   {
@@ -17,9 +16,8 @@ const PLANS = [
     price: '€99',
     period: '/month',
     features: ['3 users', 'Unlimited vehicles', 'All features', 'AI document extraction', 'Priority support', 'Excel export'],
-    offer: 'First Month Free',
-    note: 'No credit card required',
-    paypal: 'https://paypal.me/Autofleetpro/99',
+    offer: 'Self-service account',
+    note: 'No card collected during registration',
     highlight: true,
   },
 ]
@@ -39,9 +37,9 @@ export default function PricingPage() {
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 12 }}>Simple Pricing</h1>
-          <p style={{ color: '#94a3b8', fontSize: 16, marginBottom: 10 }}>First Month Free · No credit card required · Cancel anytime</p>
+          <p style={{ color: '#94a3b8', fontSize: 16, marginBottom: 10 }}>Create an account without a credit card</p>
           <p style={{ color: '#cbd5e1', fontSize: 14, maxWidth: 620, margin: '0 auto', lineHeight: 1.6 }}>
-            Use AutoFleet Pro free for your first month. If it saves you time and helps you sell vehicles faster, continue. If not, cancel with no obligation.
+            Create an account and explore the app. Online subscription checkout is being prepared; no payment is collected during registration.
           </p>
         </div>
 
@@ -71,14 +69,12 @@ export default function PricingPage() {
                 ))}
               </ul>
               <Link
-                href="/contact"
+                href="/login?signup=1"
                 style={{ display: 'block', textAlign: 'center', background: plan.highlight ? 'white' : '#3b82f6', color: plan.highlight ? '#1d4ed8' : 'white', padding: '12px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 15 }}
               >
-                Start first month free →
+                Create account →
               </Link>
-              <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: '#94a3b8' }}>
-                or <a href={plan.paypal} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'none' }}>pay immediately with PayPal</a>
-              </div>
+
             </div>
           ))}
         </div>
@@ -86,10 +82,10 @@ export default function PricingPage() {
         <div style={{ marginTop: 48, background: '#1e293b', borderRadius: 16, padding: 28, border: '1px solid #334155' }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>How to get started</h2>
           {[
-            '1. Start with 30 days free via the contact form',
-            '2. Create your account at autofleet-pro.vercel.app/login',
-            '3. Send us your email — we activate your access within 24h',
-            '4. If AutoFleet Pro helps your dealership, continue. If not, cancel with no obligation.',
+            '1. Create your account and confirm your email',
+            '2. Add your first vehicle or import an Excel file',
+            '3. Manage your vehicles, documents and CMR in the app',
+            '4. Subscription checkout is being prepared; no payment is collected here yet.',
           ].map(step => (
             <div key={step} style={{ padding: '8px 0', borderBottom: '1px solid #334155', fontSize: 14, color: '#cbd5e1' }}>{step}</div>
           ))}
