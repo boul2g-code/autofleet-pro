@@ -1,4 +1,4 @@
-# AutoFleet Pro — Next.js 14 App Router
+# AutoFleet Pro — Next.js 16 App Router
 
 **Πλήρες σύστημα διαχείρισης στόλου οχημάτων** για εταιρείες εμπορίας μεταχειρισμένων αυτοκινήτων & φορτηγών, με έδρες σε Γερμανία & Ελλάδα.
 
@@ -10,11 +10,11 @@ Trilingual: **Ελληνικά / English / Deutsch** — switch at any time, all
 
 ```bash
 # 1. Unzip & enter
-unzip autofleet-nextjs.zip
-cd autofleet-nextjs
+git clone https://github.com/boul2g-code/autofleet-pro.git
+cd autofleet-pro
 
 # 2. Install
-npm install
+npm ci
 
 # 3. (Optional) add your Anthropic key for AI extraction
 cp .env.example .env.local
@@ -179,11 +179,11 @@ ANTHROPIC_API_KEY=sk-ant-...   # Optional — can also be set in app Settings
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript 5 |
 | State | Zustand 4 |
 | Storage | Supabase Postgres + private Supabase Storage |
-| PDF | jsPDF 2.5 |
+| PDF | jsPDF 4.x |
 | Styling | Tailwind CSS + custom CSS variables |
 | AI | Anthropic Claude (`claude-sonnet-4-20250514`) |
 
